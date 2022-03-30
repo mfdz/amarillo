@@ -38,8 +38,8 @@ class Carpool(BaseModel):
     agency: str = Field(..., example="ride2go")
     deeplink: HttpUrl 
     stops: List[StopTime] = Field([], min_items=2, max_items=10,
-                                  description="The first stop is the origin of the trip. The last stop is
-                                  the destination of the trip.") 
+                                  description="""The first stop is the origin of the trip. The last stop is
+                                  the destination of the trip.""") 
     departureTime: time 
     departureDate: Union[date, Set[Weekday]] 
     lastUpdated: Optional[datetime] = None
