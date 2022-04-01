@@ -1,7 +1,7 @@
 import uvicorn
 from datetime import date, datetime, time, timedelta
 from enum import Enum
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query, status
 from typing import List, Dict, Set, Union, Optional
 from pydantic import ( BaseModel, BaseSettings, Field, HttpUrl, NegativeInt,
                        PositiveInt, conint, conlist, constr )
@@ -30,7 +30,7 @@ app = FastAPI(title="Amarillo",
               },
               openapi_tags=[
                   {
-                      "name": "carpools",
+                      "name": "carpool",
                       #"description": "Find out more about Amarillo - the carpooling intermediary",
                       "externalDocs": {
                           "description": "Find out more about Amarillo - the carpooling intermediary",
@@ -99,20 +99,18 @@ cp1 = Carpool(**data1)
 # JSON string for trying out the API in Swagger
 cp2 = """
 {
-  "id": "string",
+  "id": "Vier",
   "agency": "string",
-  "deeplink": "string",
+  "deeplink": "http://mfdz.de",
   "stops": [
     {
-      "id": "03",
-      "address": "drei"      
+      "id": "03", "name": "drei", "lat": 45, "lon": 9
     },
     {
-      "id": "03b",
-      "address": "drei b"      
+      "id": "03b", "name": "drei b", "lat": 45, "lon": 9
     }
   ],
-  "departureTime": "string",
+  "departureTime": "12:34",
   "departureDate": "2022-03-30",
   "lastUpdated": "2022-03-30 12:34"
 }
@@ -124,14 +122,19 @@ carpools: Dict[str, Carpool] = {
 }
 
 
-@app.put("/carpool")
+@app.put("/carpool",
+         summary="Update an existing carpool",
+         # TODO description="",
+         response_model=Carpool,
+         status_code=status.HTTP_202_ACCEPTED,
+         tags=["carpool"])
 async def put_carpool(cp: Carpool):
 
     exists = carpools.get(cp.id) != None
     
     if not exists:
-        return "TODO carpool does not exist"
-    
+        raise HTTPException(status_code=404, detail="Carpool not found")
+
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()   
        
@@ -140,7 +143,8 @@ async def put_carpool(cp: Carpool):
     return cp
 
 
-@app.post("/carpool")
+@app.post("/carpool",
+          tags=["carpool"])
 async def post_carpool(cp: Carpool) -> Carpool:
     
     if cp.lastUpdated == None:
@@ -157,7 +161,8 @@ async def post_carpool(cp: Carpool) -> Carpool:
 
 
 # TODO make use of agencyId 
-@app.get("/carpool/{agencyId}/{carpoolId}")
+@app.get("/carpool/{agencyId}/{carpoolId}",
+         tags=["carpool"])
 async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
     
     exists = carpools.get(carpoolId) != None
@@ -169,7 +174,8 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
     
     
 # TODO make use of agencyId     
-@app.delete("/carpool/{agencyId}/{carpoolId}")
+@app.delete("/carpool/{agencyId}/{carpoolId}",
+            tags=["carpool"])
 async def delete_carpool(agencyId: str, carpoolId: str):
 
     exists = carpools.get(carpoolId) != None
