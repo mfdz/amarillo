@@ -14,7 +14,36 @@ settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
 
 print("Hello Amarillo!")
 
-app = FastAPI(title="Amarillo")
+app = FastAPI(title="Amarillo",
+              description="""This service allows carpool agencies to publish their trip offers, so routing services may suggest them as trip options. For carpool offers, only the minimum required information (origin/destination, optionally intermediate stops, departure time and a deep link for booking/contacting the driver) needs to be published, booking/contact exchange is to be handled by the publishing agency.""",
+              version="0.0.1",
+              # TODO 404
+              terms_of_service="http://mfdz.de/carpool-hub-terms/",
+              contact={
+                  # "name": "unused",
+                  # "url": "http://unused",
+                  "email": "info@mfdz.de",
+              },
+              license_info={
+                  "name": "AGPL-3.0 License",
+                  "url": "https://www.gnu.org/licenses/agpl-3.0.de.html",
+              },
+              openapi_tags=[
+                  {
+                      "name": "carpools",
+                      #"description": "Find out more about Amarillo - the carpooling intermediary",
+                      "externalDocs": {
+                          "description": "Find out more about Amarillo - the carpooling intermediary",
+                          "url": "https://github.com/mfdz/amarillo",
+                      },
+                  },
+                  {
+                      "name": "servers",
+                      "url": "https://amarillo.mfdz.de:8000"
+                  }
+              ],
+              redoc_url=None
+              )
 
 class Weekday(str, Enum):
     monday = "monday"
