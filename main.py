@@ -14,7 +14,7 @@ settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
 
 print("Hello Amarillo!")
 
-app = FastAPI()
+app = FastAPI(title="Amarillo")
 
 class Weekday(str, Enum):
     monday = "monday"
