@@ -156,4 +156,5 @@ async def delete_carpool(agencyId: str, carpoolId: str):
 async def read_root():
     return "Hello Amarillo!"
 
-
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
