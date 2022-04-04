@@ -57,7 +57,7 @@ class Weekday(str, Enum):
     sunday = "sunday"
 
 class StopTime(BaseModel):
-    id: str
+    id: str = None
     name: str
     arrivalTime: time = None
     departureTime: time = None # in GTFS time can be >24:00
