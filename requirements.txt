@@ -1,3 +1,5 @@
 fastapi[all]
 uvicorn[standard]
 pydantic[dotenv]
+protobuf
+pytest
