@@ -125,13 +125,16 @@ carpools: Dict[str, Carpool] = {
 
 class Message(BaseModel):
     message: str
-
 @app.put("/carpool",
+         operation_id = "updatecarpool",
          summary="Update an existing carpool",
          # TODO description="",
          response_model=Carpool,
+         description="Carpool object that should be updated",
          status_code=status.HTTP_202_ACCEPTED,
          tags=["carpool"],
+         # TODO next to the status codes are "Links". There is nothing shown now.
+         # Either show something there, or hide the Links, or do nothing.
          responses={400: {"description": "Invalid"},
                     404: {"description": "Carpool not found"},
                     # TODO note that automatic validations against the schema
@@ -141,16 +144,17 @@ class Message(BaseModel):
 async def put_carpool(cp: Carpool):
 
     exists = carpools.get(cp.id) != None
-    
+
     if not exists:
         raise HTTPException(status_code=404, detail="Carpool not found")
 
     if cp.lastUpdated == None:
-        cp.lastUpdated = datetime.now()   
-       
+        cp.lastUpdated = datetime.now()
+
     carpools[cp.id] = cp
-    
+
     return cp
+
 
 
 @app.post("/carpool",
