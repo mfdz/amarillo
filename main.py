@@ -123,13 +123,21 @@ carpools: Dict[str, Carpool] = {
     cp1.id: cp1
 }
 
+class Message(BaseModel):
+    message: str
 
 @app.put("/carpool",
          summary="Update an existing carpool",
          # TODO description="",
          response_model=Carpool,
          status_code=status.HTTP_202_ACCEPTED,
-         tags=["carpool"])
+         tags=["carpool"],
+         responses={400: {"description": "Invalid"},
+                    404: {"description": "Carpool not found"},
+                    # TODO note that automatic validations against the schema
+                    # are returned with code 422, also shown in Swagger.
+                    # maybe 405 is not needed?
+                    405: {"description": "Validation exception"}})
 async def put_carpool(cp: Carpool):
 
     exists = carpools.get(cp.id) != None
