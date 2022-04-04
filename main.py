@@ -14,7 +14,7 @@ settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
 
 print("Hello Amarillo!")
 
-app = FastAPI(title="Amarillo",
+app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               description="""This service allows carpool agencies to publish their trip offers, so routing services may suggest them as trip options. For carpool offers, only the minimum required information (origin/destination, optionally intermediate stops, departure time and a deep link for booking/contacting the driver) needs to be published, booking/contact exchange is to be handled by the publishing agency.""",
               version="0.0.1",
               # TODO 404
@@ -189,7 +189,7 @@ async def delete_carpool(agencyId: str, carpoolId: str):
     
 @app.get("/")
 async def read_root():
-    return "Hello Amarillo!"
+    return { "msg": "Hello Amarillo!" }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
