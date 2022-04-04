@@ -1,11 +1,12 @@
 import uvicorn
-from datetime import date, datetime, time, timedelta
-from enum import Enum
-from fastapi import FastAPI, HTTPException, Query, status
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse, Response
-from typing import List, Dict, Set, Union, Optional
-from pydantic import ( BaseModel, BaseSettings, Field, HttpUrl, NegativeInt,
-                       PositiveInt, conint, conlist, constr )
+from typing import List, Dict
+from pydantic import (BaseModel, BaseSettings)
+
+from models.Carpool import Carpool
+from models.StopTime import StopTime
 from services.gtfs import gtfs_rt
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
@@ -46,34 +47,6 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               ],
               redoc_url=None
               )
-
-class Weekday(str, Enum):
-    monday = "monday"
-    tuesday = "tuesday"
-    wednesday = "wednesday"
-    thursday = "thursday"
-    friday = "friday"
-    saturday = "saturday"
-    sunday = "sunday"
-
-class StopTime(BaseModel):
-    id: str = None
-    name: str
-    arrivalTime: time = None
-    departureTime: time = None # in GTFS time can be >24:00
-    lat: float = Field(ge=-90, lt=90, multiple_of=1e-10) 
-    lon: float = Field(ge=-180, lt=180, multiple_of=1e-10) 
-    
-class Carpool(BaseModel):
-    id: str = Field(min_length=1, max_length=256, regex='^\\w*$') 
-    agency: str = Field(..., example="ride2go")
-    deeplink: HttpUrl 
-    stops: List[StopTime] = Field([], min_items=2, max_items=10,
-                                  description="""The first stop is the origin of the trip. The last stop is
-                                  the destination of the trip.""") 
-    departureTime: time 
-    departureDate: Union[date, Set[Weekday]] 
-    lastUpdated: Optional[datetime] = None
 
 stops0 = [StopTime(id="adsf", name="qwert", lat=45, lon=10), StopTime(id="sss", name="dd", lat=45, lon=10)]
 
