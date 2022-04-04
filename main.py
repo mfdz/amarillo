@@ -2,9 +2,11 @@ import uvicorn
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 from fastapi import FastAPI, HTTPException, Query, status
+from fastapi.responses import JSONResponse, Response
 from typing import List, Dict, Set, Union, Optional
 from pydantic import ( BaseModel, BaseSettings, Field, HttpUrl, NegativeInt,
                        PositiveInt, conint, conlist, constr )
+from services.gtfs import gtfs_rt
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
 class Settings(BaseSettings):
@@ -185,8 +187,16 @@ async def delete_carpool(agencyId: str, carpoolId: str):
     
     carpools[carpoolId] = None    
     return "TODO success "
-    
-    
+
+
+@app.get("/gtfs-rt")
+async def read_gtfs_rt(format: str = 'protobuf', tags=["gtfs"]):
+    data = gtfs_rt(carpools, format)
+    if "json" == format.lower():
+        return JSONResponse(content=data)
+    else:  
+        return Response(content=data, media_type="application/x-protobuf")
+
 @app.get("/")
 async def read_root():
     return "Hello Amarillo!"
