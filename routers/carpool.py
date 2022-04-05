@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, status
 from datetime import datetime
 from typing import Dict
 
 from models.Carpool import Carpool
+from tests.sampledata import examples
 
 carpools: Dict[str, Carpool] = {}
 
@@ -27,7 +28,10 @@ router = APIRouter(
                        # are returned with code 422, also shown in Swagger.
                        # maybe 405 is not needed?
                        405: {"description": "Validation exception"}})
-async def put_carpool(cp: Carpool):
+async def put_carpool(cp: Carpool = Body(
+    ...,
+    examples=examples,
+)):
     exists = carpools.get(cp.id) != None
 
     if not exists:
@@ -42,7 +46,10 @@ async def put_carpool(cp: Carpool):
 
 
 @router.post("/")
-async def post_carpool(cp: Carpool) -> Carpool:
+async def post_carpool(cp: Carpool = Body(
+    ...,
+    examples=examples,
+)) -> Carpool:
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()
 
