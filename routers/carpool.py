@@ -1,9 +1,13 @@
+import logging
+
 from fastapi import APIRouter, Body, HTTPException, status
 from datetime import datetime
 from typing import Dict
 
 from models.Carpool import Carpool
 from tests.sampledata import examples
+
+logger = logging.getLogger(__name__)
 
 carpools: Dict[str, Carpool] = {}
 
@@ -42,6 +46,8 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
 
     carpools[cp.id] = cp
 
+    print(f"Put trip {cp.id}.")
+
     return cp
 
 
@@ -75,6 +81,8 @@ async def post_carpool(cp: Carpool = Body(...,
 
     carpools[cp.id] = cp
 
+    print(f"Post trip {cp.id}.")
+
     return cp
 
 
@@ -102,6 +110,8 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Carpool with id {carpoolId} does not exist.")
+
+    print(f"Get trip {carpoolId}.")
 
     return carpools[carpoolId]
 
@@ -132,4 +142,7 @@ async def delete_carpool(agencyId: str, carpoolId: str):
             detail=f"Carpool with id {carpoolId} does not exist.")
 
     carpools[carpoolId] = None
+
+    print(f"Delete trip {carpoolId}.")
+
     return "deleted"
