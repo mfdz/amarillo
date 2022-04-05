@@ -1,14 +1,8 @@
 import uvicorn
-
+import routers.carpool, routers.gtfs_rt
 from fastapi import FastAPI, status
-from fastapi.responses import JSONResponse, Response
 from typing import List
 from pydantic import (BaseSettings)
-
-from models.Carpool import Carpool
-from models.StopTime import StopTime
-import routers.carpool
-from services.gtfs import gtfs_rt
 
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
@@ -64,14 +58,7 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               )
 
 app.include_router(routers.carpool.router)
-
-@app.get("/gtfs-rt")
-async def read_gtfs_rt(format: str = 'protobuf', tags=["gtfs"]):
-    data = gtfs_rt(carpools, format)
-    if "json" == format.lower():
-        return JSONResponse(content=data)
-    else:
-        return Response(content=data, media_type="application/x-protobuf")
+app.include_router(routers.gtfs_rt.router)
 
 
 @app.get("/")
