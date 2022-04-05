@@ -46,17 +46,34 @@ async def put_carpool(cp: Carpool = Body(
 
 
 @router.post("/")
-async def post_carpool(cp: Carpool = Body(
+async def post_carpool(cp: Carpool
+= Body(
     ...,
+    operation_id="addcarpool",
+    summary="Add a new carpool",
+    description="Carpool object to be created",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Carpool created"},
+        # TODO note that automatic validations against the schema
+        # are returned with code 422, also shown in Swagger.
+        # maybe 405 is not needed?
+        status.HTTP_405_METHOD_NOT_ALLOWED: {
+            "description": "Validation exception"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Carpool with this id exists already."}},
     examples=examples,
-)) -> Carpool:
+)
+) -> Carpool:
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()
 
     exists = carpools.get(cp.id) != None
 
     if exists:
-        raise "TODO carpool exist"
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Carpool with id {cp.id} exists already.")
 
     carpools[cp.id] = cp
 

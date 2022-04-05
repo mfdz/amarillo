@@ -37,11 +37,11 @@ carpool_repeating = Carpool(
 examples = {
     "one-time trip with date": {
         "summary": "one-time trip with date",
-        # "description": "todo",
+        "description": "carpool object that should to be added or modified",
         "value": carpool_1234},
     "repeating trip Mon-Fri": {
         "summary": "repeating trip Mon-Fri",
-        # "description": "todo",
+        "description": "carpool object that should to be added or modified",
         "value": carpool_repeating}
 }
 
