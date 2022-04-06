@@ -31,7 +31,7 @@ class Carpool(BaseModel):
         example="https://mfdz.de/trip/103361")
 
     stops: List[StopTime] = Field(
-        [],
+        ...,
         min_items=2,
         max_items=10,
         description="Stops which this carpool passes by and offers to pick "
