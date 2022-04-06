@@ -1,4 +1,6 @@
 import uvicorn
+from starlette.staticfiles import StaticFiles
+
 import routers.carpool, routers.gtfs_rt
 from fastapi import FastAPI, status
 from typing import List
@@ -6,6 +8,9 @@ from pydantic import (BaseSettings)
 
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
+from views import home
+
+
 class Settings(BaseSettings):
     agencies: List[str]
 
@@ -61,10 +66,16 @@ app.include_router(routers.carpool.router)
 app.include_router(routers.gtfs_rt.router)
 
 
-@app.get("/")
-async def read_root():
-    return {"msg": "Hello Amarillo!"}
+def configure():
+    configure_routing()
+
+def configure_routing():
+    app.mount('/static', StaticFiles(directory='static'), name='static')
+    app.include_router(home.router)
 
 
 if __name__ == "__main__":
+    configure()
     uvicorn.run(app, host="0.0.0.0", port=8000)
+else:
+    configure()
