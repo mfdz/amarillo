@@ -17,7 +17,7 @@ mock_trip_updated_added = {
         'time': time.mktime((2022,4,9,7,33,0,0,0,0)), 
         'uncertainty': 600
       }, 
-      'stopId': 'de:12073:900340108::2', 
+      'stopId': 'de:12073:900340108', 
       'scheduleRelationship': 'SCHEDULED'
     },
     { 
