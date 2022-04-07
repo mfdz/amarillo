@@ -1,21 +1,21 @@
 import uvicorn
 from starlette.staticfiles import StaticFiles
 
-import routers.carpool, routers.gtfs_rt
+from app.routers import carpool, gtfs_rt
 from fastapi import FastAPI, status
 from typing import List
 from pydantic import (BaseSettings)
 
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
-from views import home
+from app.views import home
 
 
 class Settings(BaseSettings):
     agencies: List[str]
 
 
-settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
+# settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
 
 print("Hello Amarillo!")
 
@@ -62,8 +62,8 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               redoc_url=None
               )
 
-app.include_router(routers.carpool.router)
-app.include_router(routers.gtfs_rt.router)
+app.include_router(carpool.router)
+app.include_router(gtfs_rt.router)
 
 
 def configure():

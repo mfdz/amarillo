@@ -2,10 +2,11 @@ import logging
 
 from fastapi import APIRouter, Body, HTTPException, status
 from datetime import datetime
-from typing import Dict
+from typing import Any, Dict, List
+from pydantic import Field
 
-from models.Carpool import Carpool
-from tests.sampledata import examples
+from app.models.Carpool import Carpool
+from app.tests.sampledata import examples
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
              operation_id="addcarpool",
              summary="Add a new carpool",
              description="Carpool object to be created",
+             response_model=Carpool,
              responses={
                  status.HTTP_200_OK: {
                      "description": "Carpool created"},

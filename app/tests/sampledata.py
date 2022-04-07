@@ -1,6 +1,4 @@
-from models.Carpool import Carpool
-from models.StopTime import StopTime
-from models.Weekday import Weekday
+from app.models.Carpool import Carpool, StopTime, Weekday
 
 # TODO use meanigful values for id and lat, lon
 stops_1234 = [
