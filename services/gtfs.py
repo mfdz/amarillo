@@ -14,7 +14,7 @@ def gtfs_rt(carpools, format='protobuf'):
 			'gtfsRealtimeVersion': '1.0', 
 			'timestamp': int(time.time())
 		}, 
-		'entity': [mocks.mock_trip_updated_added]
+		'entity': [mocks.mock_trip_updated_added, mocks.mock_trip_updated_deleted]
 	}
 	feed = gtfs_realtime_pb2.FeedMessage()
 	ParseDict(gtfsrt_dict, feed)
