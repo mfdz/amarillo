@@ -13,8 +13,12 @@ mock_trip_updated_added = {
     },
     'stopTimeUpdate': [{
       'stopSequence': 1, 
+      'arrival': {
+        'time': time.mktime((2022,4,9,7,33,0,0,0,0)),
+        'uncertainty': 600
+      },
       'departure': {
-        'time': time.mktime((2022,4,9,7,33,0,0,0,0)), 
+        'time': time.mktime((2022,4,9,7,33,0,0,0,0)),
         'uncertainty': 600
       }, 
       'stopId': 'de:12073:900340108', 
@@ -23,7 +27,11 @@ mock_trip_updated_added = {
     { 
       'stopSequence': 2, 
       'arrival': {
-        'time': time.mktime((2022,4,9,8,3,0,0,0,0)), 
+        'time': time.mktime((2022,4,9,8,3,0,0,0,0)),
+        'uncertainty': 600
+      }, 
+      'departure': {
+        'time': time.mktime((2022,4,9,8,3,0,0,0,0)),
         'uncertainty': 600
       }, 
       'stopId': 'mfdz:Ang001', 
