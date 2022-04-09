@@ -87,7 +87,6 @@ async def post_carpool(cp: Carpool = Body(...,
     return cp
 
 
-# TODO make use of agencyId
 @router.get("/{agencyId}/{carpoolId}",
             operation_id="getcarpoolById",
             summary="Find carpool by ID",
@@ -117,7 +116,6 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
     return carpools.get(agencyId, carpoolId)
 
 
-# TODO make use of agencyId
 @router.delete("/{agencyId}/{carpoolId}",
                operation_id="deletecarpool",
                summary="Deletes a carpool",
@@ -144,6 +142,6 @@ async def delete_carpool(agencyId: str, carpoolId: str):
 
     carpools.delete(agencyId, carpoolId)
 
-    print(f"Delete trip {   agencyId}:{carpoolId}.")
+    print(f"Delete trip {agencyId}:{carpoolId}.")
 
     return "deleted"
