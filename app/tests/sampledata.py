@@ -48,8 +48,8 @@ data1 = {
     'agency': "mfdz",
     'deeplink': "https://mfdz.de/trip/123",
     'stops': [
-        {'id': "de:12073:900340137::2", 'name': "abc", 'lat': 45, 'lon': 9},
-        {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 45, 'lon': 9}],
+        {'id': "mfdz:12073:001", 'name': "abc", 'lat': 53.11901, 'lon': 14.015776},
+        {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 53.011459, 'lon': 13.94945}],
     'departureTime': "15:00",
     'departureDate': "2022-03-30",
 }
