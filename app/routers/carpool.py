@@ -2,15 +2,14 @@ import logging
 
 from fastapi import APIRouter, Body, HTTPException, status
 from datetime import datetime
-from typing import Any, Dict, List
+
 from pydantic import Field
 
 from app.models.Carpool import Carpool
 from app.tests.sampledata import examples
+from app.services.carpools import carpools
 
 logger = logging.getLogger(__name__)
-
-carpools: Dict[str, Carpool] = {}
 
 router = APIRouter(
     prefix="/carpool",
@@ -45,7 +44,7 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()
 
-    carpools[cp.id] = cp
+    carpools.put(cp.id, cp)
 
     print(f"Put trip {cp.id}.")
 
@@ -81,7 +80,7 @@ async def post_carpool(cp: Carpool = Body(...,
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Carpool with id {cp.id} exists already.")
 
-    carpools[cp.id] = cp
+    carpools.put(cp.id, cp)
 
     print(f"Post trip {cp.id}.")
 
@@ -115,7 +114,7 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
 
     print(f"Get trip {carpoolId}.")
 
-    return carpools[carpoolId]
+    return carpools.get(carpoolId)
 
 
 # TODO make use of agencyId
@@ -143,7 +142,7 @@ async def delete_carpool(agencyId: str, carpoolId: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Carpool with id {carpoolId} does not exist.")
 
-    carpools[carpoolId] = None
+    carpools.delete(carpoolId)
 
     print(f"Delete trip {carpoolId}.")
 
