@@ -14,8 +14,7 @@ from app.views import home
 class Settings(BaseSettings):
     agencies: List[str]
 
-
-# settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
+settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
 
 print("Hello Amarillo!")
 
