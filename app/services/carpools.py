@@ -6,13 +6,13 @@ class CarpoolService():
 
 	carpools: Dict[str, Carpool] = {}
 
-	def get(self, carpool_id: str):
+	def get(self, agency_id: str, carpool_id: str):
 		return self.carpools.get(carpool_id)
 
-	def put(self, carpool_id: str, carpool):
+	def put(self, agency_id: str, carpool_id: str, carpool):
 		self.carpools[carpool_id] = carpool
 
-	def delete(self, carpool_id: str):
+	def delete(self, agency_id: str, carpool_id: str):
 		self.carpools[carpool_id] = None
 
 	def get_recent_deletions(self):
