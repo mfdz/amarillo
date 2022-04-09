@@ -25,7 +25,7 @@ class StopTime(BaseModel):
                     "the DHID which is available via the 'zentrales "
                     "Haltestellenverzeichnis (zHV)', published by DELFI e.V. "
                     "Note, that currently carpooling location.",
-        regex="^([a-zA-Z]{2,5}):\d+:\d+:\d*:\w+$",
+        regex=r"^([a-zA-Z]{2,5}):\d+:\d+(:\d*(:\w+)?)?$",
         example="de:12073:900340137::2")
 
     name: str = Field(
@@ -35,7 +35,7 @@ class StopTime(BaseModel):
         max_length=256,
         example="Angermünde, Breitscheidstr.")
 
-    departureTime: time = Field(
+    departureTime: str = Field(
         None,
         description="Departure time from a specific stop for a specific "
                     "carpool trip. For times occurring after midnight on the "
@@ -46,12 +46,11 @@ class StopTime(BaseModel):
                     "and departureTime. Note, that arrivalTime/departureTime of "
                     "the stops are not mandatory, and might then be estimated by "
                     "this service.",
-        # TODO see below
-        # regex="^[0-9][0-9]:[0-5][0-9](:[0-5][0-9])?$",
+        regex=r"^[0-9][0-9]:[0-5][0-9](:[0-5][0-9])?$",
         example="17:00"
     )
 
-    arrivalTime: time = Field(
+    arrivalTime: str = Field(
         None,
         description="Arrival time at a specific stop for a specific trip on a "
                     "carpool route. If there are not separate times for arrival "
@@ -62,13 +61,7 @@ class StopTime(BaseModel):
                     "begins. Note, that arrivalTime/departureTime of the stops "
                     "are not mandatory, and might then be estimated by this "
                     "service.",
-        # TODO the regexp will probably not work if the time is >24:00 because
-        # the type is time. Handle internal and external representation
-        # differently?
-        # Actually, when commented it, it causes this error:
-        # ValueError: On field "arrivalTime" the following field constraints are
-        # set but not enforced: regex.
-        # regex="^[0-9][0-9]:[0-5][0-9](:[0-5][0-9])?$",
+        regex=r"^[0-9][0-9]:[0-5][0-9](:[0-5][0-9])?$",
         example="18:00")
 
     lat: float = Field(
