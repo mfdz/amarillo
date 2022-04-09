@@ -5,6 +5,7 @@ from app.routers import carpool, gtfs_rt
 from fastapi import FastAPI, status
 from typing import List
 from pydantic import (BaseSettings)
+from app.services import stops
 
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
@@ -67,11 +68,22 @@ app.include_router(gtfs_rt.router)
 
 def configure():
     configure_routing()
+    configure_services()
 
 def configure_routing():
     app.mount('/static', StaticFiles(directory='static'), name='static')
     app.include_router(home.router)
 
+def configure_services():
+    # TODO move to prod settings
+    stop_sources = [ 
+    #    { "url": "https://data.mfdz.de/mfdz/stops/custom.csv", "vicinity": 50},
+    #    { "url": "https://data.mfdz.de/mfdz/stops/stops_zhv.csv", "vicinity": 50},
+    #    { "url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500}
+    ]
+    stop_store = stops.StopsStore()
+    for stops_source in stop_sources:
+        stop_store.register_stops(stops_source["url"], stops_source["vicinity"])
 
 if __name__ == "__main__":
     configure()
