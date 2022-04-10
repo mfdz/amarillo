@@ -3,15 +3,15 @@ from app.models.Carpool import Carpool, StopTime, Weekday
 # TODO use meanigful values for id and lat, lon
 stops_1234 = [
     StopTime(
-        id="de:12073:900340137::6",
+        id="de:08115:4802:0:3",
         name="Herrenberg",
-        lat=45,
-        lon=10),
+        lat=48.5948979,
+        lon=8.8684534),
     StopTime(
-        id="de:12073:900340137::7",
-        name="Stuttgart",
-        lat=45,
-        lon=10)]
+        id="de:08111:6221:3:6",
+        name="Stuttgart Feuersee",
+        lat= 48.7733275,
+        lon=9.1671590)]
 
 carpool_1234 = Carpool(
     id="1234",

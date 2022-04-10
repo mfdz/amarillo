@@ -1,5 +1,5 @@
 
-from app.models.Carpool import Carpool
+from app.models.Carpool import Carpool, Weekday
 from app.services.routing import RoutingService
 from shapely.geometry import Point, LineString
 from app.services.stops import stops_store
@@ -12,11 +12,20 @@ class Trip:
     stops= []
 
     def __init__(self, trip_id, url, calendar, departureTime, path, agency):
-        if isinstance(calendar, list):
+        if isinstance(calendar, set):
             self.runs_regularly = True
-            self.weekdays = [int(x in calendar.weekdays) for x in range(0,7)]
-            start_in_day = self.total_seconds(calendar.time)
-            self.starts = [weekday * 24 * 3600 + start_in_day for weekday in calendar.weekdays] 
+            self.weekdays = [ 
+                1 if Weekday.monday in calendar else 0,
+                1 if Weekday.tuesday in calendar else 0,
+                1 if Weekday.wednesday in calendar else 0,
+                1 if Weekday.thursday in calendar else 0,
+                1 if Weekday.friday in calendar else 0,
+                1 if Weekday.saturday in calendar else 0,
+                1 if Weekday.sunday in calendar else 0,
+            ]
+            start_in_day = self._total_seconds(departureTime)
+            # TODO
+            # self.starts = [weekday * 24 * 3600 + start_in_day for weekday in calendar.weekdays] 
         else:
             self.start = datetime.datetime.combine(calendar, departureTime)    
             self.runs_regularly = False
@@ -32,6 +41,9 @@ class Trip:
     def path_as_line_string(self):
         return LineString(self.path["points"]["coordinates"])
     
+    def _total_seconds(self, instant):
+        return instant.hour * 3600 + +instant.minute * 60 + instant.second
+
 class TripStore():
     trips = {}
 
