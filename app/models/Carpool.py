@@ -1,5 +1,5 @@
 from datetime import time, date, datetime
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, EmailStr
 from typing import List, Union, Set, Optional
 from datetime import time
 from pydantic import BaseModel, Field
@@ -87,6 +87,62 @@ class StopTime(BaseModel):
                        "'lon': 13.9934706687}"
         }
 
+class Agency(BaseModel):
+    id: str = Field(
+        description="ID of the agency.",
+        min_length=1,
+        max_length=20,
+        regex='^[a-zA-Z0-9]+$',
+        example="mfdz")
+
+    name: str = Field(
+        description="Name",
+        min_length=1,
+        max_length=48,
+        regex=r'^[\w -\.]+$',
+        example="MITFAHR|DE|ZENTRALE")
+
+    url: HttpUrl = Field(
+        description="URL of the carpool agency.",
+        example="https://mfdz.de/")
+
+    timezone: str = Field(
+        description="Timezone where the carpool agency is located.",
+        min_length=1,
+        max_length=48,
+        regex=r'^[\w/]+$',
+        example="Europe/Berlin")
+
+    lang: str = Field(
+        description="Primary language used by this carpool agency.",
+        min_length=1,
+        max_length=2,
+        regex=r'^[a-zA-Z_]+$',
+        example="de")
+
+    email: EmailStr = Field(
+        description="""Email address actively monitored by the agency’s 
+            customer service department. This email address should be a direct 
+            contact point where carpool riders can reach a customer service 
+            representative at the agency.""",
+        example="info@mfdz.de")
+
+    class Config:
+        schema_extra = {
+            "title": "Agency",
+            "description": "Carpool agency.",
+            "example":
+                """
+                {
+                  "id": "mfdz",
+                  "name": "MITFAHR|DE|ZENTRALE",
+                  "url": "http://mfdz.de",
+                  "timezone": "Europe/Berlin",
+                  "lang": "de",
+                  "email": ""info@mfdz.de""
+                }
+                """
+        }
 
 class Carpool(BaseModel):
     id: str = Field(
