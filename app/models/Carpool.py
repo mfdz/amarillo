@@ -220,6 +220,8 @@ class Carpool(BaseModel):
         example="2022-02-13T20:20:39+00:00")
 
     class Config:
+        title = "Carpool",
+        # description ...
         schema_extra = {
             "example":
                 """
