@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, Response
-from routers.carpool import carpools
-from services.gtfs import gtfs_rt
+from app.routers.carpool import carpools
+from app.services.gtfs import gtfs_rt
 
 router = APIRouter(
     prefix="/gtfs-rt",

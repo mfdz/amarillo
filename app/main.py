@@ -1,19 +1,19 @@
 import uvicorn
 from starlette.staticfiles import StaticFiles
 
-import routers.carpool, routers.gtfs_rt
+from app.routers import carpool, gtfs_rt
 from fastapi import FastAPI, status
 from typing import List
 from pydantic import BaseSettings
+from app.services import stops
 
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
-from views import home
+from app.views import home
 
 
 class Settings(BaseSettings):
     agencies: List[str]
-
 
 settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
 
@@ -62,17 +62,28 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               redoc_url=None
               )
 
-app.include_router(routers.carpool.router)
-app.include_router(routers.gtfs_rt.router)
+app.include_router(carpool.router)
+app.include_router(gtfs_rt.router)
 
 
 def configure():
     configure_routing()
+    configure_services()
 
 def configure_routing():
     app.mount('/static', StaticFiles(directory='static'), name='static')
     app.include_router(home.router)
 
+def configure_services():
+    # TODO move to prod settings
+    stop_sources = [ 
+    #    { "url": "https://data.mfdz.de/mfdz/stops/custom.csv", "vicinity": 50},
+    #    { "url": "https://data.mfdz.de/mfdz/stops/stops_zhv.csv", "vicinity": 50},
+    #    { "url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500}
+    ]
+    stop_store = stops.StopsStore()
+    for stops_source in stop_sources:
+        stop_store.register_stops(stops_source["url"], stops_source["vicinity"])
 
 if __name__ == "__main__":
     configure()

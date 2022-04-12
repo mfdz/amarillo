@@ -1,6 +1,4 @@
-from models.Carpool import Carpool
-from models.StopTime import StopTime
-from models.Weekday import Weekday
+from app.models.Carpool import Carpool, StopTime, Weekday
 
 # TODO use meanigful values for id and lat, lon
 stops_1234 = [
@@ -47,8 +45,8 @@ examples = {
 
 data1 = {
     'id': "Eins",
-    'agency': "ride2go",
-    'deeplink': "https://ride2go.com/trip/123",
+    'agency': "mfdz",
+    'deeplink': "https://mfdz.de/trip/123",
     'stops': [
         {'id': "de:12073:900340137::2", 'name': "abc", 'lat': 45, 'lon': 9},
         {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 45, 'lon': 9}],

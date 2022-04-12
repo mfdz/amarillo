@@ -1,4 +1,5 @@
 fastapi[all]
+geopandas
 uvicorn[standard]
 pydantic[dotenv]
 protobuf
