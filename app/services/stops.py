@@ -93,7 +93,7 @@ class StopsStore():
     
     def _convert_to_dataframe(self, stops):
         return gpd.GeoDataFrame([[stop.name, stop.lon, stop.lat,
-            None, Point(self.projection(stop.lon, stop.lat))] for stop in stops], columns = ['stop_name','x','y','id','geometry'])
+            stop.id, Point(self.projection(stop.lon, stop.lat))] for stop in stops], columns = ['stop_name','x','y','id','geometry'])
          
     def _sort_by_distance(self, stops, transformedLine):
         stops['distance']=stops.apply(lambda row: transformedLine.project(row['geometry']), axis=1)
