@@ -4,7 +4,7 @@ from starlette.staticfiles import StaticFiles
 import routers.carpool, routers.gtfs_rt
 from fastapi import FastAPI, status
 from typing import List
-from pydantic import (BaseSettings)
+from pydantic import BaseSettings
 
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
