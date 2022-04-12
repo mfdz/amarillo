@@ -13,4 +13,11 @@ Create a virtual environment `python3 -m venv venv`.
 
 Activate the environment and install the dependencies `pip install -r requirements.txt`.
 
-Run `uvicorn main:app --reload`.
+Run `uvicorn app.main:app`. 
+
+In development use `--reload`. In production use `--host 0.0.0.
+0 --port 8000`.
+
+## Testing
+
+In the top directory, run `pytest app/tests`.
