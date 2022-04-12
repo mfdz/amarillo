@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto2',
   serialized_options=b'\n\007de.mfdz',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x18realtime_extension.proto\x12\x10transit_realtime\x1a\x13gtfs-realtime.proto\"/\n\x1bMfdzTripDescriptorExtension\x12\x10\n\x08trip_url\x18\x01 \x01(\t:i\n\x0ftrip_descriptor\x12 .transit_realtime.TripDescriptor\x18\xa8\x46 \x01(\x0b\x32-.transit_realtime.MfdzTripDescriptorExtensionB\t\n\x07\x64\x65.mfdz'
+  serialized_pb=b'\n\x18realtime_extension.proto\x12\x10transit_realtime\x1a\x13gtfs-realtime.proto\"p\n\x1bMfdzTripDescriptorExtension\x12\x11\n\troute_url\x18\x01 \x01(\t\x12\x11\n\tagency_id\x18\x02 \x01(\t\x12\x17\n\x0froute_long_name\x18\x03 \x01(\t\x12\x12\n\nroute_type\x18\x04 \x01(\r:i\n\x0ftrip_descriptor\x12 .transit_realtime.TripDescriptor\x18\xa8\x46 \x01(\x0b\x32-.transit_realtime.MfdzTripDescriptorExtensionB\t\n\x07\x64\x65.mfdz'
   ,
   dependencies=[gtfs__realtime__pb2.DESCRIPTOR,])
 
@@ -44,9 +44,30 @@ _MFDZTRIPDESCRIPTOREXTENSION = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='trip_url', full_name='transit_realtime.MfdzTripDescriptorExtension.trip_url', index=0,
+      name='route_url', full_name='transit_realtime.MfdzTripDescriptorExtension.route_url', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='agency_id', full_name='transit_realtime.MfdzTripDescriptorExtension.agency_id', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='route_long_name', full_name='transit_realtime.MfdzTripDescriptorExtension.route_long_name', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='route_type', full_name='transit_realtime.MfdzTripDescriptorExtension.route_type', index=3,
+      number=4, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -63,7 +84,7 @@ _MFDZTRIPDESCRIPTOREXTENSION = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=67,
-  serialized_end=114,
+  serialized_end=179,
 )
 
 DESCRIPTOR.message_types_by_name['MfdzTripDescriptorExtension'] = _MFDZTRIPDESCRIPTOREXTENSION

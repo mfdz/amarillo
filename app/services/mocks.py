@@ -1,15 +1,18 @@
 import time
 
 mock_trip_updated_added = {
-  'id': 'carpool-update-123', 
+  'id': 'mifaz:carpool-update-123', 
   'tripUpdate': {
     'trip': {
-      'tripId': 'carpool-update-123', 
+      'tripId': 'mifaz:carpool-update-123', 
       'startTime': '07:33:00',
       'startDate': '20220409', 
       'scheduleRelationship': 'ADDED', 
-      'routeId': 'carpool-update-123',
-      '[transit_realtime.trip_descriptor]': { 'tripUrl' : 'http://myurl'}
+      'routeId': 'mifaz:carpool-update-123',
+      '[transit_realtime.trip_descriptor]': { 
+        'routeUrl' : 'http://myurl',
+        'agencyId' : 'mifaz',
+        'route_long_name' : 'Angermünde nach Biesenbrow'}
     },
     'stopTimeUpdate': [{
       'stopSequence': 1, 

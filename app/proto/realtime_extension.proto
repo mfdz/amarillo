@@ -6,7 +6,10 @@ option java_package = "de.mfdz";
 package transit_realtime;
 
 message MfdzTripDescriptorExtension {
-  optional string trip_url = 1;
+  optional string route_url = 1;
+  optional string agency_id = 2;
+  optional string route_long_name = 3;
+  optional uint32 route_type = 4;
 }
 
 extend TripDescriptor {
