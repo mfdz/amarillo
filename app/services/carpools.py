@@ -16,7 +16,7 @@ class CarpoolService():
 
 	def delete(self, agency_id: str, carpool_id: str):
 		id = f"{agency_id}:{carpool_id}"
-		self.carpools[id] = None
+		del self.carpools[id]
 		trip_store.delete_carpool(id)
 	
 carpools = CarpoolService()

@@ -35,7 +35,7 @@ class Trip:
         self.path = path
         self.duration = datetime.timedelta(milliseconds=path["time"])     
         self.trip_id = trip_id
-        self.url = trip_id
+        self.url = url
         self.agency = agency
 
     def path_as_line_string(self):
@@ -45,14 +45,23 @@ class Trip:
         return instant.hour * 3600 + +instant.minute * 60 + instant.second
 
 class TripStore():
+    """
+    TripStore maintains the currently valid trips. A trip is a
+    carpool offer enhanced with all stops this 
+
+    Attributes:
+        trips           Dict of currently valid trips.
+        deleted_trips   Dict of recently deleted trips.
+    """
     trips = {}
+    deleted_trips = {}
 
     def __init__(self):
         self.router = RoutingService()
 
     def put_carpool(self, carpool: Carpool):
         """
-            Adds carpool to the TripStore.
+        Adds carpool to the TripStore.
         """
         id = "{}:{}".format(carpool.agency, carpool.id)
         try: 
@@ -67,8 +76,10 @@ class TripStore():
         """
             Deletes carpool from the TripStore.
         """
-        # TODO get the trip and figure out all trips to delete
-        self.trips[agencyScopedCarpoolId] = None
+        trip_to_be_deleted = self.trips[agencyScopedCarpoolId]
+        if trip_to_be_deleted:
+            self.deleted_trips[agencyScopedCarpoolId] = trip_to_be_deleted
+        del self.trips[agencyScopedCarpoolId]
         logger.debug("Deleted trip %s", id)
 
     def _transform_to_trip(self, carpool):
