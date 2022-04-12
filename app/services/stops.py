@@ -98,6 +98,3 @@ class StopsStore():
     def _sort_by_distance(self, stops, transformedLine):
         stops['distance']=stops.apply(lambda row: transformedLine.project(row['geometry']), axis=1)
         stops.sort_values('distance', inplace=True)
-
-# TODO use depency injection instead
-stops_store = StopsStore()

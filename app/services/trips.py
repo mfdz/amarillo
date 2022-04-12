@@ -2,7 +2,6 @@
 from app.models.Carpool import Carpool, Weekday
 from app.services.routing import RoutingService
 from shapely.geometry import Point, LineString
-from app.services.stops import stops_store
 import datetime
 import logging
 
@@ -56,8 +55,9 @@ class TripStore():
     trips = {}
     deleted_trips = {}
 
-    def __init__(self):
+    def __init__(self, stops_store):
         self.router = RoutingService()
+        self.stops_store = stops_store
 
     def put_carpool(self, carpool: Carpool):
         """
@@ -89,7 +89,7 @@ class TripStore():
             raise RuntimeError ('No route found.')
 
         trip = Trip(id, carpool.deeplink, carpool.departureDate, carpool.departureTime, path, carpool.agency)
-        virtual_stops = stops_store.find_additional_stops_around(trip.path_as_line_string(), carpool.stops) 
+        virtual_stops = self.stops_store.find_additional_stops_around(trip.path_as_line_string(), carpool.stops) 
         if not virtual_stops.empty:
             virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
             logger.debug("Virtual stops found: {}".format(virtual_stops))
@@ -130,5 +130,3 @@ class TripStore():
                 stop_times.append(cumulated_time)
         return stop_times
 
-# TOOD use dependency injection
-trip_store = TripStore()
