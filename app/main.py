@@ -4,7 +4,7 @@ from starlette.staticfiles import StaticFiles
 from app.routers import carpool, gtfs_rt
 from fastapi import FastAPI, status
 from typing import List
-from pydantic import (BaseSettings)
+from pydantic import BaseSettings
 from app.services import stops
 
 
@@ -13,7 +13,7 @@ from app.views import home
 
 
 class Settings(BaseSettings):
-    agencies: List[str]
+    agencies: List[str] = []
 
 settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
 
