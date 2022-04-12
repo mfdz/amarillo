@@ -25,7 +25,13 @@ mock_trip_updated_added = {
         'uncertainty': 600
       }, 
       'stopId': 'de:12073:900340108', 
-      'scheduleRelationship': 'SCHEDULED'
+      'scheduleRelationship': 'SCHEDULED',
+      'stop_time_properties': {
+        '[transit_realtime.stop_time_properties]': {
+          'dropoffType': 'NONE',
+          'pickupType': 'COORDINATE_WITH_DRIVER'
+        }
+      }
     },
     { 
       'stopSequence': 2, 
@@ -38,7 +44,13 @@ mock_trip_updated_added = {
         'uncertainty': 600
       }, 
       'stopId': 'mfdz:Ang001', 
-      'scheduleRelationship': 'SCHEDULED'
+      'scheduleRelationship': 'SCHEDULED',
+      'stop_time_properties': {
+        '[transit_realtime.stop_time_properties]': {
+          'dropoffType': 'COORDINATE_WITH_DRIVER',
+          'pickupType': 'NONE'
+        }
+      }
     }]
   }
 }

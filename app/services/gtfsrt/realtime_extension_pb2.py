@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto2',
   serialized_options=b'\n\007de.mfdz',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x18realtime_extension.proto\x12\x10transit_realtime\x1a\x13gtfs-realtime.proto\"p\n\x1bMfdzTripDescriptorExtension\x12\x11\n\troute_url\x18\x01 \x01(\t\x12\x11\n\tagency_id\x18\x02 \x01(\t\x12\x17\n\x0froute_long_name\x18\x03 \x01(\t\x12\x12\n\nroute_type\x18\x04 \x01(\r:i\n\x0ftrip_descriptor\x12 .transit_realtime.TripDescriptor\x18\xa8\x46 \x01(\x0b\x32-.transit_realtime.MfdzTripDescriptorExtensionB\t\n\x07\x64\x65.mfdz'
+  serialized_pb=b'\n\x18realtime_extension.proto\x12\x10transit_realtime\x1a\x13gtfs-realtime.proto\"p\n\x1bMfdzTripDescriptorExtension\x12\x11\n\troute_url\x18\x01 \x01(\t\x12\x11\n\tagency_id\x18\x02 \x01(\t\x12\x17\n\x0froute_long_name\x18\x03 \x01(\t\x12\x12\n\nroute_type\x18\x04 \x01(\r\"\xb0\x02\n\x1fMfdzStopTimePropertiesExtension\x12X\n\x0bpickup_type\x18\x01 \x01(\x0e\x32\x43.transit_realtime.MfdzStopTimePropertiesExtension.DropOffPickupType\x12Y\n\x0c\x64ropoff_type\x18\x02 \x01(\x0e\x32\x43.transit_realtime.MfdzStopTimePropertiesExtension.DropOffPickupType\"X\n\x11\x44ropOffPickupType\x12\x0b\n\x07REGULAR\x10\x00\x12\x08\n\x04NONE\x10\x01\x12\x10\n\x0cPHONE_AGENCY\x10\x02\x12\x1a\n\x16\x43OORDINATE_WITH_DRIVER\x10\x03:i\n\x0ftrip_descriptor\x12 .transit_realtime.TripDescriptor\x18\xa8\x46 \x01(\x0b\x32-.transit_realtime.MfdzTripDescriptorExtension:\x90\x01\n\x14stop_time_properties\x12>.transit_realtime.TripUpdate.StopTimeUpdate.StopTimeProperties\x18\xa8\x46 \x01(\x0b\x32\x31.transit_realtime.MfdzStopTimePropertiesExtensionB\t\n\x07\x64\x65.mfdz'
   ,
   dependencies=[gtfs__realtime__pb2.DESCRIPTOR,])
 
@@ -33,6 +33,49 @@ trip_descriptor = _descriptor.FieldDescriptor(
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
   serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key)
+STOP_TIME_PROPERTIES_FIELD_NUMBER = 9000
+stop_time_properties = _descriptor.FieldDescriptor(
+  name='stop_time_properties', full_name='transit_realtime.stop_time_properties', index=1,
+  number=9000, type=11, cpp_type=10, label=1,
+  has_default_value=False, default_value=None,
+  message_type=None, enum_type=None, containing_type=None,
+  is_extension=True, extension_scope=None,
+  serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key)
+
+_MFDZSTOPTIMEPROPERTIESEXTENSION_DROPOFFPICKUPTYPE = _descriptor.EnumDescriptor(
+  name='DropOffPickupType',
+  full_name='transit_realtime.MfdzStopTimePropertiesExtension.DropOffPickupType',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='REGULAR', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='NONE', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='PHONE_AGENCY', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='COORDINATE_WITH_DRIVER', index=3, number=3,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=398,
+  serialized_end=486,
+)
+_sym_db.RegisterEnumDescriptor(_MFDZSTOPTIMEPROPERTIESEXTENSION_DROPOFFPICKUPTYPE)
 
 
 _MFDZTRIPDESCRIPTOREXTENSION = _descriptor.Descriptor(
@@ -87,8 +130,53 @@ _MFDZTRIPDESCRIPTOREXTENSION = _descriptor.Descriptor(
   serialized_end=179,
 )
 
+
+_MFDZSTOPTIMEPROPERTIESEXTENSION = _descriptor.Descriptor(
+  name='MfdzStopTimePropertiesExtension',
+  full_name='transit_realtime.MfdzStopTimePropertiesExtension',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='pickup_type', full_name='transit_realtime.MfdzStopTimePropertiesExtension.pickup_type', index=0,
+      number=1, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='dropoff_type', full_name='transit_realtime.MfdzStopTimePropertiesExtension.dropoff_type', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _MFDZSTOPTIMEPROPERTIESEXTENSION_DROPOFFPICKUPTYPE,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=182,
+  serialized_end=486,
+)
+
+_MFDZSTOPTIMEPROPERTIESEXTENSION.fields_by_name['pickup_type'].enum_type = _MFDZSTOPTIMEPROPERTIESEXTENSION_DROPOFFPICKUPTYPE
+_MFDZSTOPTIMEPROPERTIESEXTENSION.fields_by_name['dropoff_type'].enum_type = _MFDZSTOPTIMEPROPERTIESEXTENSION_DROPOFFPICKUPTYPE
+_MFDZSTOPTIMEPROPERTIESEXTENSION_DROPOFFPICKUPTYPE.containing_type = _MFDZSTOPTIMEPROPERTIESEXTENSION
 DESCRIPTOR.message_types_by_name['MfdzTripDescriptorExtension'] = _MFDZTRIPDESCRIPTOREXTENSION
+DESCRIPTOR.message_types_by_name['MfdzStopTimePropertiesExtension'] = _MFDZSTOPTIMEPROPERTIESEXTENSION
 DESCRIPTOR.extensions_by_name['trip_descriptor'] = trip_descriptor
+DESCRIPTOR.extensions_by_name['stop_time_properties'] = stop_time_properties
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 MfdzTripDescriptorExtension = _reflection.GeneratedProtocolMessageType('MfdzTripDescriptorExtension', (_message.Message,), {
@@ -98,8 +186,17 @@ MfdzTripDescriptorExtension = _reflection.GeneratedProtocolMessageType('MfdzTrip
   })
 _sym_db.RegisterMessage(MfdzTripDescriptorExtension)
 
+MfdzStopTimePropertiesExtension = _reflection.GeneratedProtocolMessageType('MfdzStopTimePropertiesExtension', (_message.Message,), {
+  'DESCRIPTOR' : _MFDZSTOPTIMEPROPERTIESEXTENSION,
+  '__module__' : 'realtime_extension_pb2'
+  # @@protoc_insertion_point(class_scope:transit_realtime.MfdzStopTimePropertiesExtension)
+  })
+_sym_db.RegisterMessage(MfdzStopTimePropertiesExtension)
+
 trip_descriptor.message_type = _MFDZTRIPDESCRIPTOREXTENSION
 gtfs__realtime__pb2.TripDescriptor.RegisterExtension(trip_descriptor)
+stop_time_properties.message_type = _MFDZSTOPTIMEPROPERTIESEXTENSION
+gtfs__realtime__pb2.TripUpdate.StopTimeUpdate.StopTimeProperties.RegisterExtension(stop_time_properties)
 
 DESCRIPTOR._options = None
 # @@protoc_insertion_point(module_scope)
