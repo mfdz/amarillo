@@ -1,10 +1,11 @@
 from datetime import time, date, datetime
 from pydantic import BaseModel, Field, HttpUrl, EmailStr
-from typing import List, Union, Set, Optional
+from typing import List, Union, Set, Optional, Tuple
 from datetime import time
 from pydantic import BaseModel, Field
 from enum import Enum
 
+NumType = Union[float, int]
 
 class Weekday(str, Enum):
     monday = "monday"
@@ -86,6 +87,18 @@ class StopTime(BaseModel):
                        "'Angermünde, Breitscheidstr.', 'lat': 53.0137311391, "
                        "'lon': 13.9934706687}"
         }
+
+class Region(BaseModel):
+    id: str = Field(
+        description="ID of the agency.",
+        min_length=1,
+        max_length=20,
+        regex='^[a-zA-Z0-9]+$',
+        example="bb")
+    
+    bbox: Tuple[NumType, NumType, NumType, NumType] = Field(
+        description="ID of the agency.",
+        example=[10.5,49.2,11.3,51.3])
 
 class Agency(BaseModel):
     id: str = Field(
