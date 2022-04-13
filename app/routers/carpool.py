@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, status
 from datetime import datetime
@@ -8,6 +9,7 @@ from pydantic import Field
 from app.models.Carpool import Carpool
 from app.tests.sampledata import examples
 from app.services.carpools import carpools
+from app.services.importing.ride2go import import_ride2go
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +87,29 @@ async def post_carpool(cp: Carpool = Body(...,
     print(f"Post trip {cp.agency}:{cp.id}.")
 
     return cp
+
+
+@router.get("/import",
+            include_in_schema=False,
+            status_code=status.HTTP_200_OK,
+            responses={
+                status.HTTP_500_INTERNAL_SERVER_ERROR:
+                    {"description": "Import error"},
+            },
+            )
+# TODO pass in agencyId: str
+async def import_() -> List[Carpool]:
+    try:
+        ride2go_carpools = import_ride2go()
+
+        [carpools.put(cp.agency, cp.id, cp) for cp in ride2go_carpools]
+
+        return ride2go_carpools
+
+    except BaseException as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Something went wrong during importing from ride2go. {e}")
 
 
 @router.get("/{agencyId}/{carpoolId}",
