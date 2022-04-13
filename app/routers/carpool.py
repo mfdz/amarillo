@@ -7,7 +7,7 @@ from pydantic import Field
 
 from app.models.Carpool import Carpool
 from app.tests.sampledata import examples
-from app.services.carpools import carpools
+from app.utils.container import container
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ router = APIRouter(
             )
 async def put_carpool(cp: Carpool = Body(..., examples=examples)
                       ) -> Carpool:
-    exists = carpools.get(cp.agency, cp.id) != None
+    exists = container['carpools'].get(cp.agency, cp.id) != None
 
     if not exists:
         raise HTTPException(
@@ -73,7 +73,7 @@ async def post_carpool(cp: Carpool = Body(...,
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()
 
-    exists = carpools.get(cp.agency, cp.id) != None
+    exists = container['carpools'].get(cp.agency, cp.id) != None
 
     if exists:
         raise HTTPException(
@@ -104,7 +104,7 @@ async def post_carpool(cp: Carpool = Body(...,
             },
             )
 async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
-    exists = carpools.get(agencyId, carpoolId) != None
+    exists = container['carpools'].get(agencyId, carpoolId) != None
 
     if not exists:
         raise HTTPException(
@@ -113,7 +113,7 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
 
     print(f"Get trip {agencyId}:{carpoolId}.")
 
-    return carpools.get(agencyId, carpoolId)
+    return container['carpools'].get(agencyId, carpoolId)
 
 
 @router.delete("/{agencyId}/{carpoolId}",
@@ -133,14 +133,14 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
                },
                )
 async def delete_carpool(agencyId: str, carpoolId: str):
-    exists = carpools.get(agencyId, carpoolId) != None
+    exists = container['carpools'].get(agencyId, carpoolId) != None
 
     if not exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Carpool with id {carpoolId} does not exist.")
 
-    carpools.delete(agencyId, carpoolId)
+    container['carpools'].delete(agencyId, carpoolId)
 
     print(f"Delete trip {agencyId}:{carpoolId}.")
 

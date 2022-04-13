@@ -6,6 +6,10 @@ from fastapi import FastAPI, status
 from typing import List
 from pydantic import BaseSettings
 from app.services import stops
+from app.services import trips
+from app.services.carpools import CarpoolService
+
+from app.utils.container import container
 
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
@@ -67,8 +71,9 @@ app.include_router(gtfs_rt.router)
 
 
 def configure():
-    configure_routing()
     configure_services()
+    configure_routing()
+    
 
 def configure_routing():
     app.mount('/static', StaticFiles(directory='static'), name='static')
@@ -84,6 +89,9 @@ def configure_services():
     stop_store = stops.StopsStore()
     for stops_source in stop_sources:
         stop_store.register_stops(stops_source["url"], stops_source["vicinity"])
+    container['stops_store'] = stop_store
+    container['trips_store'] = trips.TripStore(stop_store)
+    container['carpools'] = CarpoolService(container['trips_store'])
 
 if __name__ == "__main__":
     configure()
