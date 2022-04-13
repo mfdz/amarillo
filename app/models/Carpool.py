@@ -16,7 +16,6 @@ class Weekday(str, Enum):
     saturday = "saturday"
     sunday = "sunday"
 
-
 class StopTime(BaseModel):
     id: str = Field(
         None,
@@ -70,7 +69,6 @@ class StopTime(BaseModel):
                     "where a passenger may mount/dismount the vehicle.",
         ge=-90,
         lt=90,
-        multiple_of=1e-10,
         example="53.0137311391")
 
     lon: float = Field(
@@ -78,7 +76,6 @@ class StopTime(BaseModel):
                     "where a passenger may mount/dismount the vehicle.",
         ge=-180,
         lt=180,
-        multiple_of=1e-10,
         example="13.9934706687")
 
     class Config:

@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, status
 from datetime import datetime
@@ -8,6 +9,7 @@ from pydantic import Field
 from app.models.Carpool import Carpool
 from app.tests.sampledata import examples
 from app.utils.container import container
+from app.services.importing.ride2go import import_ride2go
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,6 @@ router = APIRouter(
     prefix="/carpool",
     tags=["carpool"]
 )
-
 
 @router.put("/",
             operation_id="updatecarpool",
@@ -49,7 +50,6 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
     print(f"Put trip {cp.agency}:{cp.id}.")
 
     return cp
-
 
 @router.post("/",
              operation_id="addcarpool",
@@ -87,6 +87,30 @@ async def post_carpool(cp: Carpool = Body(...,
     return cp
 
 
+@router.get("/import",
+            include_in_schema=False,
+            status_code=status.HTTP_200_OK,
+            responses={
+                status.HTTP_500_INTERNAL_SERVER_ERROR:
+                    {"description": "Import error"},
+            },
+            )
+# TODO pass in agencyId: str
+async def import_() -> List[Carpool]:
+    carpools = container["carpools"]
+    try:
+        ride2go_carpools = import_ride2go()
+
+        [carpools.put(cp.agency, cp.id, cp) for cp in ride2go_carpools]
+
+        return ride2go_carpools
+
+    except BaseException as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Something went wrong during importing from ride2go. {e}")
+
+
 @router.get("/{agencyId}/{carpoolId}",
             operation_id="getcarpoolById",
             summary="Find carpool by ID",
@@ -109,7 +133,7 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
     if not exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Carpool with id {carpoolId} does not exist.")
+            detail=f"Carpool with agency {agencyId} and id {carpoolId} does not exist.")
 
     print(f"Get trip {agencyId}:{carpoolId}.")
 
@@ -132,6 +156,7 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
                    # 405: {"description": "Validation exception"}
                },
                )
+
 async def delete_carpool(agencyId: str, carpoolId: str):
     exists = container['carpools'].get(agencyId, carpoolId) != None
 

@@ -2,6 +2,7 @@ fastapi[all]
 geopandas
 uvicorn[standard]
 pydantic[dotenv]
+pydantic_collections
 protobuf
 rtree
 schedule

@@ -22,5 +22,3 @@ class CarpoolService():
 		id = f"{agency_id}:{carpool_id}"
 		del self.carpools[id]
 		self.trip_store.delete_carpool(id)
-
-
