@@ -1,4 +1,4 @@
-
+from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
 from app.models.Carpool import Carpool, Weekday
 from app.services.routing import RoutingService
 from shapely.geometry import Point, LineString
@@ -8,7 +8,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Trip:
-    stops= []
+
+    NO_BIKES_ALLOWED = 2
+    RIDESHARING_ROUTE_TYPE = 1700
+    CALENDAR_DATES_EXCEPTION_TYPE_ADDED = 1
+    CALENDAR_DATES_EXCEPTION_TYPE_REMOVED = 2
+    STOP_TIMES_STOP_TYPE_REGULARLY = 0
+    STOP_TIMES_STOP_TYPE_NONE = 1
+    STOP_TIMES_STOP_TYPE_PHONE_AGENCY = 2
+    STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER = 3
+    STOP_TIMES_TIMEPOINT_APPROXIMATE = 0 
+    STOP_TIMES_TIMEPOINT_EXACT = 1 
 
     def __init__(self, trip_id, url, calendar, departureTime, path, agency):
         if isinstance(calendar, set):
@@ -36,12 +46,68 @@ class Trip:
         self.trip_id = trip_id
         self.url = url
         self.agency = agency
+        self.stops = []
 
     def path_as_line_string(self):
         return LineString(self.path["points"]["coordinates"])
     
     def _total_seconds(self, instant):
         return instant.hour * 3600 + +instant.minute * 60 + instant.second
+
+    def start_time_str(self):
+        return self.start_time.strftime("%H:%M:%S")
+
+    def next_trip_dates(self, start_date, day_count=14):
+        if self.runs_regularly:
+            for single_date in (start_date + datetime.timedelta(n) for n in range(day_count)):
+                if self.weekdays[single_date.weekday()]==1:
+                    yield single_date.strftime("%Y%m%d")
+        else:
+            yield self.start.strftime("%Y%m%d")
+
+    def route_long_name(self):
+        return self.stops.iloc(0)[0]["stop_name"] + " nach " + self.stops.tail(1).iloc(0)[0]["stop_name"]
+
+    def stops_and_stop_times(self):
+        # Assumptions: 
+        # arrival_time = departure_time
+        # pickup_type, drop_off_type for origin: = coordinate/none
+        # pickup_type, drop_off_type for destination: = none/coordinate
+        # timepoint = approximate for origin and destination (not sure what consequences this might have for trip planners)
+        number_of_stops = len(self.stops.index)
+        total_distance = self.stops.iloc[number_of_stops-1]["distance"]
+        
+        first_stop_time = GtfsTimeDelta(hours = self.start_time.hour, minutes = self.start_time.minute, seconds = self.start_time.second) 
+        stop_times = []
+        for i in range(0, number_of_stops):
+            current_stop = self.stops.iloc[i]
+            if i == 0:
+                if (self.stops.iloc[1].time-current_stop.time) < 1000:
+                    # skip custom stop if there is an official stop very close by
+                    logger.debug("Skipped stop {}", current_stop)
+                    continue
+            else:
+                if (current_stop.time-self.stops.iloc[i-1].time) < 5000:
+                    # skip latter stop if it's very close (<5 seconds drive) by the preceding
+                    logger.debug("Skipped stop {}", current_stop)
+                    continue
+            
+            trip_time = datetime.timedelta(milliseconds=int(current_stop.time))
+            is_dropoff = self._is_dropoff_stop(current_stop, total_distance)
+            is_pickup = self._is_pickup_stop(current_stop, total_distance)
+            # TODO would be nice if possible to publish a minimum shared distance 
+            pickup_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_pickup else self.STOP_TIMES_STOP_TYPE_NONE
+            dropoff_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_dropoff else self.STOP_TIMES_STOP_TYPE_NONE
+            
+            next_stop_time = first_stop_time + trip_time
+
+            yield i+1, GtfsStopTime(self.trip_id, str(next_stop_time), str(next_stop_time), current_stop.id, i+1, pickup_type, dropoff_type, self.STOP_TIMES_TIMEPOINT_APPROXIMATE)
+    
+    def _is_dropoff_stop(self, current_stop, total_distance):
+        return current_stop["distance"] >= 0.5 * total_distance
+        
+    def _is_pickup_stop(self, current_stop, total_distance):
+        return current_stop["distance"] < 0.5 * total_distance
 
 class TripStore():
     """
@@ -54,6 +120,7 @@ class TripStore():
     """
     trips = {}
     deleted_trips = {}
+    recent_trips = {}
 
     def __init__(self, stops_store):
         self.router = RoutingService()
@@ -67,6 +134,7 @@ class TripStore():
         try: 
             trip = self._transform_to_trip(carpool)
             self.trips[id] = trip
+            self.recent_trips[id] = trip
             logger.debug("Added trip %s", id)
             return trip
         except Exception as err:
@@ -76,10 +144,14 @@ class TripStore():
         """
             Deletes carpool from the TripStore.
         """
-        trip_to_be_deleted = self.trips[agencyScopedCarpoolId]
+        trip_to_be_deleted = self.trips.get(agencyScopedCarpoolId)
         if trip_to_be_deleted:
             self.deleted_trips[agencyScopedCarpoolId] = trip_to_be_deleted
-        del self.trips[agencyScopedCarpoolId]
+            del self.trips[agencyScopedCarpoolId]
+        
+        if self.recent_trips.get(agencyScopedCarpoolId):
+            del self.recent_trips[agencyScopedCarpoolId]
+
         logger.debug("Deleted trip %s", id)
 
     def _transform_to_trip(self, carpool):
@@ -88,7 +160,7 @@ class TripStore():
         if not path.get("time"):
             raise RuntimeError ('No route found.')
 
-        trip = Trip(id, carpool.deeplink, carpool.departureDate, carpool.departureTime, path, carpool.agency)
+        trip = Trip(f"{carpool.agency}:{carpool.id}", str(carpool.deeplink), carpool.departureDate, carpool.departureTime, path, carpool.agency)
         virtual_stops = self.stops_store.find_additional_stops_around(trip.path_as_line_string(), carpool.stops) 
         if not virtual_stops.empty:
             virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])

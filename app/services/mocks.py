@@ -1,8 +1,7 @@
 import time
 
-mock_trip_updated_added = {
-  'id': 'mifaz:carpool-update-123', 
-  'tripUpdate': {
+
+mock_added = {
     'trip': {
       'tripId': 'mifaz:carpool-update-123', 
       'startTime': '07:33:00',
@@ -53,7 +52,12 @@ mock_trip_updated_added = {
       }
     }]
   }
+
+mock_trip_updated_added = {
+  'id': 'mifaz:carpool-update-123', 
+  'tripUpdate': mock_added
 }
+
 
 mock_trip_updated_deleted = {
   'id': 'carpool-update-124', 

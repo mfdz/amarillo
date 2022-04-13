@@ -51,8 +51,20 @@ data1 = {
         {'id': "mfdz:12073:001", 'name': "abc", 'lat': 53.11901, 'lon': 14.015776},
         {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 53.011459, 'lon': 13.94945}],
     'departureTime': "15:00",
-    'departureDate': "2022-03-30",
+    'departureDate': "2022-05-30",
 }
+
+carpool_repeating_json = {
+    'id': "Eins",
+    'agency': "mfdz",
+    'deeplink': "https://mfdz.de/trip/123",
+    'stops': [
+        {'id': "mfdz:12073:001", 'name': "abc", 'lat': 53.11901, 'lon': 14.015776},
+        {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 53.011459, 'lon': 13.94945}],
+    'departureTime': "15:00",
+    'departureDate': ["monday"],
+}
+
 
 cp1 = Carpool(**data1)
 
