@@ -5,6 +5,10 @@ from app.tests.sampledata import carpool_1234, data1
 client = TestClient(app)
 
 
+def test_doc():
+    response = client.get("/openapi.json")
+    assert response.status_code == 200
+    
 def test_get_mfdz_0():
     response = client.get("/carpool/mfdz/0")
     assert response.status_code == 404

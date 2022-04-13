@@ -233,9 +233,9 @@ class Carpool(BaseModel):
         example="2022-02-13T20:20:39+00:00")
 
     class Config:
-        title = "Carpool",
-        # description ...
         schema_extra = {
+            "title": "Carpool",   
+            # description ...
             "example":
                 """
                 {
@@ -257,4 +257,4 @@ class Carpool(BaseModel):
                   "lastUpdated": "2022-03-30 12:34"
                 }
                 """
-        }
+            }
