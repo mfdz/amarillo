@@ -10,7 +10,7 @@ import requests
 from io import TextIOWrapper
 import codecs
 
-class StopsStore:
+class StopsStore():
     stopsDataFrames = []
 
     def __init__(self, internal_projection = "EPSG:32632"):
@@ -48,7 +48,6 @@ class StopsStore:
         if not stops.empty:
             self._sort_by_distance(stops, transformedLine)
         return stops
-
 
     def _normalize_stop_name(self, stop_name):
         default_name = 'P+R-Parkplatz'
@@ -93,10 +92,9 @@ class StopsStore:
         return exact_matches
     
     def _convert_to_dataframe(self, stops):
-        return gpd.GeoDataFrame([[stop.address, stop.latlng.lng, stop.latlng.lat,
-            None, Point(self.projection(stop.latlng.lng, stop.latlng.lat))] for stop in stops], columns = ['stop_name','x','y','id','geometry'])
+        return gpd.GeoDataFrame([[stop.name, stop.lon, stop.lat,
+            stop.id, Point(self.projection(stop.lon, stop.lat))] for stop in stops], columns = ['stop_name','x','y','id','geometry'])
          
     def _sort_by_distance(self, stops, transformedLine):
         stops['distance']=stops.apply(lambda row: transformedLine.project(row['geometry']), axis=1)
         stops.sort_values('distance', inplace=True)
-

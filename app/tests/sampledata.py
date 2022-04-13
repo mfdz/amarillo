@@ -3,15 +3,15 @@ from app.models.Carpool import Carpool, StopTime, Weekday
 # TODO use meanigful values for id and lat, lon
 stops_1234 = [
     StopTime(
-        id="de:12073:900340137::6",
+        id="de:08115:4802:0:3",
         name="Herrenberg",
-        lat=45,
-        lon=10),
+        lat=48.5948979,
+        lon=8.8684534),
     StopTime(
-        id="de:12073:900340137::7",
-        name="Stuttgart",
-        lat=45,
-        lon=10)]
+        id="de:08111:6221:3:6",
+        name="Stuttgart Feuersee",
+        lat= 48.7733275,
+        lon=9.1671590)]
 
 carpool_1234 = Carpool(
     id="1234",
@@ -48,11 +48,23 @@ data1 = {
     'agency': "mfdz",
     'deeplink': "https://mfdz.de/trip/123",
     'stops': [
-        {'id': "de:12073:900340137::2", 'name': "abc", 'lat': 45, 'lon': 9},
-        {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 45, 'lon': 9}],
+        {'id': "mfdz:12073:001", 'name': "abc", 'lat': 53.11901, 'lon': 14.015776},
+        {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 53.011459, 'lon': 13.94945}],
     'departureTime': "15:00",
-    'departureDate': "2022-03-30",
+    'departureDate': "2022-05-30",
 }
+
+carpool_repeating_json = {
+    'id': "Eins",
+    'agency': "mfdz",
+    'deeplink': "https://mfdz.de/trip/123",
+    'stops': [
+        {'id': "mfdz:12073:001", 'name': "abc", 'lat': 53.11901, 'lon': 14.015776},
+        {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 53.011459, 'lon': 13.94945}],
+    'departureTime': "15:00",
+    'departureDate': ["monday"],
+}
+
 
 cp1 = Carpool(**data1)
 

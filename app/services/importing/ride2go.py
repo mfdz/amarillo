@@ -3,7 +3,6 @@ from typing import List
 import requests
 from pydantic_collections import BaseCollectionModel
 from app.models.Carpool import Carpool, StopTime
-from app.services.carpools import carpools
 from app.services.secrets import secrets
 import json
 import re

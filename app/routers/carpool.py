@@ -8,7 +8,7 @@ from pydantic import Field
 
 from app.models.Carpool import Carpool
 from app.tests.sampledata import examples
-from app.services.carpools import carpools
+from app.utils.container import container
 from app.services.importing.ride2go import import_ride2go
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ router = APIRouter(
     prefix="/carpool",
     tags=["carpool"]
 )
-
 
 @router.put("/",
             operation_id="updatecarpool",
@@ -36,7 +35,7 @@ router = APIRouter(
             )
 async def put_carpool(cp: Carpool = Body(..., examples=examples)
                       ) -> Carpool:
-    exists = carpools.get(cp.agency, cp.id) != None
+    exists = container['carpools'].get(cp.agency, cp.id) != None
 
     if not exists:
         raise HTTPException(
@@ -46,12 +45,11 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()
 
-    carpools.put(cp.agency, cp.id, cp)
+    container['carpools'].put(cp.agency, cp.id, cp)
 
     print(f"Put trip {cp.agency}:{cp.id}.")
 
     return cp
-
 
 @router.post("/",
              operation_id="addcarpool",
@@ -75,14 +73,14 @@ async def post_carpool(cp: Carpool = Body(...,
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()
 
-    exists = carpools.get(cp.agency, cp.id) != None
+    exists = container['carpools'].get(cp.agency, cp.id) != None
 
     if exists:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Carpool with id {cp.id} exists already.")
 
-    carpools.put(cp.agency, cp.id, cp)
+    container['carpools'].put(cp.agency, cp.id, cp)
 
     print(f"Post trip {cp.agency}:{cp.id}.")
 
@@ -99,6 +97,7 @@ async def post_carpool(cp: Carpool = Body(...,
             )
 # TODO pass in agencyId: str
 async def import_() -> List[Carpool]:
+    carpools = container["carpools"]
     try:
         ride2go_carpools = import_ride2go()
 
@@ -129,7 +128,7 @@ async def import_() -> List[Carpool]:
             },
             )
 async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
-    exists = carpools.get(agencyId, carpoolId) != None
+    exists = container['carpools'].get(agencyId, carpoolId) != None
 
     if not exists:
         raise HTTPException(
@@ -138,7 +137,7 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
 
     print(f"Get trip {agencyId}:{carpoolId}.")
 
-    return carpools.get(agencyId, carpoolId)
+    return container['carpools'].get(agencyId, carpoolId)
 
 
 @router.delete("/{agencyId}/{carpoolId}",
@@ -157,15 +156,16 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
                    # 405: {"description": "Validation exception"}
                },
                )
+
 async def delete_carpool(agencyId: str, carpoolId: str):
-    exists = carpools.get(agencyId, carpoolId) != None
+    exists = container['carpools'].get(agencyId, carpoolId) != None
 
     if not exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Carpool with id {carpoolId} does not exist.")
 
-    carpools.delete(agencyId, carpoolId)
+    container['carpools'].delete(agencyId, carpoolId)
 
     print(f"Delete trip {agencyId}:{carpoolId}.")
 

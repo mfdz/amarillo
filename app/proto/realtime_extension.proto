@@ -6,9 +6,35 @@ option java_package = "de.mfdz";
 package transit_realtime;
 
 message MfdzTripDescriptorExtension {
-  optional string trip_url = 1;
+  optional string route_url = 1;
+  optional string agency_id = 2;
+  optional string route_long_name = 3;
+  optional uint32 route_type = 4;
 }
 
 extend TripDescriptor {
   optional MfdzTripDescriptorExtension trip_descriptor = 9000;
+}
+
+message MfdzStopTimePropertiesExtension {
+  enum DropOffPickupType {
+    // Regularly scheduled pickup/dropoff. 
+    REGULAR = 0;
+
+    // No pickup/dropoff available
+    NONE = 1;
+
+    // Must phone agency to arrange pickup/dropoff.
+    PHONE_AGENCY = 2;
+
+    // Must coordinate with driver to arrange pickup/dropoff.
+    COORDINATE_WITH_DRIVER = 3;
+  }
+  
+  optional DropOffPickupType pickup_type = 1;
+  optional DropOffPickupType dropoff_type = 2;
+}
+
+extend TripUpdate.StopTimeUpdate.StopTimeProperties {
+  optional MfdzStopTimePropertiesExtension stop_time_properties = 9000;
 }

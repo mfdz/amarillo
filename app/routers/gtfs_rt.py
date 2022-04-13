@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, Response
-from app.routers.carpool import carpools
 from app.services.gtfs import gtfs_rt
+from app.utils.container import container
 
 router = APIRouter(
     prefix="/gtfs-rt",
@@ -24,7 +24,7 @@ router = APIRouter(
             description="Returns a GTFS-RT feed including all trip updates since "
                         "yesterday's midnight.")
 async def read_gtfs_rt(format: str = 'protobuf'):
-    data = gtfs_rt(carpools, format)
+    data = gtfs_rt(container['carpools'], format)
     if "json" == format.lower():
         return JSONResponse(content=data)
     else:
