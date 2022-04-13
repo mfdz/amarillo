@@ -7,10 +7,9 @@ from app.services.stops import StopsStore
 
 class CarpoolService():
 
-	carpools: Dict[str, Carpool] = {}
-
 	def __init__(self, trip_store):
 		self.trip_store = trip_store
+		self.carpools: Dict[str, Carpool] = {}
 
 	def get(self, agency_id: str, carpool_id: str):
 		return self.carpools.get(f"{agency_id}:{carpool_id}")
