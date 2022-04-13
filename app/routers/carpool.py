@@ -109,7 +109,7 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
     if not exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Carpool with id {carpoolId} does not exist.")
+            detail=f"Carpool with agency {agencyId} and id {carpoolId} does not exist.")
 
     print(f"Get trip {agencyId}:{carpoolId}.")
 
