@@ -3,8 +3,8 @@ from starlette.staticfiles import StaticFiles
 
 from app.routers import carpool, gtfs_rt
 from fastapi import FastAPI, status
-from typing import List
-from pydantic import BaseSettings
+from typing import List, Dict
+from pydantic import BaseSettings, Field
 from app.services import stops
 
 
@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     agencies: List[str] = []
 
 settings = Settings(_env_file='prod.env', _env_file_encoding='utf-8')
+
+# Example: secrets = { "mfdz": "some secret" }
+class Secrets(BaseSettings):
+    secrets: Dict[str, str] = Field({})
+
+# read if file exists, otherwise no error
+secrets = Secrets(_env_file='secrets', _env_file_encoding='utf-8')
 
 print("Hello Amarillo!")
 
