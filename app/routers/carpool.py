@@ -44,7 +44,7 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
     if cp.lastUpdated == None:
         cp.lastUpdated = datetime.now()
 
-    carpools.put(cp.agency, cp.id, cp)
+    container['carpools'].put(cp.agency, cp.id, cp)
 
     print(f"Put trip {cp.agency}:{cp.id}.")
 
@@ -80,7 +80,7 @@ async def post_carpool(cp: Carpool = Body(...,
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Carpool with id {cp.id} exists already.")
 
-    carpools.put(cp.agency, cp.id, cp)
+    container['carpools'].put(cp.agency, cp.id, cp)
 
     print(f"Post trip {cp.agency}:{cp.id}.")
 
