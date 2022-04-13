@@ -1,12 +1,11 @@
 import app.services.gtfsrt.gtfs_realtime_pb2 as gtfs_realtime_pb2
 import app.services.gtfsrt.realtime_extension_pb2 as mfdzrte
+from app.utils.container import container
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.json_format import ParseDict
+from datetime import datetime, timedelta
 import time
-from datetime import datetime
-# TODO only temporarilly 
-import app.services.mocks as mocks
-from app.utils.container import container
+import re
 
 class GtfsRtProducer():
 
@@ -69,8 +68,13 @@ class GtfsRtProducer():
 		} for trip_date in trip.next_trip_dates(fromdate)]
 
 	def _to_seconds(self, fromdate, stop_time):
-		tt = datetime.strptime(f'{fromdate}-{stop_time}', '%Y%m%d-%H:%M:%S').timetuple()
-		return time.mktime(tt)
+		startdate = datetime.strptime(fromdate, '%Y%m%d')
+		m = re.search(r'(\d+):(\d+):(\d+)', stop_time)
+		delta = timedelta(
+			hours=int(m.group(1)),
+			minutes=int(m.group(2)),
+			seconds=int(m.group(3)))
+		return time.mktime((startdate + delta).timetuple())
 	
 	def _to_stop_times(self, trip, fromdate):
 		return [{

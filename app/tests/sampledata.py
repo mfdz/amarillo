@@ -50,7 +50,7 @@ data1 = {
     'stops': [
         {'id': "mfdz:12073:001", 'name': "abc", 'lat': 53.11901, 'lon': 14.015776},
         {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 53.011459, 'lon': 13.94945}],
-    'departureTime': "15:00",
+    'departureTime': "23:59",
     'departureDate': "2022-05-30",
 }
 

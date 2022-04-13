@@ -36,7 +36,7 @@ class TestTripConverter:
         assert json == [{
             'trip': {
               'tripId': 'mfdz:Eins', 
-              'startTime': '15:00:00',
+              'startTime': '23:59:00',
               'startDate': '20220530', 
               'scheduleRelationship': 'CANCELED', 
               'routeId': 'mfdz:Eins'
@@ -53,7 +53,7 @@ class TestTripConverter:
         assert json == [{
             'trip': {
               'tripId': 'mfdz:Eins', 
-              'startTime': '15:00:00',
+              'startTime': '23:59:00',
               'startDate': '20220530', 
               'scheduleRelationship': 'ADDED', 
               'routeId': 'mfdz:Eins',
@@ -65,11 +65,11 @@ class TestTripConverter:
             'stopTimeUpdate': [{
                   'stopSequence': 1, 
                   'arrival': {
-                    'time': time.mktime(datetime(2022,5,30,15,0,0).timetuple()),
+                    'time': time.mktime(datetime(2022,5,30,23,59,0).timetuple()),
                     'uncertainty': 600
                   },
                   'departure': {
-                    'time': time.mktime(datetime(2022,5,30,15,0,0).timetuple()),
+                    'time': time.mktime(datetime(2022,5,30,23,59,0).timetuple()),
                     'uncertainty': 600
                   }, 
                   'stopId': 'mfdz:12073:001', 
@@ -84,11 +84,11 @@ class TestTripConverter:
                 { 
                   'stopSequence': 2, 
                   'arrival': {
-                    'time': time.mktime(datetime(2022,5,30,15,17,45,0).timetuple()),
+                    'time': time.mktime(datetime(2022,5,31,0,16,45,0).timetuple()),
                     'uncertainty': 600
                   }, 
                   'departure': {
-                    'time': time.mktime(datetime(2022,5,30,15,17,45,0).timetuple()),
+                    'time': time.mktime(datetime(2022,5,31,0,16,45,0).timetuple()),
                     'uncertainty': 600
                   }, 
 
