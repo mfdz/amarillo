@@ -71,6 +71,7 @@ def configure():
 
 def configure_routing():
     app.mount('/static', StaticFiles(directory='static'), name='static')
+    app.mount('/gtfs', StaticFiles(directory='gtfs'), name='gtfs')
     app.include_router(home.router)
 
 
