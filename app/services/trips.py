@@ -20,7 +20,7 @@ class Trip:
     STOP_TIMES_TIMEPOINT_APPROXIMATE = 0 
     STOP_TIMES_TIMEPOINT_EXACT = 1 
 
-    def __init__(self, trip_id, url, calendar, departureTime, path, agency):
+    def __init__(self, trip_id, url, calendar, departureTime, path, agency, lastUpdated):
         if isinstance(calendar, set):
             self.runs_regularly = True
             self.weekdays = [ 
@@ -47,6 +47,7 @@ class Trip:
         self.url = url
         self.agency = agency
         self.stops = []
+        self.lastUpdated = lastUpdated
 
     def path_as_line_string(self):
         return LineString(self.path["points"]["coordinates"])
@@ -178,7 +179,7 @@ class TripStore():
         if not path.get("time"):
             raise RuntimeError ('No route found.')
 
-        trip = Trip(f"{carpool.agency}:{carpool.id}", str(carpool.deeplink), carpool.departureDate, carpool.departureTime, path, carpool.agency)
+        trip = Trip(f"{carpool.agency}:{carpool.id}", str(carpool.deeplink), carpool.departureDate, carpool.departureTime, path, carpool.agency, carpool.lastUpdated)
         virtual_stops = self.stops_store.find_additional_stops_around(trip.path_as_line_string(), carpool.stops) 
         if not virtual_stops.empty:
             virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
