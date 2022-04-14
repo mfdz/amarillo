@@ -4,9 +4,12 @@ from datetime import datetime, timedelta
 from zipfile import ZipFile
 import csv
 import gettext
+import logging
 import re
 import os
 from app.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
+
+logger = logging.getLogger(__name__)
 
 class GtfsExport:
     NO_BIKES_ALLOWED = 2
@@ -113,8 +116,8 @@ class GtfsExport:
         
             return match + appendix
         except Exception as ex:
-            print("error for "+destination )
-            print(ex)
+            logger.error("error for "+destination )
+            logger.exception(ex)
             return destination
    
     def _create_route(self, route_id, trip): 
