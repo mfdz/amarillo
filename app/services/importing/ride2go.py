@@ -25,7 +25,8 @@ def as_Carpool(dict) -> Carpool:
                       deeplink=dict['deeplink'],
                       stops=[as_StopTime(s) for s in dict.get('stops')],
                       departureTime=dict.get('departTime'),
-                      departureDate=dict.get('departDate') if dict.get('departDate') else dict.get('weekdays'))
+                      departureDate=dict.get('departDate') if dict.get('departDate') else dict.get('weekdays'),
+                      lastUpdated=dict.get('lastUpdated'))
 
     return carpool
 
