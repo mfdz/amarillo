@@ -27,7 +27,7 @@ def generate_gtfs_rt():
 	# TODO re-link to minimize
 
 def start_schedule():
-	schedule.every().day.at("10:30").do(generate_gtfs)
+	schedule.every().day.at("08:35").do(generate_gtfs)
 	# schedule.every(30).seconds.do(generate_gtfs_rt)
 	job_thread = threading.Thread(target=run_schedule, daemon=True)
 	job_thread.start()
