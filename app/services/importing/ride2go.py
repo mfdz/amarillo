@@ -27,9 +27,9 @@ def as_Carpool(dict) -> Carpool:
 
     return carpool
 
-
 def import_ride2go() -> List[Carpool]:
-    ride2go_query_data = '{ "southWestCoordinates": { "lat": 47.5432, "lon": 9.7366 }, "northEastCoordinates": { "lat": 50.541, "lon": 13.228 }, "lastModifiedSinceDays": 180 }'
+    # TODO for now. we use braandenburg bounding box, the region filtering should be done on export
+    ride2go_query_data = '{ "southWestCoordinates": { "lat": 51.36, "lon": 11.26 }, "northEastCoordinates": { "lat": 53.56, "lon": 14.77 }, "lastModifiedSinceDays": 180 }'
 
     ride2go_url = "https://ride2go.com/api/v1/trips/export"
 
