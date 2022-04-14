@@ -17,6 +17,7 @@ regions = [
 ]
 # TODO access agencies defined via model
 agencies = [ 
+	GtfsAgency('ride2go', 'ride2go', 'http://www.ride2go.de', 'Europe/Berlin', 'de', 'info@ride2go.com'),
 	GtfsAgency('fg', 'Fahrgemeinschaft.de', 'http://www.fahrgemeinschaft.de', 'Europe/Berlin', 'de', 'hilfe@adac-mitfahrclub.de'),
 	GtfsAgency('mifaz', 'mifaz.de', 'http://www.mifaz.de', 'Europe/Berlin', 'de', 'info@mifaz.de'),
 ]
