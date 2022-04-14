@@ -1,33 +1,57 @@
+from app.models.Carpool import Region
 from app.services.gtfs_export import GtfsExport, GtfsFeedInfo, GtfsAgency
+from app.services.gtfs import GtfsRtProducer
+from app.utils.container import container
 import schedule
 import threading
 import time
+import logging
 
+logger = logging.getLogger(__name__)
+
+regions = [
+	Region(**{'id': 'bb', 'bbox': [11.26, 51.36, 14.77, 53.56]}),
+	Region(**{'id': 'bw', 'bbox': [49.79,  7.51, 47.54, 10.5]}),
+	Region(**{'id': 'by', 'bbox': [50.56,  8.97, 47.28, 13.86]}),
+	Region(**{'id': 'nrw', 'bbox': [52.53,  5.86, 50.33, 9.45]})
+]
+# TODO access agencies defined via model
+agencies = [ 
+	GtfsAgency('fg', 'Fahrgemeinschaft.de', 'http://www.fahrgemeinschaft.de', 'Europe/Berlin', 'de', 'hilfe@adac-mitfahrclub.de'),
+	GtfsAgency('mifaz', 'mifaz.de', 'http://www.mifaz.de', 'Europe/Berlin', 'de', 'info@mifaz.de'),
+]
 def run_schedule():
 	while 1:
-		schedule.run_pending()
+		try:
+			schedule.run_pending()
+		except Exception as e:
+			logger.exception(e)
 		time.sleep(1)
 
 def generate_gtfs():
-	print("Generate GTFS")
-	# TODO access agencies defined via model
-	agencies = [ 
-		GtfsAgency('fg', 'Fahrgemeinschaft.de', 'http://www.fahrgemeinschaft.de', 'Europe/Berlin', 'de', 'hilfe@adac-mitfahrclub.de'),
-		GtfsAgency('mifaz', 'mifaz.de', 'http://www.mifaz.de', 'Europe/Berlin', 'de', 'info@mifaz.de'),
-	]
-	feed_info = GtfsFeedInfo('mfdz', 'MITFAHR|DE|ZENTRALE', 'http://www.mitfahrdezentrale.de', 'de', 1)
-	exporter = GtfsExport(agencies, feed_info, trip_store, stop_store)
-	# TODO generate region specific feed
-	exporter.export("gtfs/mfdz.gtfs.zip", "target/")
+	logger.info("Generate GTFS")
+
+	for region in regions:
+		feed_info = GtfsFeedInfo('mfdz', 'MITFAHR|DE|ZENTRALE', 'http://www.mitfahrdezentrale.de', 'de', 1)
+		exporter = GtfsExport(
+			agencies, 
+			feed_info, 
+			container['trips_store'], 
+			container['stops_store'], 
+			region.bbox)
+		exporter.export(f"gtfs/mfdz.{region.id}.gtfs.zip", "target/")
 
 def generate_gtfs_rt():
-	print("Generate GTFS-RT")
-	rt = GtfsRtProducer().generate_feed(time.time())
-	# TODO write out pbf
-	# TODO re-link to minimize
+	logger.info("Generate GTFS-RT")
+	# TODO generate temp file and re-link to afterwards
+	for region in regions:
+		rt = GtfsRtProducer().generate_feed(time.time(), format='protobuff', bbox=region.bbox)
+		with open(f"gtfs/mfdz.{region.id}.gtfsrt.pbf", "wb") as f:
+			f.write(rt)
 
 def start_schedule():
-	schedule.every().day.at("08:35").do(generate_gtfs)
-	# schedule.every(30).seconds.do(generate_gtfs_rt)
+	#schedule.every().day.at("08:35").do(generate_gtfs)
+	schedule.every(1).minutes.do(generate_gtfs)
+	schedule.every(60).seconds.do(generate_gtfs_rt)
 	job_thread = threading.Thread(target=run_schedule, daemon=True)
 	job_thread.start()

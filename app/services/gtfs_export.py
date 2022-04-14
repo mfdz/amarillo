@@ -26,7 +26,7 @@ class GtfsExport:
 
     stored_stops = {}
     
-    def __init__(self, agencies, feed_info, ridestore, stopstore):
+    def __init__(self, agencies, feed_info, ridestore, stopstore, bbox = None):
         self.stops = {}
         self.routes = []
         self.calendar_dates = []
@@ -41,6 +41,7 @@ class GtfsExport:
         self.localized_short_name = "Mitfahrgelegenheit"
         self.stopstore = stopstore
         self.ridestore = ridestore
+        self.bbox = bbox
             
     def export(self, gtfszip_filename, gtfsfolder):
         self._assert_folder_exists(gtfsfolder)

@@ -12,7 +12,7 @@ class GtfsRtProducer():
 	def __init__(self):
 		pass
 
-	def generate_feed(self, time, format='protobuf'):
+	def generate_feed(self, time, format='protobuf', bbox=None):
 		# See https://developers.google.com/transit/gtfs-realtime/reference
 		# https://github.com/mfdz/carpool-gtfs-rt/blob/master/src/main/java/de/mfdz/resource/CarpoolResource.java
 		gtfsrt_dict = {
@@ -33,8 +33,7 @@ class GtfsRtProducer():
 	def _get_trip_updates(self):
 		trips = []
 		trips.extend(self._get_added())
-		trips.extend(self._get_deleted())		
-		print(trips)
+		trips.extend(self._get_deleted())
 		trip_updates = []
 		for num, trip in enumerate(trips):
    			trip_updates.append( {

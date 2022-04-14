@@ -133,3 +133,5 @@ setup.ipynb
 *~
 /.idea/
 secrets
+gtfs/*.zip
+gtfs/*.pbf
