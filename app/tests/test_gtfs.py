@@ -60,7 +60,9 @@ class TestTripConverter:
               '[transit_realtime.trip_descriptor]': { 
                 'routeUrl' : 'https://mfdz.de/trip/123',
                 'agencyId' : 'mfdz',
-                'route_long_name' : 'abc nach xyz'}
+                'route_long_name' : 'abc nach xyz',
+                'route_type': 1700
+                }
             },
             'stopTimeUpdate': [{
                   'stopSequence': 1, 

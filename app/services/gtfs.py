@@ -108,7 +108,8 @@ class GtfsRtProducer():
 		      '[transit_realtime.trip_descriptor]': { 
 					'routeUrl' : trip.url,
 				    'agencyId' : trip.agency,
-				    'route_long_name' : trip.route_long_name()
+				    'route_long_name' : trip.route_long_name(),
+				    'route_type': 1700
 			    	}
 		    },
 		    'stopTimeUpdate': self._to_stop_times(trip, trip_date)
