@@ -1,4 +1,5 @@
 import uvicorn
+import mimetypes
 from starlette.staticfiles import StaticFiles
 
 from app.routers import carpool, gtfs_rt
@@ -70,6 +71,7 @@ def configure():
 
 
 def configure_routing():
+    mimetypes.add_type('application/x-protobuf','.pbf')
     app.mount('/static', StaticFiles(directory='static'), name='static')
     app.mount('/gtfs', StaticFiles(directory='gtfs'), name='gtfs')
     app.include_router(home.router)
