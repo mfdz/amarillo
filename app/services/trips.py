@@ -79,9 +79,12 @@ class Trip:
         
         first_stop_time = GtfsTimeDelta(hours = self.start_time.hour, minutes = self.start_time.minute, seconds = self.start_time.second) 
         stop_times = []
+        seq_nr = 0
         for i in range(0, number_of_stops):
             current_stop = self.stops.iloc[i]
-            if i == 0:
+            if not current_stop.id:
+                continue
+            elif i == 0:
                 if (self.stops.iloc[1].time-current_stop.time) < 1000:
                     # skip custom stop if there is an official stop very close by
                     logger.debug("Skipped stop {}", current_stop)
@@ -100,8 +103,8 @@ class Trip:
             dropoff_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_dropoff else self.STOP_TIMES_STOP_TYPE_NONE
             
             next_stop_time = first_stop_time + trip_time
-
-            yield i+1, GtfsStopTime(self.trip_id, str(next_stop_time), str(next_stop_time), current_stop.id, i+1, pickup_type, dropoff_type, self.STOP_TIMES_TIMEPOINT_APPROXIMATE)
+            seq_nr += 1
+            yield seq_nr, GtfsStopTime(self.trip_id, str(next_stop_time), str(next_stop_time), current_stop.id, seq_nr, pickup_type, dropoff_type, self.STOP_TIMES_TIMEPOINT_APPROXIMATE)
     
     def _is_dropoff_stop(self, current_stop, total_distance):
         return current_stop["distance"] >= 0.5 * total_distance
