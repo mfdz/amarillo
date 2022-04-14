@@ -9,6 +9,9 @@ import re
 import requests
 from io import TextIOWrapper
 import codecs
+import logging
+
+logger = logging.getLogger(__name__)
 
 class StopsStore():
     stopsDataFrames = []
@@ -22,6 +25,7 @@ class StopsStore():
         E.g. bus stops should be registered with a distance of e.g. 30m,
         while larger carpool parkings might be registered with e.g. 500m
         """
+        logger.info("Load stops from %s", source)
         if source.startswith('http'):
             with requests.get(source) as csv_source:
                 stopsDataFrame = self._load_stops(codecs.iterdecode(csv_source.iter_lines(), 'utf-8'))
@@ -66,7 +70,6 @@ class StopsStore():
         columns = ['stop_id', 'stop_lat', 'stop_lon', 'stop_name']
         lists = [id, lat, lon, stop_name]
         for row in reader:
-            print(row)
             for col, lst in zip(columns, lists):
                 if col == "stop_lat" or col == "stop_lon":
                     lst.append(float(row[col].replace(",",".")))
