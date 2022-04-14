@@ -6,6 +6,7 @@ import schedule
 import threading
 import time
 import logging
+from datetime import date, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,11 @@ def run_schedule():
 			logger.exception(e)
 		time.sleep(1)
 
+def midnight():
+	yesterday = date.today()-timedelta(days=1)
+	container['trips_store'].purge_trips_older_than(yesterday)
+	generate_gtfs()
+
 def generate_gtfs():
 	logger.info("Generate GTFS")
 
@@ -51,8 +57,8 @@ def generate_gtfs_rt():
 			f.write(rt)
 
 def start_schedule():
-	#schedule.every().day.at("08:35").do(generate_gtfs)
-	schedule.every(1).minutes.do(generate_gtfs)
+	schedule.every().day.at("00:00").do(midnight)
+	#schedule.every(10).seconds.do(midnight)
 	schedule.every(60).seconds.do(generate_gtfs_rt)
 	job_thread = threading.Thread(target=run_schedule, daemon=True)
 	job_thread.start()

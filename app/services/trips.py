@@ -2,7 +2,7 @@ from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
 from app.models.Carpool import Carpool, Weekday
 from app.services.routing import RoutingService
 from shapely.geometry import Point, LineString
-import datetime
+from datetime import datetime, timedelta, date
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,13 +36,13 @@ class Trip:
             # TODO
             # self.starts = [weekday * 24 * 3600 + start_in_day for weekday in calendar.weekdays] 
         else:
-            self.start = datetime.datetime.combine(calendar, departureTime)    
+            self.start = datetime.combine(calendar, departureTime)    
             self.runs_regularly = False
             self.weekdays = [0,0,0,0,0,0,0]
 
         self.start_time = departureTime
         self.path = path
-        self.duration = datetime.timedelta(milliseconds=path["time"])     
+        self.duration = timedelta(milliseconds=path["time"])     
         self.trip_id = trip_id
         self.url = url
         self.agency = agency
@@ -59,7 +59,7 @@ class Trip:
 
     def next_trip_dates(self, start_date, day_count=14):
         if self.runs_regularly:
-            for single_date in (start_date + datetime.timedelta(n) for n in range(day_count)):
+            for single_date in (start_date + timedelta(n) for n in range(day_count)):
                 if self.weekdays[single_date.weekday()]==1:
                     yield single_date.strftime("%Y%m%d")
         else:
@@ -95,7 +95,7 @@ class Trip:
                     logger.debug("Skipped stop {}", current_stop)
                     continue
             
-            trip_time = datetime.timedelta(milliseconds=int(current_stop.time))
+            trip_time = timedelta(milliseconds=int(current_stop.time))
             is_dropoff = self._is_dropoff_stop(current_stop, total_distance)
             is_pickup = self._is_pickup_stop(current_stop, total_distance)
             # TODO would be nice if possible to publish a minimum shared distance 
@@ -132,12 +132,13 @@ class TripStore():
     def put_carpool(self, carpool: Carpool):
         """
         Adds carpool to the TripStore.
-        """
+        """    
         id = "{}:{}".format(carpool.agency, carpool.id)
         try: 
             trip = self._transform_to_trip(carpool)
             self.trips[id] = trip
-            self.recent_trips[id] = trip
+            if carpool.lastUpdated and carpool.lastUpdated.date() >= self._yesterday():
+                self.recent_trips[id] = trip
             logger.debug("Added trip %s", id)
             return trip
         except Exception as err:
@@ -156,6 +157,20 @@ class TripStore():
             del self.recent_trips[agencyScopedCarpoolId]
 
         logger.debug("Deleted trip %s", id)
+
+    def purge_trips_older_than(self, day):
+        for key in self.recent_trips.keys():
+            t = self.recent_trips.get(key)
+            if t and t.lastUpdated.date() < day:
+                del recent_trips[key]
+
+        for key in self.deleted_trips.keys():
+            t = self.deleted_trips.get(key)
+            if t and t.lastUpdated.date() < day:
+                del deleted_trips[key]
+
+    def _yesterday(self):
+        return date.today() - timedelta(days=1)
 
     def _transform_to_trip(self, carpool):
         path = self._path_for_ride(carpool)
