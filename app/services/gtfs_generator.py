@@ -10,11 +10,12 @@ from datetime import date, timedelta
 
 logger = logging.getLogger(__name__)
 
+# TODO define via config
 regions = [
-	Region(**{'id': 'bb', 'bbox': [11.26, 51.36, 14.77, 53.56]}),
-	Region(**{'id': 'bw', 'bbox': [49.79,  7.51, 47.54, 10.5]}),
-	Region(**{'id': 'by', 'bbox': [50.56,  8.97, 47.28, 13.86]}),
-	Region(**{'id': 'nrw', 'bbox': [52.53,  5.86, 50.33, 9.45]})
+	Region(**{'id': 'bb', 'bbox':  [11.26, 51.36, 14.77, 53.56]}),
+	Region(**{'id': 'bw', 'bbox':  [ 7.51, 49.79, 10.50, 47.54]}),
+	Region(**{'id': 'by', 'bbox':  [ 8.97, 50.56, 13.86, 47.28]}),
+	Region(**{'id': 'nrw', 'bbox': [ 5.86, 52.53,  9.45, 50.33]})
 ]
 # TODO access agencies defined via model
 agencies = [ 

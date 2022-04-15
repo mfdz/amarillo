@@ -87,14 +87,14 @@ class StopTime(BaseModel):
 
 class Region(BaseModel):
     id: str = Field(
-        description="ID of the agency.",
+        description="ID of the region.",
         min_length=1,
         max_length=20,
         regex='^[a-zA-Z0-9]+$',
         example="bb")
     
     bbox: Tuple[NumType, NumType, NumType, NumType] = Field(
-        description="ID of the agency.",
+        description="Bounding box of the region. Format is [minLon, minLat, maxLon, maxLat]",
         example=[10.5,49.2,11.3,51.3])
 
 class Agency(BaseModel):
