@@ -88,12 +88,12 @@ class Trip:
             elif i == 0:
                 if (self.stops.iloc[1].time-current_stop.time) < 1000:
                     # skip custom stop if there is an official stop very close by
-                    logger.debug("Skipped stop {}", current_stop)
+                    logger.debug("Skipped stop %s", current_stop.id)
                     continue
             else:
                 if (current_stop.time-self.stops.iloc[i-1].time) < 5000:
                     # skip latter stop if it's very close (<5 seconds drive) by the preceding
-                    logger.debug("Skipped stop {}", current_stop)
+                    logger.debug("Skipped stop %s", current_stop.id)
                     continue
             
             trip_time = timedelta(milliseconds=int(current_stop.time))
