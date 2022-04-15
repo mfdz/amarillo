@@ -20,7 +20,7 @@ class GtfsRtProducer():
 				'gtfsRealtimeVersion': '1.0', 
 				'timestamp': int(time)
 			}, 
-			'entity': self._get_trip_updates()
+			'entity': self._get_trip_updates(bbox)
 		}
 		feed = gtfs_realtime_pb2.FeedMessage()
 		ParseDict(gtfsrt_dict, feed)
@@ -30,10 +30,10 @@ class GtfsRtProducer():
 		else:
 			return feed.SerializeToString()
 
-	def _get_trip_updates(self):
+	def _get_trip_updates(self, bbox = None):
 		trips = []
-		trips.extend(self._get_added())
-		trips.extend(self._get_deleted())
+		trips.extend(self._get_added(bbox))
+		trips.extend(self._get_deleted(bbox))
 		trip_updates = []
 		for num, trip in enumerate(trips):
    			trip_updates.append( {
@@ -43,17 +43,25 @@ class GtfsRtProducer():
   			)
 		return trip_updates
 
-	def _get_deleted(self):
-		deleted = []
-		for t in container['trips_store'].deleted_trips.values():
-			deleted.extend(self._as_delete_updates(t, datetime.today()))
-		return deleted
+	def _get_deleted(self, bbox = None):
+		return self._get_updates(
+			container['trips_store'].deleted_trips.values(),
+			self._as_delete_updates,
+			bbox)
 
-	def _get_added(self):
-		recent = []
-		for t in container['trips_store'].recent_trips.values():
-			recent.extend(self._as_added_updates(t, datetime.today()))
-		return recent
+	def _get_added(self, bbox = None):
+		return self._get_updates(
+			container['trips_store'].recent_trips.values(),
+			self._as_added_updates,
+			bbox)
+	
+	def _get_updates(self, trips, update_func, bbox = None):
+		updates = []
+		today = datetime.today()
+		for t in trips:
+			if bbox == None or t.intersects(bbox):
+				updates.extend(update_func(t, today))
+		return updates
 
 	def _as_delete_updates(self, trip, fromdate):
 		return [{ 

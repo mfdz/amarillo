@@ -2,6 +2,7 @@ from app.models.Carpool import Region
 from app.services.gtfs_export import GtfsExport, GtfsFeedInfo, GtfsAgency
 from app.services.gtfs import GtfsRtProducer
 from app.utils.container import container
+import json
 import schedule
 import threading
 import time

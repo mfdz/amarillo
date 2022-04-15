@@ -1,7 +1,7 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
 from app.models.Carpool import Carpool, Weekday
 from app.services.routing import RoutingService
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point, LineString, box
 from datetime import datetime, timedelta, date
 import logging
 
@@ -48,6 +48,7 @@ class Trip:
         self.agency = agency
         self.stops = []
         self.lastUpdated = lastUpdated
+
 
     def path_as_line_string(self):
         return LineString(self.path["points"]["coordinates"])
@@ -113,6 +114,9 @@ class Trip:
     def _is_pickup_stop(self, current_stop, total_distance):
         return current_stop["distance"] < 0.5 * total_distance
 
+    def intersects(self, bbox):
+        return self.bbox.intersects(box(*bbox))
+
 class TripStore():
     """
     TripStore maintains the currently valid trips. A trip is a
@@ -174,7 +178,7 @@ class TripStore():
         return date.today() - timedelta(days=1)
 
     def _transform_to_trip(self, carpool):
-        path = self._path_for_ride(carpool)
+        bbox, path = self._bbox_and_path_for_ride(carpool)
         # If no path has been found: ignore
         if not path.get("time"):
             raise RuntimeError ('No route found.')
@@ -186,11 +190,18 @@ class TripStore():
             logger.debug("Virtual stops found: {}".format(virtual_stops))
         
         trip.stops = virtual_stops
+        trip.bbox = bbox
         return trip
     
-    def _path_for_ride(self, carpool):
+    def _bbox_and_path_for_ride(self, carpool):
         points = self._stop_coords(carpool.stops)
-        return self.router.path_for_stops(points)
+        bbox = (
+            min([p.x for p in points]),
+            min([p.y for p in points]),
+            max([p.x for p in points]),
+            max([p.y for p in points])
+            )
+        return box(*bbox), self.router.path_for_stops(points)
     
     def _stop_coords(self, stops):
         # Retrieve coordinates of all officially announced stops (start, intermediate, target)
