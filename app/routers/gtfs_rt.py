@@ -1,13 +1,13 @@
+import time
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, Response
-from app.services.gtfs import gtfs_rt
+from app.services.gtfs import GtfsRtProducer
 from app.utils.container import container
 
 router = APIRouter(
     prefix="/gtfs-rt",
     tags=["gtfs-rt"]
 )
-
 
 # TODO add from original spec:
 #       parameters:
@@ -24,7 +24,7 @@ router = APIRouter(
             description="Returns a GTFS-RT feed including all trip updates since "
                         "yesterday's midnight.")
 async def read_gtfs_rt(format: str = 'protobuf'):
-    data = gtfs_rt(container['carpools'], format)
+    data = GtfsRtProducer(container['trips_store']).generate_feed(time.time(), format)
     if "json" == format.lower():
         return JSONResponse(content=data)
     else:

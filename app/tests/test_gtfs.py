@@ -30,7 +30,7 @@ class TestTripConverter:
         assert response.status_code == 200, "Adding a carpool must work"
         trip = next(iter(container['trips_store'].trips.values()))
 
-        converter = GtfsRtProducer()
+        converter = GtfsRtProducer(container['trips_store'])
         json = converter._as_delete_updates(trip, datetime(2022,4,11))
 
         assert json == [{
@@ -48,7 +48,7 @@ class TestTripConverter:
         assert response.status_code == 200, "Adding a carpool must work"
         trip = next(iter(container['trips_store'].trips.values()))
 
-        converter = GtfsRtProducer()
+        converter = GtfsRtProducer(container['trips_store'])
         json = converter._as_added_updates(trip, datetime(2022,4,11))
         assert json == [{
             'trip': {
@@ -110,7 +110,7 @@ class TestTripConverter:
         assert response.status_code == 200, "Adding a carpool must work"
         trip = next(iter(container['trips_store'].trips.values()))
 
-        converter = GtfsRtProducer()
+        converter = GtfsRtProducer(container['trips_store'])
         json = converter._as_delete_updates(trip, datetime(2022,4,11))
 
         assert json == [{

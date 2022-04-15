@@ -52,14 +52,9 @@ def generate_gtfs():
 
 def generate_gtfs_rt():
 	logger.info("Generate GTFS-RT")
-	# TODO generate temp file and re-link to afterwards
+	producer = GtfsRtProducer(container['trips_store'])
 	for region in regions:
-		rt = GtfsRtProducer().generate_feed(time.time(), format='protobuff', bbox=region.bbox)
-		with open(f"gtfs/mfdz.{region.id}.gtfsrt.pbf", "wb") as f:
-			f.write(rt)
-		rtjson = GtfsRtProducer().generate_feed(time.time(), format='json', bbox=region.bbox)
-		with open(f"gtfs/mfdz.{region.id}.gtfsrt.json", "w") as f:
-			json.dump(rtjson, f)
+		rt = producer.export_feed(time.time(), "gtfs/mfdz.{region.id}.gtfsrt", bbox=region.bbox)
 
 def start_schedule():
 	schedule.every().day.at("00:00").do(midnight)

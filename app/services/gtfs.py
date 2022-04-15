@@ -1,16 +1,16 @@
 import app.services.gtfsrt.gtfs_realtime_pb2 as gtfs_realtime_pb2
 import app.services.gtfsrt.realtime_extension_pb2 as mfdzrte
-from app.utils.container import container
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.json_format import ParseDict
 from datetime import datetime, timedelta
-import time
+import json
 import re
+import time
 
 class GtfsRtProducer():
 
-	def __init__(self):
-		pass
+	def __init__(self, trip_store):
+		self.trip_store = trip_store
 
 	def generate_feed(self, time, format='protobuf', bbox=None):
 		# See https://developers.google.com/transit/gtfs-realtime/reference
@@ -25,10 +25,22 @@ class GtfsRtProducer():
 		feed = gtfs_realtime_pb2.FeedMessage()
 		ParseDict(gtfsrt_dict, feed)
 
-		if "json" == format.lower():
+		if "message" == format.lower():
+			return feed
+		elif "json" == format.lower():
 			return MessageToDict(feed)
 		else:
 			return feed.SerializeToString()
+
+	def export_feed(self, timestamp, file_path, bbox=None):
+		"""
+		Exports gtfs-rt feed as .json and .pbf file to file_path
+		""" 
+		feed = self.generate_feed(timestamp, "message", bbox=None)
+		with open(f"{file_path}.pbf", "wb") as f:
+			f.write(feed.SerializeToString())
+		with open(f"{file_path}.json", "w") as f:
+			json.dump(MessageToDict(feed), f)
 
 	def _get_trip_updates(self, bbox = None):
 		trips = []
@@ -45,13 +57,13 @@ class GtfsRtProducer():
 
 	def _get_deleted(self, bbox = None):
 		return self._get_updates(
-			container['trips_store'].deleted_trips.values(),
+			self.trip_store.deleted_trips.values(),
 			self._as_delete_updates,
 			bbox)
 
 	def _get_added(self, bbox = None):
 		return self._get_updates(
-			container['trips_store'].recent_trips.values(),
+			self.trip_store.recent_trips.values(),
 			self._as_added_updates,
 			bbox)
 	
@@ -122,6 +134,3 @@ class GtfsRtProducer():
 		    },
 		    'stopTimeUpdate': self._to_stop_times(trip, trip_date)
 		} for trip_date in trip.next_trip_dates(fromdate)]
-
-def gtfs_rt(carpools, format='protobuf'):
-	return GtfsRtProducer().generate_feed(time.time(), format)
