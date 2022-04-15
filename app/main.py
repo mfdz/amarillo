@@ -1,3 +1,10 @@
+
+import logging
+import logging.config
+
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger(__name__)
+
 import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
@@ -16,7 +23,7 @@ import app.services.gtfs_generator as gtfs_generator
 # https://pydantic-docs.helpmanual.io/usage/settings/
 from app.views import home
 
-print("Hello Amarillo!")
+logger.info("Hello Amarillo!")
 
 app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               description="This service allows carpool agencies to publish "
