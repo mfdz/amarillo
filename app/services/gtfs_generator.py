@@ -57,6 +57,9 @@ def generate_gtfs_rt():
 		rt = GtfsRtProducer().generate_feed(time.time(), format='protobuff', bbox=region.bbox)
 		with open(f"gtfs/mfdz.{region.id}.gtfsrt.pbf", "wb") as f:
 			f.write(rt)
+		rtjson = GtfsRtProducer().generate_feed(time.time(), format='json', bbox=region.bbox)
+		with open(f"gtfs/mfdz.{region.id}.gtfsrt.json", "w") as f:
+			json.dump(rtjson, f)
 
 def start_schedule():
 	schedule.every().day.at("00:00").do(midnight)
