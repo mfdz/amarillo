@@ -54,7 +54,7 @@ def generate_gtfs_rt():
 	logger.info("Generate GTFS-RT")
 	producer = GtfsRtProducer(container['trips_store'])
 	for region in regions:
-		rt = producer.export_feed(time.time(), "gtfs/mfdz.{region.id}.gtfsrt", bbox=region.bbox)
+		rt = producer.export_feed(time.time(), f"gtfs/mfdz.{region.id}.gtfsrt", bbox=region.bbox)
 
 def start_schedule():
 	schedule.every().day.at("00:00").do(midnight)
