@@ -209,12 +209,22 @@ class GtfsExport:
         return "{}#{}#{}".format(stop.stop_name,stop.x,stop.y)
         
     def _should_always_export(self, stop):
-        ### stops with a stop_id equal to mfdz: or a name containing the string mitfahr
-        ### should be retained as carpool stops, even if no trip passes by
-        stop_name = stop.stop_name.lower() 
-        #return stop.stop_id.startswith('de:11') or stop.stop_id.startswith('de:12') or stop.stop_id.startswith('mfdz:') or 'mitfahr' in stop_name or 'p&m' in stop_name 
-        return stop.stop_id.startswith('de:05') or stop.stop_id.startswith('mfdz:') or 'mitfahr' in stop_name or 'p&m' in stop_name 
+        """ 
+        Returns true, if the given stop shall be exported to GTFS,
+        regardless, if it's part of a trip or not.
 
+        This is necessary, as potential stops are required 
+        to be part of the GTFS to be referenced later on 
+        by dynamicly added trips.
+        """
+        if self.bbox:
+            return (self.bbox[0] <= stop.stop_lon <= self.bbox[2] and 
+                self.bbox[1] <= stop.stop_lat <= self.bbox[3])
+        else:
+            stop_name = stop.stop_name.lower() 
+            # mfdz: prefixed stops are custom stops which are explicitly meant to be carpooling stops
+            return stop.stop_id.startswith('mfdz:') or 'mitfahr' in stop_name or 'p&m' in stop_name 
+        
     def _load_stored_stop(self, stop):
         gtfsstop = self._convert_stop(stop)
         stop_hash = self._stop_hash(stop)
