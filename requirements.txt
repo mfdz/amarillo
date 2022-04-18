@@ -6,3 +6,4 @@ protobuf
 rtree
 schedule
 pytest
+setproctitle
