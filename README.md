@@ -1,6 +1,6 @@
 # Amarillo
 
-**CRUD for car pool offers**
+**CRUD for carpool offers**
 
 An Amarillo is a [yellow-dressed person](https://www.cubatravelnetwork.com/de/autoverleih-in-kuba/autofahren-auf-kuba) helping others to find a car pool in Cuba. 
 
