@@ -1,4 +1,5 @@
 import logging
+import os.path
 from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, status
@@ -17,6 +18,7 @@ router = APIRouter(
     prefix="/carpool",
     tags=["carpool"]
 )
+
 
 @router.put("/",
             operation_id="updatecarpool",
@@ -51,6 +53,7 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
 
     return cp
 
+
 @router.post("/",
              operation_id="addcarpool",
              summary="Add a new carpool",
@@ -62,29 +65,39 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
                  # TODO note that automatic validations against the schema
                  # are returned with code 422, also shown in Swagger.
                  # maybe 405 is not needed?
+                 status.HTTP_404_NOT_FOUND: {
+                     "description": "Agency does not exist"},
                  status.HTTP_405_METHOD_NOT_ALLOWED: {
                      "description": "Validation exception"},
                  status.HTTP_409_CONFLICT: {
                      "description": "Carpool with this id exists already."}})
-async def post_carpool(cp: Carpool = Body(...,
-                                          examples=examples,
-                                          )
+async def post_carpool(carpool: Carpool = Body(...,
+                                               examples=examples,
+                                               )
                        ) -> Carpool:
-    if cp.lastUpdated == None:
-        cp.lastUpdated = datetime.now()
+    agency_exists = os.path.exists(f"data/agency/{carpool.agency}.json")
 
-    exists = container['carpools'].get(cp.agency, cp.id) != None
+    if not agency_exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agency with id {carpool.agency} does not exist.")
 
-    if exists:
+    if carpool.lastUpdated is None:
+        carpool.lastUpdated = datetime.now()
+
+    carpool_exists = os.path.exists(f"data/carpool/{carpool.agency}/{carpool.id}.json")
+
+    if carpool_exists:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Carpool with id {cp.id} exists already.")
+            detail=f"Carpool with id {carpool.id} exists already.")
 
-    container['carpools'].put(cp.agency, cp.id, cp)
+    with open(f'data/carpool/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
+        f.write(carpool.json())
 
-    print(f"Post trip {cp.agency}:{cp.id}.")
+    logger.info("POST trip {carpool.agency}:{carpool.id}.")
 
-    return cp
+    return carpool
 
 
 @router.get("/import",
@@ -156,7 +169,6 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
                    # 405: {"description": "Validation exception"}
                },
                )
-
 async def delete_carpool(agencyId: str, carpoolId: str):
     exists = container['carpools'].get(agencyId, carpoolId) != None
 
