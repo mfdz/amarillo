@@ -9,7 +9,7 @@ import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from app.routers import carpool, gtfs_rt
+from app.routers import carpool, gtfs_rt, agency
 from fastapi import FastAPI, status
 from app.services import stops
 from app.services import trips
@@ -69,6 +69,7 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               )
 
 app.include_router(carpool.router)
+app.include_router(agency.router)
 app.include_router(gtfs_rt.router)
 
 
