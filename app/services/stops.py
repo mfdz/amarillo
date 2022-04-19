@@ -14,11 +14,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 class StopsStore():
-    stopsDataFrames = []
-
+    
     def __init__(self, internal_projection = "EPSG:32632"):
         self.projection = Transformer.from_crs("EPSG:4326", internal_projection, always_xy=True).transform
-        
+        self.stopsDataFrames = []
+    
     def register_stops(self, source : str, distance : int = 500):
         """Imports stops from given source and registers them with
         the distance they are still associated with a trip.
