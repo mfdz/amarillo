@@ -109,7 +109,7 @@ class Agency(BaseModel):
         description="Name",
         min_length=1,
         max_length=48,
-        regex=r'^[\w -\.]+$',
+        regex=r'^[\w -\.\|]+$',
         example="MITFAHR|DE|ZENTRALE")
 
     url: HttpUrl = Field(
