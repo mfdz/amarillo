@@ -7,3 +7,9 @@ rtree
 schedule
 pytest
 setproctitle
+starlette
+pandas
+requests
+Shapely
+pyproj
+pyinotify
