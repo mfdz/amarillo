@@ -1,11 +1,11 @@
 import logging
+import json
+import os
 import os.path
 from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, status
 from datetime import datetime
-
-from pydantic import Field
 
 from app.models.Carpool import Carpool
 from app.tests.sampledata import examples
@@ -29,29 +29,22 @@ router = APIRouter(
             # TODO next to the status codes are "Links". There is nothing shown now.
             # Either show something there, or hide the Links, or do nothing.
             responses={400: {"description": "Invalid"},
-                       404: {"description": "Carpool not found"},
+                       404: {"description": "Agency or carpool not found"},
                        # TODO note that automatic validations against the schema
                        # are returned with code 422, also shown in Swagger.
                        # maybe 405 is not needed?
                        405: {"description": "Validation exception"}},
             )
-async def put_carpool(cp: Carpool = Body(..., examples=examples)
-                      ) -> Carpool:
-    exists = container['carpools'].get(cp.agency, cp.id) != None
+async def put_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpool:
+    logger.info(f"Put trip {carpool.agency}:{carpool.id}.")
+    await assert_agency_exists(carpool.agency)
+    await assert_carpool_exists(carpool.agency, carpool.id)
 
-    if not exists:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Carpool with id {cp.id} for agency {cp.agency} not found")
+    await set_lastUpdated_if_unset(carpool)
 
-    if cp.lastUpdated == None:
-        cp.lastUpdated = datetime.now()
+    await save_carpool(carpool)
 
-    container['carpools'].put(cp.agency, cp.id, cp)
-
-    print(f"Put trip {cp.agency}:{cp.id}.")
-
-    return cp
+    return carpool
 
 
 @router.post("/",
@@ -71,31 +64,14 @@ async def put_carpool(cp: Carpool = Body(..., examples=examples)
                      "description": "Validation exception"},
                  status.HTTP_409_CONFLICT: {
                      "description": "Carpool with this id exists already."}})
-async def post_carpool(carpool: Carpool = Body(...,
-                                               examples=examples,
-                                               )
-                       ) -> Carpool:
-    agency_exists = os.path.exists(f"data/agency/{carpool.agency}.json")
-
-    if not agency_exists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Agency with id {carpool.agency} does not exist.")
-
-    if carpool.lastUpdated is None:
-        carpool.lastUpdated = datetime.now()
-
-    carpool_exists = os.path.exists(f"data/carpool/{carpool.agency}/{carpool.id}.json")
-
-    if carpool_exists:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Carpool with id {carpool.id} exists already.")
-
-    with open(f'data/carpool/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
-        f.write(carpool.json())
-
+async def post_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpool:
     logger.info("POST trip {carpool.agency}:{carpool.id}.")
+    await assert_agency_exists(carpool.agency)
+    await assert_carpool_does_not_exist(carpool.agency, carpool.id)
+
+    await set_lastUpdated_if_unset(carpool)
+
+    await save_carpool(carpool)
 
     return carpool
 
@@ -141,16 +117,13 @@ async def import_() -> List[Carpool]:
             },
             )
 async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
-    exists = container['carpools'].get(agencyId, carpoolId) != None
+    logger.info(f"Get trip {agencyId}:{carpoolId}.")
+    await assert_agency_exists(agencyId)
+    await assert_carpool_exists(agencyId, carpoolId)
 
-    if not exists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Carpool with agency {agencyId} and id {carpoolId} does not exist.")
+    carpool = await load_carpool(agencyId, carpoolId)
 
-    print(f"Get trip {agencyId}:{carpoolId}.")
-
-    return container['carpools'].get(agencyId, carpoolId)
+    return carpool
 
 
 @router.delete("/{agencyId}/{carpoolId}",
@@ -170,15 +143,51 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
                },
                )
 async def delete_carpool(agencyId: str, carpoolId: str):
-    exists = container['carpools'].get(agencyId, carpoolId) != None
+    logger.info(f"Delete trip {agencyId}:{carpoolId}.")
+    await assert_agency_exists(agencyId)
+    await assert_carpool_exists(agencyId, carpoolId)
 
-    if not exists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Carpool with id {carpoolId} does not exist.")
-
-    container['carpools'].delete(agencyId, carpoolId)
-
-    print(f"Delete trip {agencyId}:{carpoolId}.")
+    os.remove(f"data/carpool/{agencyId}/{carpoolId}.json")
 
     return "deleted"
+
+
+async def set_lastUpdated_if_unset(carpool):
+    if carpool.lastUpdated is None:
+        carpool.lastUpdated = datetime.now()
+
+
+async def load_carpool(agencyId, carpoolId):
+    with open(f'data/carpool/{agencyId}/{carpoolId}.json', 'r', encoding='utf-8') as f:
+        dict = json.load(f)
+        carpool = Carpool(**dict)
+    return carpool
+
+
+async def save_carpool(carpool):
+    with open(f'data/carpool/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
+        f.write(carpool.json())
+
+
+async def assert_agency_exists(agency_id: str):
+    agency_exists = os.path.exists(f"data/agency/{agency_id}.json")
+    if not agency_exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agency with id {agency_id} does not exist.")
+
+
+async def assert_carpool_exists(agency_id: str, carpool_id: str):
+    carpool_exists = os.path.exists(f"data/carpool/{agency_id}/{carpool_id}.json")
+    if not carpool_exists:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Carpool with id {carpool_id} for agency {agency_id} not found")
+
+
+async def assert_carpool_does_not_exist(agency_id: str, carpool_id: str):
+    carpool_exists = os.path.exists(f"data/carpool/{agency_id}/{carpool_id}.json")
+    if carpool_exists:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Carpool with id {carpool_id} exists already.")
