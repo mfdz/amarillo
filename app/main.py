@@ -61,6 +61,10 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                       "url": "http://amarillo.mfdz.de:8000"
                   },
                   {
+                      "description": "Dev server for development",
+                      "url": "http://amarillo.mfdz.de:8001"
+                  },
+                  {
                       "description": "Localhost for development",
                       "url": "http://localhost:8000"
                   }
