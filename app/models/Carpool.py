@@ -142,16 +142,16 @@ class Agency(BaseModel):
             "title": "Agency",
             "description": "Carpool agency.",
             "example":
-                """
+                #"""
                 {
                   "id": "mfdz",
                   "name": "MITFAHR|DE|ZENTRALE",
                   "url": "http://mfdz.de",
                   "timezone": "Europe/Berlin",
                   "lang": "de",
-                  "email": ""info@mfdz.de""
+                  "email": "info@mfdz.de"
                 }
-                """
+                #"""
         }
 
 class Carpool(BaseModel):
