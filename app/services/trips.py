@@ -62,6 +62,7 @@ class Trip:
     def intersects(self, bbox):
         return self.bbox.intersects(box(*bbox))
 
+
 class TripStore():
     """
     TripStore maintains the currently valid trips. A trip is a
@@ -72,20 +73,8 @@ class TripStore():
         deleted_trips   Dict of recently deleted trips.
     """
 
-    NO_BIKES_ALLOWED = 2
-    RIDESHARING_ROUTE_TYPE = 1700
-    CALENDAR_DATES_EXCEPTION_TYPE_ADDED = 1
-    CALENDAR_DATES_EXCEPTION_TYPE_REMOVED = 2
-    STOP_TIMES_STOP_TYPE_REGULARLY = 0
-    STOP_TIMES_STOP_TYPE_NONE = 1
-    STOP_TIMES_STOP_TYPE_PHONE_AGENCY = 2
-    STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER = 3
-    STOP_TIMES_TIMEPOINT_APPROXIMATE = 0 
-    STOP_TIMES_TIMEPOINT_EXACT = 1 
-
-    
     def __init__(self, stops_store):
-        self.router = RoutingService()
+        self.transformer = TripTransformer(stops_store)
         self.stops_store = stops_store
         self.trips = {}
         self.deleted_trips = {}
@@ -95,10 +84,15 @@ class TripStore():
     def put_carpool(self, carpool: Carpool):
         """
         Adds carpool to the TripStore.
-        """    
+        """
+        # TODO: check, if already known (id AND lastUpdated matches)
+        # Only then we should transform to trip and store
+
         id = "{}:{}".format(carpool.agency, carpool.id)
         try: 
-            trip = self._transform_to_trip(carpool)
+            # TODO move trip transformation to proper class
+            # TODO split enhancement and trip transformation
+            trip = self.transformer.transform_to_trip(carpool)
             self.trips[id] = trip
             if carpool.lastUpdated and carpool.lastUpdated.date() >= self._yesterday():
                 self.recent_trips[id] = trip
@@ -135,7 +129,32 @@ class TripStore():
     def _yesterday(self):
         return date.today() - timedelta(days=1)
 
-    def _transform_to_trip(self, carpool):
+
+class TripTransformer:
+
+    NO_BIKES_ALLOWED = 2
+    RIDESHARING_ROUTE_TYPE = 1700
+    CALENDAR_DATES_EXCEPTION_TYPE_ADDED = 1
+    CALENDAR_DATES_EXCEPTION_TYPE_REMOVED = 2
+    STOP_TIMES_STOP_TYPE_REGULARLY = 0
+    STOP_TIMES_STOP_TYPE_NONE = 1
+    STOP_TIMES_STOP_TYPE_PHONE_AGENCY = 2
+    STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER = 3
+    STOP_TIMES_TIMEPOINT_APPROXIMATE = 0 
+    STOP_TIMES_TIMEPOINT_EXACT = 1 
+    router = RoutingService()
+
+    def __init__(self, stops_store):
+        self.stops_store = stops_store
+
+    def transform_to_trip(self, carpool):
+        (lineString, stop_times, route_name, headsign) = self._enhance_carpool(carpool)
+        trip_id = f"{carpool.agency}:{carpool.id}"
+        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, lineString, carpool.agency, carpool.lastUpdated, stop_times)
+
+        return trip
+
+    def _enhance_carpool(self, carpool):
         path = self._path_for_ride(carpool)
         # If no path has been found: ignore
         if not path.get("time"):
@@ -151,10 +170,9 @@ class TripStore():
         route_name = virtual_stops.iloc(0)[0]["stop_name"] + " nach " + virtual_stops.tail(1).iloc(0)[0]["stop_name"]
         stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
         headsign= virtual_stops.tail(1).iloc(0)[0]["stop_name"]
-        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, lineString, carpool.agency, carpool.lastUpdated, stop_times)
+        
+        return (lineString, stop_times, route_name, headsign)
 
-        return trip
-    
     def _path_for_ride(self, carpool):
         points = self._stop_coords(carpool.stops)
         return self.router.path_for_stops(points)
@@ -240,3 +258,4 @@ class TripStore():
         
     def _is_pickup_stop(self, current_stop, total_distance):
         return current_stop["distance"] < 0.5 * total_distance
+
