@@ -167,9 +167,12 @@ class GtfsExport:
         for stop_time in trip.stop_times:
             # retrieve stop from stored_stops and mark it to be exported
             wkn_stop = self.stored_stops.get(stop_time.stop_id)
-            self.stops[stop_time.stop_id] = wkn_stop
-            # Append stop_time
-            self.stop_times.append(stop_time)
+            if not wkn_stop:
+                logger.warn("No stop found in stop_store for %s. Will skip stop_time %s of trip %s", stop_time.stop_id, stop_time.stop_sequence, trip.trip_id)
+            else:
+                self.stops[stop_time.stop_id] = wkn_stop
+                # Append stop_time
+                self.stop_times.append(stop_time)
         
     def _append_shapes(self, trip, shape_id):
         counter = 0
