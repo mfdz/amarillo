@@ -195,7 +195,7 @@ class Carpool(BaseModel):
     stops: List[StopTime] = Field(
         ...,
         min_items=2,
-        max_items=10,
+        max_items=100,
         description="Stops which this carpool passes by and offers to pick "
                     "up/drop off passengers. This list must at minimum "
                     "include two stops, the origin and destination of this "
