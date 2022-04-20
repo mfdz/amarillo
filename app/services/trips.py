@@ -43,7 +43,7 @@ class Trip:
         return path
     
     def _total_seconds(self, instant):
-        return instant.hour * 3600 + +instant.minute * 60 + instant.second
+        return instant.hour * 3600 + instant.minute * 60 + instant.second
 
     def start_time_str(self):
         return self.start_time.strftime("%H:%M:%S")
