@@ -1,6 +1,6 @@
-
 import logging
 import logging.config
+from configuration import configure_services
 
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger(__name__)
@@ -83,28 +83,10 @@ def configure():
 
 
 def configure_routing():
-    mimetypes.add_type('application/x-protobuf','.pbf')
+    mimetypes.add_type('application/x-protobuf', '.pbf')
     app.mount('/static', StaticFiles(directory='static'), name='static')
     app.mount('/gtfs', StaticFiles(directory='gtfs'), name='gtfs')
     app.include_router(home.router)
-
-
-def configure_services():
-    stop_sources = [
-        {"url": "https://data.mfdz.de/mfdz/stops/custom.csv", "vicinity": 50},
-        {"url": "https://data.mfdz.de/mfdz/stops/stops_zhv.csv", "vicinity": 50},
-        {"url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500}
-    ]
-    stop_store = stops.StopsStore()
-    if config.env == 'PROD':
-        for stops_source in stop_sources:
-            stop_store.register_stops(stops_source["url"], stops_source["vicinity"])
-    container['stops_store'] = stop_store
-    container['trips_store'] = trips.TripStore(stop_store)
-    container['carpools'] = CarpoolService(container['trips_store'])
-
-    if config.env == 'PROD':
-        gtfs_generator.start_schedule()
 
 
 if __name__ == "__main__":

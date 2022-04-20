@@ -157,7 +157,7 @@ async def set_lastUpdated_if_unset(carpool):
         carpool.lastUpdated = datetime.now()
 
 
-async def load_carpool(agencyId, carpoolId):
+async def load_carpool(agencyId, carpoolId) -> Carpool:
     with open(f'data/carpool/{agencyId}/{carpoolId}.json', 'r', encoding='utf-8') as f:
         dict = json.load(f)
         carpool = Carpool(**dict)

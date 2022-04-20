@@ -8,3 +8,5 @@ class Config(BaseSettings):
     env: str = 'DEV'
 
 config = Config(_env_file='config', _env_file_encoding='utf-8')
+
+
