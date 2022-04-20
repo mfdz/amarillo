@@ -1,6 +1,7 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
 from app.models.Carpool import Carpool, Weekday, StopTime, PickupDropoffType
 from app.services.routing import RoutingService
+from app.utils.utils import assert_folder_exists
 from shapely.geometry import Point, box
 from geojson_pydantic.geometries import LineString
 from datetime import datetime, timedelta, date
@@ -92,6 +93,7 @@ class TripStore():
         id = "{}:{}".format(carpool.agency, carpool.id)
         try: 
             enhanced_carpool = self.transformer.enhance_carpool(carpool)
+            assert_folder_exists(f'data/enhanced/{carpool.agency}/')
             with open(f'data/enhanced/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
                 f.write(enhanced_carpool.json())
             return self._load_as_trip(enhanced_carpool)

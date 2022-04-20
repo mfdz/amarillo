@@ -6,7 +6,7 @@ import csv
 import gettext
 import logging
 import re
-import os
+from app.utils.utils import assert_folder_exists
 from app.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class GtfsExport:
         self.bbox = bbox
             
     def export(self, gtfszip_filename, gtfsfolder):
-        self._assert_folder_exists(gtfsfolder)
+        assert_folder_exists(gtfsfolder)
         self._prepare_gtfs_feed(self.ridestore, self.stopstore)
         self._write_csvfile(gtfsfolder, 'agency.txt', self.agencies)
         self._write_csvfile(gtfsfolder, 'feed_info.txt', self.feed_info)
@@ -59,10 +59,6 @@ class GtfsExport:
         self._write_csvfile(gtfsfolder, 'stop_times.txt', self.stop_times)
         self._write_csvfile(gtfsfolder, 'shapes.txt', self.shapes)
         self._zip_files(gtfszip_filename, gtfsfolder)
-    
-    def _assert_folder_exists(self, foldername):
-        if not os.path.isdir(foldername):
-            os.makedirs(foldername)
 
     def _zip_files(self, gtfszip_filename, gtfsfolder):
         gtfsfiles = ['agency.txt', 'feed_info.txt', 'routes.txt', 'trips.txt', 
