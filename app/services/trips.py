@@ -1,5 +1,5 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
-from app.models.Carpool import Carpool, Weekday
+from app.models.Carpool import Carpool, Weekday, StopTime
 from app.services.routing import RoutingService
 from shapely.geometry import Point, LineString, box
 from datetime import datetime, timedelta, date
@@ -148,7 +148,9 @@ class TripTransformer:
         self.stops_store = stops_store
 
     def transform_to_trip(self, carpool):
-        (lineString, stop_times, route_name, headsign) = self._enhance_carpool(carpool)
+        (lineString, stop_times) = self._enhance_carpool(carpool)
+        route_name = carpool.stops[0].name + " nach " + carpool.stops[-1].name
+        headsign= carpool.stops[-1].name
         trip_id = f"{carpool.agency}:{carpool.id}"
         trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, lineString, carpool.agency, carpool.lastUpdated, stop_times)
 
@@ -167,11 +169,11 @@ class TripTransformer:
             logger.debug("Virtual stops found: {}".format(virtual_stops))
 
         trip_id = f"{carpool.agency}:{carpool.id}"
-        route_name = virtual_stops.iloc(0)[0]["stop_name"] + " nach " + virtual_stops.tail(1).iloc(0)[0]["stop_name"]
         stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
-        headsign= virtual_stops.tail(1).iloc(0)[0]["stop_name"]
+        cp_stop_times = self._cp_stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
+        carpool.stops = cp_stop_times
         
-        return (lineString, stop_times, route_name, headsign)
+        return (lineString, stop_times)
 
     def _path_for_ride(self, carpool):
         points = self._stop_coords(carpool.stops)
@@ -251,6 +253,55 @@ class TripTransformer:
                 seq_nr, pickup_type, 
                 dropoff_type, 
                 self.STOP_TIMES_TIMEPOINT_APPROXIMATE))
+        return stop_times
+
+    def _cp_stops_and_stop_times(self, start_time, trip_id, stops_frame):
+        # Assumptions: 
+        # arrival_time = departure_time
+        # pickup_type, drop_off_type for origin: = coordinate/none
+        # pickup_type, drop_off_type for destination: = none/coordinate
+        # timepoint = approximate for origin and destination (not sure what consequences this might have for trip planners)
+        number_of_stops = len(stops_frame.index)
+        total_distance = stops_frame.iloc[number_of_stops-1]["distance"]
+        
+        first_stop_time = GtfsTimeDelta(hours = start_time.hour, minutes = start_time.minute, seconds = start_time.second) 
+        stop_times = []
+        seq_nr = 0
+        for i in range(0, number_of_stops):
+            current_stop = stops_frame.iloc[i]
+
+            print(current_stop.id, current_stop.time)
+            if not current_stop.id:
+                continue
+            elif i == 0:
+                if (stops_frame.iloc[1].time-current_stop.time) < 1000:
+                    # skip custom stop if there is an official stop very close by
+                    logger.debug("Skipped stop %s", current_stop.id)
+                    continue
+            else:
+                if (current_stop.time-stops_frame.iloc[i-1].time) < 5000 and not i==1:
+                    # skip latter stop if it's very close (<5 seconds drive) by the preceding
+                    logger.debug("Skipped stop %s", current_stop.id)
+                    continue
+            trip_time = timedelta(milliseconds=int(current_stop.time))
+            is_dropoff = self._is_dropoff_stop(current_stop, total_distance)
+            is_pickup = self._is_pickup_stop(current_stop, total_distance)
+            # TODO would be nice if possible to publish a minimum shared distance 
+            pickup_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_pickup else self.STOP_TIMES_STOP_TYPE_NONE
+            dropoff_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_dropoff else self.STOP_TIMES_STOP_TYPE_NONE
+            
+            next_stop_time = first_stop_time + trip_time
+            seq_nr += 1
+            stop_times.append(StopTime(**{
+                'arrivalTime': str(next_stop_time), 
+                'departureTime': str(next_stop_time), 
+                'id': current_stop.id, 
+                'pickup_dropoff': 'only_pickup',
+                'name': str(current_stop.stop_name),
+                'lat': current_stop.y,
+                'lon': current_stop.x
+                }))
+
         return stop_times
     
     def _is_dropoff_stop(self, current_stop, total_distance):
