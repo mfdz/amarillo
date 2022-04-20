@@ -5,7 +5,6 @@ from app.services.gtfs_export import GtfsExport
 from app.services.gtfs import GtfsRtProducer
 from app.services.stops import StopsStore
 from app.services.trips import TripStore
-from app.utils.container import container
 from app.models.Carpool import Carpool
 from datetime import datetime
 import time
@@ -15,22 +14,25 @@ client = TestClient(app)
 
 def test_gtfs_generation():
     cp = Carpool(**data1)
-    container['trips_store'].put_carpool(cp)
+    stops_store = StopsStore()
+    trips_store = TripStore(stops_store)
+    trips_store.put_carpool(cp)
 
-    exporter = GtfsExport(None, None, container['trips_store'], container['stops_store'])
+    exporter = GtfsExport(None, None, trips_store, stops_store)
     exporter.export('target/tests/test_gtfs_generation/test.gtfs.zip', "target/tests/test_gtfs_generation")
 
 class TestTripConverter:
 
     def setup_method(self, method):
-        configure_services()      
+        self.stops_store = StopsStore()
+        self.trips_store = TripStore(self.stops_store)    
 
     def test_as_one_time_trip_as_delete_update(self):
         cp = Carpool(**data1)
-        container['trips_store'].put_carpool(cp)
-        trip = next(iter(container['trips_store'].trips.values()))
+        self.trips_store.put_carpool(cp)
+        trip = next(iter(self.trips_store.trips.values()))
         
-        converter = GtfsRtProducer(container['trips_store'])
+        converter = GtfsRtProducer(self.trips_store)
         json = converter._as_delete_updates(trip, datetime(2022,4,11))
 
         assert json == [{
@@ -45,10 +47,10 @@ class TestTripConverter:
 
     def test_as_one_time_trip_as_added_update(self):
         cp = Carpool(**data1)
-        container['trips_store'].put_carpool(cp)
-        trip = next(iter(container['trips_store'].trips.values()))
+        self.trips_store.put_carpool(cp)
+        trip = next(iter(self.trips_store.trips.values()))
         
-        converter = GtfsRtProducer(container['trips_store'])
+        converter = GtfsRtProducer(self.trips_store)
         json = converter._as_added_updates(trip, datetime(2022,4,11))
         assert json == [{
             'trip': {
@@ -107,10 +109,10 @@ class TestTripConverter:
 
     def test_as_periodic_trip_as_delete_update(self):
         cp = Carpool(**carpool_repeating_json)
-        container['trips_store'].put_carpool(cp)
-        trip = next(iter(container['trips_store'].trips.values()))
+        self.trips_store.put_carpool(cp)
+        trip = next(iter(self.trips_store.trips.values()))
         
-        converter = GtfsRtProducer(container['trips_store'])
+        converter = GtfsRtProducer(self.trips_store)
         json = converter._as_delete_updates(trip, datetime(2022,4,11))
 
         assert json == [{

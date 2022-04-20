@@ -83,13 +83,14 @@ class TripStore():
     STOP_TIMES_TIMEPOINT_APPROXIMATE = 0 
     STOP_TIMES_TIMEPOINT_EXACT = 1 
 
-    trips = {}
-    deleted_trips = {}
-    recent_trips = {}
-
+    
     def __init__(self, stops_store):
         self.router = RoutingService()
         self.stops_store = stops_store
+        self.trips = {}
+        self.deleted_trips = {}
+        self.recent_trips = {}
+
 
     def put_carpool(self, carpool: Carpool):
         """
