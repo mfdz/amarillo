@@ -5,6 +5,8 @@ from app.utils.utils import assert_folder_exists
 from shapely.geometry import Point, box
 from geojson_pydantic.geometries import LineString
 from datetime import datetime, timedelta, date
+import os
+import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -91,14 +93,26 @@ class TripStore():
         # Only then we should transform to trip and store
 
         id = "{}:{}".format(carpool.agency, carpool.id)
-        try: 
-            enhanced_carpool = self.transformer.enhance_carpool(carpool)
-            assert_folder_exists(f'data/enhanced/{carpool.agency}/')
-            with open(f'data/enhanced/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
-                f.write(enhanced_carpool.json())
+        filename = f'data/enhanced/{carpool.agency}/{carpool.id}.json'
+        try:
+            existing_carpool = self.load_carpool_if_exists(carpool.agency, carpool.id)
+            if existing_carpool and existing_carpool.lastUpdated == carpool.lastUpdated:
+                enhanced_carpool = existing_carpool
+            else:
+                enhanced_carpool = self.transformer.enhance_carpool(carpool)
+                assert_folder_exists(f'data/enhanced/{carpool.agency}/')
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(enhanced_carpool.json())
+            
             return self._load_as_trip(enhanced_carpool)
         except Exception as err:
             logger.error("Failed to add carpool %s:%s to TripStore.", carpool.agency, carpool.id, exc_info=True)
+
+    def load_carpool_if_exists(self, agency_id: str, carpool_id: str):
+        if carpool_exists(agency_id, carpool_id, 'data/enhanced'):
+            return load_carpool(agency_id, carpool_id, 'data/enhanced')
+        else:
+            return None
 
     def _load_as_trip(self, carpool: Carpool):
         trip = self.transformer.transform_to_trip(carpool)
@@ -256,7 +270,6 @@ class TripTransformer:
         for i in range(0, number_of_stops):
             current_stop = stops_frame.iloc[i]
 
-            print(current_stop.id, current_stop.time)
             if not current_stop.id:
                 continue
             elif i == 0:
@@ -302,4 +315,13 @@ class TripTransformer:
         
     def _is_pickup_stop(self, current_stop, total_distance):
         return current_stop["distance"] < 0.5 * total_distance
+
+def load_carpool(agencyId: str, carpoolId: str, folder: str ='data/enhanced') -> Carpool:
+    with open(f'{folder}/{agencyId}/{carpoolId}.json', 'r', encoding='utf-8') as f:
+        dict = json.load(f)
+        carpool = Carpool(**dict)
+    return carpool
+
+def carpool_exists(agency_id: str, carpool_id: str, folder: str ='data/enhanced'):
+    return os.path.exists(f"{folder}/{agency_id}/{carpool_id}.json")
 
