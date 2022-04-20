@@ -2,7 +2,7 @@ import csv
 import geopandas as gpd
 import pandas as pd
 from contextlib import closing
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString
 from shapely.ops import transform
 from pyproj import Proj, Transformer
 import re
@@ -45,7 +45,7 @@ class StopsStore():
         stops_frames = []
         if stops:
             stops_frames.append(self._convert_to_dataframe(stops)) 
-        transformedLine = transform(self.projection, line)
+        transformedLine = transform(self.projection, LineString(line.coordinates))
         for stops_to_match in self.stopsDataFrames:
             stops_frames.append(self._find_stops_around_transformed(stops_to_match['stops'], transformedLine, stops_to_match['distanceInMeter']))
         stops = gpd.GeoDataFrame( pd.concat(stops_frames, ignore_index=True, sort=True)) 

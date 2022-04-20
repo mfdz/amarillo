@@ -13,3 +13,4 @@ requests
 Shapely
 pyproj
 pyinotify
+geojson-pydantic

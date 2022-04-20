@@ -176,7 +176,7 @@ class GtfsExport:
         
     def _append_shapes(self, trip, shape_id):
         counter = 0
-        for point in trip.path.coords:
+        for point in trip.path.coordinates:
                 counter += 1
                 self.shapes.append(GtfsShape(shape_id, point[0], point[1], counter))
             

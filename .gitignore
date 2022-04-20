@@ -137,3 +137,4 @@ gtfs/*.zip
 gtfs/*.pbf
 gtfs/*.json
 data/carpool/
+data/enhanced/

@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, HttpUrl, EmailStr
 from typing import List, Union, Set, Optional, Tuple
 from datetime import time
 from pydantic import BaseModel, Field
+from geojson_pydantic.geometries import LineString
 from enum import Enum
 
 NumType = Union[float, int]
@@ -30,7 +31,7 @@ class StopTime(BaseModel):
                     "the DHID which is available via the 'zentrales "
                     "Haltestellenverzeichnis (zHV)', published by DELFI e.V. "
                     "Note, that currently carpooling location.",
-        regex=r"^([a-zA-Z]{2,5}):\d+:\d+(:\d*(:\w+)?)?$",
+        regex=r"^([a-zA-Z]{2,5}):\d+:\d+(:\d*(:\w+)?)?$|^osm:[nwr]\d+$",
         example="de:12073:900340137::2")
 
     name: str = Field(
@@ -233,6 +234,9 @@ class Carpool(BaseModel):
         example='A single date 2022-04-04 or a list of weekdays ["saturday", '
                 '"sunday"]')
 
+    path: Optional[LineString] = Field(
+        description="Optional route geometry as json LineString.")
+    
     lastUpdated: Optional[datetime] = Field(
         None,
         description="LastUpdated should reflect the last time, the user "
