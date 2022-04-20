@@ -12,6 +12,8 @@ from app.services.carpools import CarpoolService
 from app.tests.sampledata import examples
 from app.utils.container import container
 from app.services.importing.ride2go import import_ride2go
+# TODO should move this to service
+from app.routers.carpool import store_carpool
 
 logger = logging.getLogger(__name__)
 
@@ -52,3 +54,37 @@ async def get_agency(agency_id: str) -> Agency:
     print(f"Get agency {agency_id}.")
 
     return agency
+
+@router.post("/{agencyId}/sync",
+             operation_id="sync",
+             summary="Synchronizes all carpool offers",
+             response_model=Carpool,
+             responses={
+                 status.HTTP_200_OK: {
+                     "description": "Carpool created"},
+                 status.HTTP_404_NOT_FOUND: {
+                     "description": "Agency does not exist"},
+                 status.HTTP_500_INTERNAL_SERVER_ERROR: {
+                    "description": "Import error"}
+            })
+async def sync(agencyId: str) -> List[Carpool]:
+    if agencyId == "ride2go":
+        import_function = import_ride2go
+    else:
+        raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Agency does not exist or does not support sync.")
+
+    try:
+        carpools = import_function()
+        # TODO get current timestamp
+        result = [await store_carpool(cp) for cp in carpools]
+        # TODO move all carpools of the above agency older than timestamp to trash, as they were not retrieved
+        return result
+
+    except BaseException as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Something went wrong during import.")
+        
+

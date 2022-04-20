@@ -75,32 +75,7 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpo
     await save_carpool(carpool)
 
     return carpool
-
-
-@router.get("/import",
-            include_in_schema=False,
-            status_code=status.HTTP_200_OK,
-            responses={
-                status.HTTP_500_INTERNAL_SERVER_ERROR:
-                    {"description": "Import error"},
-            },
-            )
-# TODO pass in agencyId: str
-async def import_() -> List[Carpool]:
-    # TODO should be renamed to sync and move unsent carpools to trash
-    carpools = container["carpools"]
-    try:
-        ride2go_carpools = import_ride2go()
-        # TODO get current timestamp
-        [await store_carpool(cp) for cp in ride2go_carpools]
-        # TODO move all carpools of the above agency older than timestamp to trash, as they were not retrieved
-        return ride2go_carpools
-
-    except BaseException as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Something went wrong during importing from ride2go. {e}")
-
+    
 
 @router.get("/{agencyId}/{carpoolId}",
             operation_id="getcarpoolById",
