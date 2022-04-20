@@ -107,6 +107,9 @@ class TripStore():
             return self._load_as_trip(enhanced_carpool)
         except Exception as err:
             logger.error("Failed to add carpool %s:%s to TripStore.", carpool.agency, carpool.id, exc_info=True)
+            assert_folder_exists(f'data/failed/{carpool.agency}/')
+            with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
+                f.write(carpool.json())
 
     def load_carpool_if_exists(self, agency_id: str, carpool_id: str):
         if carpool_exists(agency_id, carpool_id, 'data/enhanced'):
@@ -204,9 +207,11 @@ class TripTransformer:
 
         trip_id = f"{carpool.agency}:{carpool.id}"
         stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
-        carpool.stops = stop_times
-        carpool.path = lineString
-        return carpool
+        
+        enhanced_carpool = carpool.copy()
+        enhanced_carpool.stops = stop_times
+        enhanced_carpool.path = lineString
+        return enhanced_carpool
 
     def _convert_stop_times(self, carpool):
 
