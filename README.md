@@ -21,3 +21,15 @@ In development use `--reload`. In production use `--host 0.0.0.
 ## Testing
 
 In the top directory, run `pytest app/tests`.
+
+## Docker
+
+### uvicorn
+- use `Dockerfile`
+- build `docker build -t amarillo-uvicorn -f Dockerfile .`
+- run `docker run -p 8000:80 -v $(pwd)/static:/code/static -v  $(pwd)/templates:/code/templates -v $(pwd)/gtfs:/code/gtfs -v $(pwd)/data:/code/data amarillo-uvicorn`
+
+### gunicorn
+- use `Dockerfile_gunicorn`
+- build `docker build -t amarillo-gunicorn -f Dockerfile_gunicorn .`
+- run `docker run -p 8000:80 -v $(pwd)/static:/app/static -v  $(pwd)/templates:/app/templates -v $(pwd)/gtfs:/app/gtfs -v $(pwd)/data:/app/data amarillo-gunicorn`
