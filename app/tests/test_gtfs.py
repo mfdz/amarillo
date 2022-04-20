@@ -6,7 +6,7 @@ from app.services.gtfs import GtfsRtProducer
 from app.services.stops import StopsStore
 from app.services.trips import TripStore
 from app.utils.container import container
-
+from app.models.Carpool import Carpool
 from datetime import datetime
 import time
 import pytest
@@ -14,8 +14,8 @@ import pytest
 client = TestClient(app)
 
 def test_gtfs_generation():
-    response = client.post("/carpool/", json=data1)
-    assert response.status_code == 200, "Adding a carpool must work"
+    cp = Carpool(**data1)
+    container['trips_store'].put_carpool(cp)
 
     exporter = GtfsExport(None, None, container['trips_store'], container['stops_store'])
     exporter.export('target/tests/test_gtfs_generation/test.gtfs.zip', "target/tests/test_gtfs_generation")
@@ -26,10 +26,10 @@ class TestTripConverter:
         configure_services()      
 
     def test_as_one_time_trip_as_delete_update(self):
-        response = client.post("/carpool/", json=data1)
-        assert response.status_code == 200, "Adding a carpool must work"
+        cp = Carpool(**data1)
+        container['trips_store'].put_carpool(cp)
         trip = next(iter(container['trips_store'].trips.values()))
-
+        
         converter = GtfsRtProducer(container['trips_store'])
         json = converter._as_delete_updates(trip, datetime(2022,4,11))
 
@@ -44,10 +44,10 @@ class TestTripConverter:
         }]
 
     def test_as_one_time_trip_as_added_update(self):
-        response = client.post("/carpool/", json=data1)
-        assert response.status_code == 200, "Adding a carpool must work"
+        cp = Carpool(**data1)
+        container['trips_store'].put_carpool(cp)
         trip = next(iter(container['trips_store'].trips.values()))
-
+        
         converter = GtfsRtProducer(container['trips_store'])
         json = converter._as_added_updates(trip, datetime(2022,4,11))
         assert json == [{
@@ -106,10 +106,10 @@ class TestTripConverter:
         }]
 
     def test_as_periodic_trip_as_delete_update(self):
-        response = client.post("/carpool/", json=carpool_repeating_json)
-        assert response.status_code == 200, "Adding a carpool must work"
+        cp = Carpool(**carpool_repeating_json)
+        container['trips_store'].put_carpool(cp)
         trip = next(iter(container['trips_store'].trips.values()))
-
+        
         converter = GtfsRtProducer(container['trips_store'])
         json = converter._as_delete_updates(trip, datetime(2022,4,11))
 
