@@ -16,6 +16,11 @@ class Weekday(str, Enum):
     saturday = "saturday"
     sunday = "sunday"
 
+class PickupDropoffType(str, Enum):
+    pickup_and_dropoff = "pickup_and_dropoff"
+    only_pickup = "only_pickup"
+    only_dropoff = "only_dropoff"
+
 class StopTime(BaseModel):
     id: str = Field(
         None,
@@ -77,6 +82,14 @@ class StopTime(BaseModel):
         ge=-180,
         lt=180,
         example="13.9934706687")
+
+    pickup_dropoff: Optional[PickupDropoffType] = Field(
+        description="If passengers may be picked up, dropped off or both at this stop. "
+                "If not specified, this service may assign this according to some custom rules. "
+                "E.g. Amarillo may allow pickup only for the first third of the distance travelled, "
+                "and dropoff only for the last third." ,
+        example="only_pickup"
+        )
 
     class Config:
         schema_extra = {
