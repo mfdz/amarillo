@@ -23,5 +23,19 @@ def configure_services():
     container['trips_store'] = trips.TripStore(stop_store)
     container['carpools'] = CarpoolService(container['trips_store'])
 
+    for carpool_file_name in glob('data/agency/**/*.json'):
+        with open(carpool_file_name) as carpool_file:
+            agency = Agency(**(json.load(carpool_file)))
+            container['carpools'].agencies[agency.id] = agency
+
+    print(f"Loaded agencies: {len(container['carpools'].agencies)}")
+
+    for carpool_file_name in glob('data/carpool/**/*.json'):
+        with open(carpool_file_name) as carpool_file:
+            carpool = Carpool(**(json.load(carpool_file)))
+            container['carpools'].put(carpool.agency, carpool.id, carpool)
+
+    print(f"Loaded carpools: {container['carpools'].get_all_ids()}")
+
     if config.env == 'PROD':
         gtfs_generator.start_schedule()
