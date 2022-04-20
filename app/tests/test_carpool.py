@@ -4,7 +4,7 @@ from app.tests.sampledata import carpool_1234, data1
 
 client = TestClient(app)
 
-
+# TODO FG: This test needs a clean temporary storage folder, not the hard coded data dir.
 def test_doc():
     response = client.get("/openapi.json")
     assert response.status_code == 200
