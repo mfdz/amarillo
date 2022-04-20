@@ -1,6 +1,6 @@
 import logging
 import logging.config
-from configuration import configure_services
+from app.configuration import configure_services
 
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger(__name__)
