@@ -66,6 +66,7 @@ async def put_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpoo
                      "description": "Carpool with this id exists already."}})
 async def post_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpool:
     logger.info("POST trip {carpool.agency}:{carpool.id}.")
+    # TODO DRY, implementation same as PUT
     await assert_agency_exists(carpool.agency)
     await assert_carpool_does_not_exist(carpool.agency, carpool.id)
 
@@ -86,12 +87,13 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpo
             )
 # TODO pass in agencyId: str
 async def import_() -> List[Carpool]:
+    # TODO should be renamed to sync and move unsent carpools to trash
     carpools = container["carpools"]
     try:
         ride2go_carpools = import_ride2go()
-
-        [carpools.put(cp.agency, cp.id, cp) for cp in ride2go_carpools]
-
+        # TODO get current timestamp
+        [await store_carpool(cp) for cp in ride2go_carpools]
+        # TODO move all carpools of the above agency older than timestamp to trash, as they were not retrieved
         return ride2go_carpools
 
     except BaseException as e:
@@ -146,11 +148,17 @@ async def delete_carpool(agencyId: str, carpoolId: str):
     logger.info(f"Delete trip {agencyId}:{carpoolId}.")
     await assert_agency_exists(agencyId)
     await assert_carpool_exists(agencyId, carpoolId)
-
+    # TODO should be moved to trashbin
     os.remove(f"data/carpool/{agencyId}/{carpoolId}.json")
 
     return "deleted"
 
+
+async def store_carpool(carpool: Carpool) -> Carpool:
+    await set_lastUpdated_if_unset(carpool)
+    await save_carpool(carpool)
+
+    return carpool
 
 async def set_lastUpdated_if_unset(carpool):
     if carpool.lastUpdated is None:
