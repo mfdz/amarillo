@@ -58,7 +58,7 @@ async def get_agency(agency_id: str) -> Agency:
 @router.post("/{agencyId}/sync",
              operation_id="sync",
              summary="Synchronizes all carpool offers",
-             response_model=Carpool,
+             response_model=List[Carpool],
              responses={
                  status.HTTP_200_OK: {
                      "description": "Carpool created"},
