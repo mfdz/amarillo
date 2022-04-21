@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, status
@@ -13,7 +14,7 @@ from app.tests.sampledata import examples
 from app.utils.container import container
 from app.services.importing.ride2go import import_ride2go
 # TODO should move this to service
-from app.routers.carpool import store_carpool
+from app.routers.carpool import store_carpool, delete_agency_carpools_older_than
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +78,10 @@ async def sync(agencyId: str) -> List[Carpool]:
 
     try:
         carpools = import_function()
-        # TODO get current timestamp
+        synced_files_older_than = time.time()
         result = [await store_carpool(cp) for cp in carpools]
-        # TODO move all carpools of the above agency older than timestamp to trash, as they were not retrieved
+        await delete_agency_carpools_older_than(agencyId, synced_files_older_than)
         return result
-
     except BaseException as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

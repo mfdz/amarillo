@@ -2,6 +2,8 @@ import logging
 import json
 import os
 import os.path
+import re
+from glob import glob
 from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, status
@@ -123,11 +125,17 @@ async def delete_carpool(agencyId: str, carpoolId: str):
     logger.info(f"Delete trip {agencyId}:{carpoolId}.")
     await assert_agency_exists(agencyId)
     await assert_carpool_exists(agencyId, carpoolId)
-    # TODO should be moved to trashbin
+    
+    return await _delete_carpool(agencyId, carpoolId)
+
+async def _delete_carpool(agencyId: str, carpoolId: str):
+    logger.info(f"Delete carpool {agencyId}:{carpoolId}.")
+    cp = await load_carpool(agencyId, carpoolId)
+    logger.info(f"Loded carpool {agencyId}:{carpoolId}.")
+    # load and store, to receive pyinotify events and have file timestamp updated
+    await save_carpool(cp, 'data/trash')
+    logger.info(f"Saved carpool {agencyId}:{carpoolId} in trash.")
     os.remove(f"data/carpool/{agencyId}/{carpoolId}.json")
-
-    return "deleted"
-
 
 async def store_carpool(carpool: Carpool) -> Carpool:
     await set_lastUpdated_if_unset(carpool)
@@ -147,8 +155,8 @@ async def load_carpool(agencyId, carpoolId) -> Carpool:
     return carpool
 
 
-async def save_carpool(carpool):
-    with open(f'data/carpool/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
+async def save_carpool(carpool, folder: str = 'data/carpool'):
+    with open(f'{folder}/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
         f.write(carpool.json())
 
 
@@ -174,3 +182,9 @@ async def assert_carpool_does_not_exist(agency_id: str, carpool_id: str):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Carpool with id {carpool_id} exists already.")
+
+async def delete_agency_carpools_older_than(agencyId, timestamp):
+    for carpool_file_name in glob(f'data/carpool/{agencyId}/*.json'):
+        if os.path.getctime(carpool_file_name) < timestamp:
+            m = re.search(r'([a-zA-Z0-9_-]+)\.json$', carpool_file_name)
+            await _delete_carpool(agencyId, m[1])
