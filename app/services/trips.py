@@ -145,12 +145,12 @@ class TripStore():
         for key in self.recent_trips.keys():
             t = self.recent_trips.get(key)
             if t and t.lastUpdated.date() < day:
-                del recent_trips[key]
+                del self.recent_trips[key]
 
         for key in self.deleted_trips.keys():
             t = self.deleted_trips.get(key)
             if t and t.lastUpdated.date() < day:
-                del deleted_trips[key]
+                del self.deleted_trips[key]
 
     def _yesterday(self):
         return date.today() - timedelta(days=1)
