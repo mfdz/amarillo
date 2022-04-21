@@ -14,6 +14,7 @@ from app.utils.container import container
 from app.utils.utils import assert_folder_exists
 import app.services.gtfs_generator as gtfs_generator
 
+logger = logging.getLogger(__name__)
 
 def create_required_directories():
     logger.info("Checking that necessary directories exist")
