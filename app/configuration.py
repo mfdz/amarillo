@@ -11,8 +11,21 @@ from app.services.carpools import CarpoolService
 from app.services.config import config
 
 from app.utils.container import container
+from app.utils.utils import assert_folder_exists
 import app.services.gtfs_generator as gtfs_generator
 
+
+def create_required_directories():
+    logger.info("Checking that necessary directories exist")
+    # Folder to serve GTFS(-RT) from
+    assert_folder_exists(f'gtfs')
+    # Temp folder for GTFS generation
+    assert_folder_exists(f'target')
+    for agency_id in container['carpools'].agencies:
+        for subdir in ['carpool','trash','enhanced', 'failed']:
+            foldername = f'data/{subdir}/{agency_id}'
+            logger.debug("Checking that necessary %s exist", foldername)
+            assert_folder_exists(f'data/{subdir}/{agency_id}')
 
 def configure_services():
     stop_sources = [
@@ -28,17 +41,26 @@ def configure_services():
     container['trips_store'] = trips.TripStore(stop_store)
     container['carpools'] = CarpoolService(container['trips_store'])
 
+    # TODO FG: why **? do we expect to store agencies in subdirectories?
     for carpool_file_name in glob('data/agency/**/*.json'):
         with open(carpool_file_name) as carpool_file:
             agency = Agency(**(json.load(carpool_file)))
             container['carpools'].agencies[agency.id] = agency
 
     print(f"Loaded agencies: {len(container['carpools'].agencies)}")
+    
+    create_required_directories()
 
-    for carpool_file_name in glob('data/carpool/**/*.json'):
-        with open(carpool_file_name) as carpool_file:
-            carpool = Carpool(**(json.load(carpool_file)))
-            container['carpools'].put(carpool.agency, carpool.id, carpool)
+    for agency_id in container['carpools'].agencies:
+        for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
+            with open(carpool_file_name) as carpool_file:
+                carpool = Carpool(**(json.load(carpool_file)))
+                container['carpools'].put(carpool.agency, carpool.id, carpool)
+        # notify carpool about carpools in trash, as delete notifications must be sent
+        for carpool_file_name in glob(f'data/trash/{agency_id}/*.json'):
+            with open(carpool_file_name) as carpool_file:
+                carpool = Carpool(**(json.load(carpool_file)))
+                container['carpools'].delete(carpool.agency, carpool.id)
 
     print(f"Loaded carpools: {container['carpools'].get_all_ids()}")
 
