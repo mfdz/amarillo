@@ -1,13 +1,15 @@
-FROM python:3.9
+# FROM tiangolo/uvicorn-gunicorn:python3.9
+FROM   tiangolo/uvicorn-gunicorn-fastapi:python3.9
 
-WORKDIR /code
+LABEL maintainer="info@mfdz.de"
 
-COPY ./requirements.txt /code/requirements.txt
+WORKDIR /app
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
-COPY ./app /code/app
-COPY config /code
-COPY logging.conf /code
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+COPY ./app /app/app
+COPY config /app
+COPY logging.conf /app
+COPY prestart.sh /app
+COPY enhancer.py /app
