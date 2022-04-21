@@ -2,7 +2,7 @@ import logging
 import logging.config
 from app.configuration import configure_services
 
-logging.config.fileConfig('logging.conf')
+logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 
 import uvicorn
