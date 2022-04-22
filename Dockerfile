@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9-slim
 
 WORKDIR /code
 
@@ -6,7 +6,8 @@ RUN \
 	apt update \
 	&& apt install -y \
 	# GDAL headers are required for fiona, which is required for geopandas.
-	libgdal-dev \
+	# Also gcc is used to compile C++ code.
+	libgdal-dev g++ \
 	# libspatialindex is required for rtree.
 	libspatialindex-dev \
 	# Remove package index obtained by `apt update`.
@@ -14,7 +15,10 @@ RUN \
 
 COPY ./requirements.txt /code/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN \
+	pip install --no-cache-dir --upgrade -r /code/requirements.txt \
+	# For some reason, --no-cache-dir doesn't work. :(
+	&& rm -rf ~/.cache/pip
 
 ENV RIDE2GO_TOKEN=''
 
