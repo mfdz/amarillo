@@ -35,7 +35,7 @@ class CarpoolService():
         id = f"{agency_id}:{carpool_id}"
         if id in self.carpools:
             del self.carpools[id]
-        self.trip_store.delete_carpool(id)
+        self.trip_store.delete_carpool(agency_id, carpool_id)
 
     def get_agency(self, agency_id: str) -> Agency:
         agency = self.agencies.get(agency_id)

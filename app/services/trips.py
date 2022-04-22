@@ -127,10 +127,11 @@ class TripStore():
 
         return trip
 
-    def delete_carpool(self, agencyScopedCarpoolId):
+    def delete_carpool(self, agency_id: str, carpool_id: str):
         """
             Deletes carpool from the TripStore.
         """
+        agencyScopedCarpoolId = f"{agency_id}:{carpool_id}"
         trip_to_be_deleted = self.trips.get(agencyScopedCarpoolId)
         if trip_to_be_deleted:
             self.deleted_trips[agencyScopedCarpoolId] = trip_to_be_deleted
@@ -139,6 +140,9 @@ class TripStore():
         if self.recent_trips.get(agencyScopedCarpoolId):
             del self.recent_trips[agencyScopedCarpoolId]
 
+        if carpool_exists(agency_id, carpool_id):
+            remove_carpool_file(agency_id, carpool_id)
+            
         logger.debug("Deleted trip %s", id)
 
     def purge_trips_older_than(self, day):
@@ -330,3 +334,5 @@ def load_carpool(agencyId: str, carpoolId: str, folder: str ='data/enhanced') ->
 def carpool_exists(agency_id: str, carpool_id: str, folder: str ='data/enhanced'):
     return os.path.exists(f"{folder}/{agency_id}/{carpool_id}.json")
 
+def remove_carpool_file(agency_id: str, carpool_id: str, folder: str ='data/enhanced'):
+    return os.remove(f"{folder}/{agency_id}/{carpool_id}.json")
