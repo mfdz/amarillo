@@ -18,6 +18,8 @@ services:
         traefik.frontend.rule: Host:amarillo.bbnavi.de
         traefik.frontend.passHostHeader: "true"
         traefik.port: '8000'
+        # bbnavi:digitransit
+        # traefik.frontend.auth.basic.users: bbnavi:$$apr1$$s135n0lg$$.yhGUnsFgFVpKW.9UuyTJ/
 
 networks:
   public:

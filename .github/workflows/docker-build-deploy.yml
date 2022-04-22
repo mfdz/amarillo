@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - deploy
-  pull_request:
-    branches:
-      - deploy
+      # todo: remove
+      - gh-action
+  # pull_request:
+  #   branches:
+  #     - deploy
 
 env:
   DOCKER_IMAGE: registry.gitlab.tpwd.de/tpwd/bb-navi/amarillo
@@ -41,7 +43,7 @@ jobs:
       QUANTUM_USER: ${{ secrets.QUANTUM_USER }}
       QUANTUM_PASSWORD: ${{ secrets.QUANTUM_PASSWORD }}
       QUANTUM_ENDPOINT: "tpwd-bb-navi"
-      QUANTUM_STACK: "amarillo-tpwd-bb-navi"
+      QUANTUM_STACK: "amarillo"
     steps:
       - uses: actions/checkout@v2
       - name: generate Planetary Quantum stack markup
@@ -53,6 +55,7 @@ jobs:
           echo "---\nversion: '1.0'\ncompose: stack.yml" >.quantum
       - name: Deploy to Planetary Quantum
         run: |
+          set -x
           docker run --rm -it \
             -v $PWD:/app
             -e QUANTUM_USER -e QUANTUM_PASSWORD -e QUANTUM_ENDPOINT -e QUANTUM_STACK \
