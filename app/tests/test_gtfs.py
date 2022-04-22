@@ -117,20 +117,20 @@ class TestTripConverter:
 
         assert json == [{
                 'trip': {
-                  'tripId': 'mfdz:Eins', 
+                  'tripId': 'mfdz:Zwei', 
                   'startTime': '15:00:00',
                   'startDate': '20220411', 
                   'scheduleRelationship': 'CANCELED', 
-                  'routeId': 'mfdz:Eins'
+                  'routeId': 'mfdz:Zwei'
                 }
             },
             {
                 'trip': {
-                  'tripId': 'mfdz:Eins', 
+                  'tripId': 'mfdz:Zwei', 
                   'startTime': '15:00:00',
                   'startDate': '20220418', 
                   'scheduleRelationship': 'CANCELED', 
-                  'routeId': 'mfdz:Eins'
+                  'routeId': 'mfdz:Zwei'
                 }
             }
         ]
