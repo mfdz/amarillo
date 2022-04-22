@@ -8,6 +8,10 @@ on:
     branches:
       - deploy
 
+env:
+  DOCKER_IMAGE: registry.gitlab.tpwd.de/tpwd/bb-navi/amarillo
+  DOCKER_TAG: production
+
 jobs:
   prep:
     runs-on: ubuntu-latest
@@ -24,7 +28,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: registry.gitlab.tpwd.de/tpwd/bb-navi/amarillo:production
+        tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
         # https://github.com/docker/build-push-action/blob/9472e9021074a3cb3279ba431598b8836d40433f/docs/advanced/cache.md#github-cache
         # https://github.com/moby/buildkit#registry-push-image-and-cache-separately
         cache-from: type=gha
@@ -33,13 +37,25 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - prep
-    container: r.planetary-quantum.com/quantum-public/cli:2
+    environment: production
     env:
       QUANTUM_USER: ${{ secrets.QUANTUM_USER }}
       QUANTUM_PASSWORD: ${{ secrets.QUANTUM_PASSWORD }}
       QUANTUM_ENDPOINT: "tpwd-bb-navi"
       QUANTUM_STACK: "amarillo-tpwd-bb-navi"
+      RIDE2GO_TOKEN: ${{ secrets.RIDE2GO_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+      - name: generate Planetary Quantum stack markup
+        run: |
+          set -o pipefail
+          docker-compose -f quantum-stack.yml config | tee stack.yml
+          echo -e "---\nversion: '1.0'\ncompose: stack.yml" >.quantum
       - name: Deploy to Planetary Quantum
-        run: quantum-cli stacks update --create --wait
+        run: |
+          set -x
+          docker run --rm -i \
+            -v $PWD:/app -w /app \
+            -e QUANTUM_USER -e QUANTUM_PASSWORD -e QUANTUM_ENDPOINT -e QUANTUM_STACK \
+            r.planetary-quantum.com/quantum-public/cli:2 \
+            quantum-cli stacks update --create --wait
