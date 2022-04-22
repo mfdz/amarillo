@@ -35,7 +35,7 @@ def import_ride2go() -> List[Carpool]:
 
     ride2go_url = "https://ride2go.com/api/v1/trips/export"
 
-    api_key = secrets.secrets.get('ride2go')
+    api_key = secrets.ride2go_token
 
     ride2go_headers = {
         'Content-type': 'text/plain;charset=UTF-8',

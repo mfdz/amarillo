@@ -3,7 +3,7 @@ from pydantic import BaseSettings, Field
 
 # Example: secrets = { "mfdz": "some secret" }
 class Secrets(BaseSettings):
-    secrets: Dict[str, str] = Field({})
+    ride2go_token: str = Field(None, env = 'RIDE2GO_TOKEN')
 
 
 # Read if file exists, otherwise no error (it's in .gitignore)

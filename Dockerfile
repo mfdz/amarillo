@@ -6,6 +6,8 @@ COPY ./requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
+ENV RIDE2GO_TOKEN=''
+
 EXPOSE 8000
 
 COPY ./app /code/app
