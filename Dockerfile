@@ -21,6 +21,7 @@ ENV RIDE2GO_TOKEN=''
 EXPOSE 8000
 
 COPY ./app /code/app
+COPY ./static /code/static
 COPY config /code
 COPY logging.conf /code
 
