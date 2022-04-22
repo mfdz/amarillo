@@ -89,13 +89,10 @@ class TripStore():
         """
         Adds carpool to the TripStore.
         """
-        # TODO: check, if already known (id AND lastUpdated matches)
-        # Only then we should transform to trip and store
-
         id = "{}:{}".format(carpool.agency, carpool.id)
         filename = f'data/enhanced/{carpool.agency}/{carpool.id}.json'
         try:
-            existing_carpool = self.load_carpool_if_exists(carpool.agency, carpool.id)
+            existing_carpool = self._load_carpool_if_exists(carpool.agency, carpool.id)
             if existing_carpool and existing_carpool.lastUpdated == carpool.lastUpdated:
                 enhanced_carpool = existing_carpool
             else:
@@ -111,7 +108,7 @@ class TripStore():
             with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
                 f.write(carpool.json())
 
-    def load_carpool_if_exists(self, agency_id: str, carpool_id: str):
+    def _load_carpool_if_exists(self, agency_id: str, carpool_id: str):
         if carpool_exists(agency_id, carpool_id, 'data/enhanced'):
             return load_carpool(agency_id, carpool_id, 'data/enhanced')
         else:
