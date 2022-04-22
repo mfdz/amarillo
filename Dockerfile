@@ -15,6 +15,8 @@ RUN \
 	# Remove package index obtained by `apt update`.
 	&& rm -rf /var/lib/apt/lists/*
 
+ENV RIDE2GO_TOKEN=''
+
 EXPOSE 8000
 
 COPY requirements.txt /app/requirements.txt
