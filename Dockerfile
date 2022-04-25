@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY ./app /app/app
 COPY ./static /app/static
+COPY ./templates /app/templates
 COPY config /app
 COPY logging.conf /app
 COPY prestart.sh /app
