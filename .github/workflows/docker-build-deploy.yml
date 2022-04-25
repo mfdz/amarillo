@@ -42,7 +42,7 @@ jobs:
       QUANTUM_USER: ${{ secrets.QUANTUM_USER }}
       QUANTUM_PASSWORD: ${{ secrets.QUANTUM_PASSWORD }}
       QUANTUM_ENDPOINT: "tpwd-bb-navi"
-      QUANTUM_STACK: "amarillo-tpwd-bb-navi"
+      QUANTUM_STACK: "amarillo"
       RIDE2GO_TOKEN: ${{ secrets.RIDE2GO_TOKEN }}
     steps:
       - uses: actions/checkout@v2
