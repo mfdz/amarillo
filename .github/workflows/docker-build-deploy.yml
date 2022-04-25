@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - deploy
-  pull_request:
-    branches:
-      - deploy
 
 env:
   DOCKER_IMAGE: registry.gitlab.tpwd.de/tpwd/bb-navi/amarillo
