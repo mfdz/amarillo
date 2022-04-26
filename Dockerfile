@@ -30,4 +30,5 @@ COPY logging.conf /app
 COPY prestart.sh /app
 COPY enhancer.py /app
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# This image inherits uvicorn-gunicorn's CMD. If you'd like to start uvicorn, use this instead
+# CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

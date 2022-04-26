@@ -15,8 +15,7 @@ Activate the environment and install the dependencies `pip install -r requiremen
 
 Run `uvicorn app.main:app`. 
 
-In development use `--reload`. In production use `--host 0.0.0.
-0 --port 8000`.
+In development, you can use `--reload`. 
 
 ## Testing
 
@@ -24,15 +23,7 @@ In the top directory, run `pytest app/tests`.
 
 ## Docker
 
-### uvicorn
-- use `Dockerfile`
-- build `docker build -t amarillo-uvicorn -f Dockerfile .`
-- run `docker run -p 8000:80 -v $(pwd)/static:/code/static -v  $(pwd)/templates:/code/templates -v $(pwd)/gtfs:/code/gtfs -v $(pwd)/data:/code/data amarillo-uvicorn`
+Based on [tiangolo/uvicorn-gunicorn:python3.9-slim](https://github.com/tiangolo/uvicorn-gunicorn-docker)
 
-### gunicorn
-
-Based on https://github.com/tiangolo/uvicorn-gunicorn-fastapi-docker
-
-- use `Dockerfile_gunicorn`
-- build `docker build -t amarillo-gunicorn -f Dockerfile_gunicorn .`
-- run `docker run -p 8000:80 -v $(pwd)/static:/app/static -v  $(pwd)/templates:/app/templates -v $(pwd)/gtfs:/app/gtfs -v $(pwd)/data:/app/data amarillo-gunicorn`
+- build `docker build -t amarillo .`
+- run `docker run -p 8000:8000 -v $(pwd)/data:/app/data amarillo-gunicorn`
