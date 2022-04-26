@@ -7,6 +7,7 @@ from app.models.Carpool import Agency, Carpool
 from app.services import stops
 from app.services import trips
 from app.services.carpools import CarpoolService
+from app.services.agencies import AgencyService
 
 from app.services.config import config
 
@@ -22,13 +23,21 @@ def create_required_directories():
     assert_folder_exists('data/gtfs')
     # Temp folder for GTFS generation
     assert_folder_exists('data/tmp')
-    for agency_id in container['carpools'].agencies:
-        for subdir in ['carpool','trash','enhanced', 'failed']:
+    for agency_id in container['agencies'].agencies:
+        for subdir in ['carpool', 'trash', 'enhanced', 'failed']:
             foldername = f'data/{subdir}/{agency_id}'
             logger.debug("Checking that necessary %s exist", foldername)
             assert_folder_exists(f'data/{subdir}/{agency_id}')
 
+def configure_services():
+    container['agencies'] = AgencyService()
+    logger.info("Loaded %d agencies", len(container['agencies'].agencies))
+    create_required_directories()
+
 def configure_enhancer_services():
+    configure_services()
+
+    logger.info("Load stops...")
     stop_sources = [
         {"url": "https://data.mfdz.de/mfdz/stops/custom.csv", "vicinity": 50},
         {"url": "https://data.mfdz.de/mfdz/stops/stops_zhv.csv", "vicinity": 50},
@@ -42,17 +51,8 @@ def configure_enhancer_services():
     container['trips_store'] = trips.TripStore(stop_store)
     container['carpools'] = CarpoolService(container['trips_store'])
 
-    # TODO FG: why **? do we expect to store agencies in subdirectories?
-    for carpool_file_name in glob('conf/agency/**/*.json'):
-        with open(carpool_file_name) as carpool_file:
-            agency = Agency(**(json.load(carpool_file)))
-            container['carpools'].agencies[agency.id] = agency
-
-    print(f"Loaded agencies: {len(container['carpools'].agencies)}")
-    
-    create_required_directories()
-
-    for agency_id in container['carpools'].agencies:
+    logger.info("Restore carpools...")
+    for agency_id in container['agencies'].agencies:
         for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
             with open(carpool_file_name) as carpool_file:
                 carpool = Carpool(**(json.load(carpool_file)))
@@ -63,11 +63,8 @@ def configure_enhancer_services():
                 carpool = Carpool(**(json.load(carpool_file)))
                 container['carpools'].delete(carpool.agency, carpool.id)
 
-    print(f"Loaded carpools: {container['carpools'].get_all_ids()}")
+    logger.info("Restored carpools: %s", container['carpools'].get_all_ids())
 
     if config.env == 'PROD':
+        logger.info("Starting scheduler")
         gtfs_generator.start_schedule()
-
-
-def configure_services():
-    pass
