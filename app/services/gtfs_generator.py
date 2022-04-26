@@ -13,7 +13,7 @@ from datetime import date, timedelta
 logger = logging.getLogger(__name__)
 
 regions = {}
-for region_file_name in glob('data/region/*.json'):
+for region_file_name in glob('conf/region/*.json'):
     with open(region_file_name) as region_file:
         dict = json.load(region_file)
         region = Region(**dict)
@@ -50,13 +50,13 @@ def generate_gtfs():
 			container['trips_store'], 
 			container['stops_store'], 
 			region.bbox)
-		exporter.export(f"gtfs/mfdz.{region.id}.gtfs.zip", "target/")
+		exporter.export(f"data/gtfs/amarillo.{region.id}.gtfs.zip", "data/tmp/")
 
 def generate_gtfs_rt():
 	logger.info("Generate GTFS-RT")
 	producer = GtfsRtProducer(container['trips_store'])
 	for region in regions.values():
-		rt = producer.export_feed(time.time(), f"gtfs/mfdz.{region.id}.gtfsrt", bbox=region.bbox)
+		rt = producer.export_feed(time.time(), f"data/gtfs/amarillo.{region.id}.gtfsrt", bbox=region.bbox)
 
 def start_schedule():
 	schedule.every().day.at("00:00").do(midnight)
