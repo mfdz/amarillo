@@ -43,7 +43,7 @@ def configure_services():
     container['carpools'] = CarpoolService(container['trips_store'])
 
     # TODO FG: why **? do we expect to store agencies in subdirectories?
-    for carpool_file_name in glob('data/agency/**/*.json'):
+    for carpool_file_name in glob('conf/agency/**/*.json'):
         with open(carpool_file_name) as carpool_file:
             agency = Agency(**(json.load(carpool_file)))
             container['carpools'].agencies[agency.id] = agency

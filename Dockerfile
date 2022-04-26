@@ -23,11 +23,12 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY ./app /app/app
+COPY enhancer.py /app
+COPY prestart.sh /app
 COPY ./static /app/static
 COPY ./templates /app/templates
 COPY config /app
 COPY logging.conf /app
-COPY prestart.sh /app
-COPY enhancer.py /app
+COPY ./config /app/config
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

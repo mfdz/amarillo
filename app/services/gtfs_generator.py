@@ -13,7 +13,7 @@ from datetime import date, timedelta
 logger = logging.getLogger(__name__)
 
 regions = {}
-for region_file_name in glob('data/region/*.json'):
+for region_file_name in glob('conf/region/*.json'):
     with open(region_file_name) as region_file:
         dict = json.load(region_file)
         region = Region(**dict)
