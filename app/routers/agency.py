@@ -83,6 +83,7 @@ async def sync(agencyId: str) -> List[Carpool]:
         await delete_agency_carpools_older_than(agencyId, synced_files_older_than)
         return result
     except BaseException as e:
+        logger.exception("Error on sync for agency %s", agencyId)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong during import.")

@@ -84,7 +84,7 @@ def configure():
 def configure_routing():
     mimetypes.add_type('application/x-protobuf', '.pbf')
     app.mount('/static', StaticFiles(directory='static'), name='static')
-    app.mount('/gtfs', StaticFiles(directory='gtfs'), name='gtfs')
+    app.mount('/gtfs', StaticFiles(directory='data/gtfs'), name='gtfs')
     app.include_router(home.router)
 
 
