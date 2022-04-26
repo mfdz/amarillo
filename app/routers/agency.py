@@ -42,9 +42,9 @@ router = APIRouter(
             },
             )
 async def get_agency(agency_id: str) -> Agency:
-    carpools: CarpoolService = container['carpools']
+    agencies: AgencyService = container['agencies']
 
-    agency = carpools.get_agency(agency_id)
+    agency = agencies.get_agency(agency_id)
 
     exists = agency is not None
 
