@@ -28,7 +28,7 @@ def create_required_directories():
             logger.debug("Checking that necessary %s exist", foldername)
             assert_folder_exists(f'data/{subdir}/{agency_id}')
 
-def configure_services():
+def configure_enhancer_services():
     stop_sources = [
         {"url": "https://data.mfdz.de/mfdz/stops/custom.csv", "vicinity": 50},
         {"url": "https://data.mfdz.de/mfdz/stops/stops_zhv.csv", "vicinity": 50},
@@ -67,3 +67,7 @@ def configure_services():
 
     if config.env == 'PROD':
         gtfs_generator.start_schedule()
+
+
+def configure_services():
+    pass

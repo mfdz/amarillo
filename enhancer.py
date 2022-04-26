@@ -2,13 +2,13 @@ import pyinotify
 import json
 import time
 
-from app.configuration import configure_services
+from app.configuration import configure_enhancer_services
 from app.utils.container import container
 from app.models.Carpool import Carpool
 
 print("Hello Enhancer")
 
-configure_services()
+configure_enhancer_services()
 
 
 wm = pyinotify.WatchManager()  # Watch Manager
