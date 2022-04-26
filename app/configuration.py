@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 def create_required_directories():
     logger.info("Checking that necessary directories exist")
     # Folder to serve GTFS(-RT) from
-    assert_folder_exists(f'data/gtfs')
+    assert_folder_exists('data/gtfs')
     # Temp folder for GTFS generation
-    assert_folder_exists(f'data/tmp')
+    assert_folder_exists('data/tmp')
     for agency_id in container['carpools'].agencies:
         for subdir in ['carpool','trash','enhanced', 'failed']:
             foldername = f'data/{subdir}/{agency_id}'
