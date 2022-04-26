@@ -85,7 +85,9 @@ def configure_enhancer_services():
 
 def configure_admin_token():
     if config.admin_token is None:
-        raise Exception("ADMIN_TOKEN environment variable not set")
+        message = "ADMIN_TOKEN environment variable not set"
+        logger.error(message)
+        raise Exception(message)
 
     logger.info("ADMIN_TOKEN environment variable found")
     # Note: the admin token is not persisted. When needed it is accessed
