@@ -1,13 +1,15 @@
 import json
 from glob import glob
+from typing import Dict
+
 from app.models.Carpool import Agency
 
 
-class AgencyService():
+class AgencyService:
 
     def __init__(self):
         self.agencies: Dict[str, Agency] = {}
-        
+
         for agency_file_name in glob('conf/agency/*.json'):
             with open(agency_file_name) as agency_file:
                 dict = json.load(agency_file)

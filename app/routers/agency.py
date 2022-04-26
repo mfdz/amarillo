@@ -3,12 +3,13 @@ import os
 import time
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, status, Depends
 from datetime import datetime
 
 from pydantic import Field
 
 from app.models.Carpool import Carpool, Agency
+from app.routers.token import verify_admin_token
 from app.services.carpools import CarpoolService
 from app.tests.sampledata import examples
 from app.utils.container import container
@@ -68,7 +69,7 @@ async def get_agency(agency_id: str) -> Agency:
                  status.HTTP_500_INTERNAL_SERVER_ERROR: {
                     "description": "Import error"}
             })
-async def sync(agencyId: str) -> List[Carpool]:
+async def sync(agencyId: str, admin_token: str = Depends(verify_admin_token)) -> List[Carpool]:
     if agencyId == "ride2go":
         import_function = import_ride2go
     else:
