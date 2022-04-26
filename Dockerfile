@@ -30,7 +30,7 @@ COPY ./static /app/static
 COPY ./templates /app/templates
 COPY config /app
 COPY logging.conf /app
-COPY ./config /app/config
+COPY ./conf /app/conf
 
 # This image inherits uvicorn-gunicorn's CMD. If you'd like to start uvicorn, use this instead
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
