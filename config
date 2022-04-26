@@ -2,4 +2,4 @@ agencies = [ "mfdz", "ride2go", "mifaz", "bessermitfahren"]
 
 # Brandenburg
 ride2go_query_data = '{ "southWestCoordinates": { "lat": 51.083, "lon": 10.657 }, "northEastCoordinates": { "lat": 53.593, "lon": 14.788 }, "lastModifiedSinceDays": 180 }'
-env = 'DEV'
+env = 'PROD'
