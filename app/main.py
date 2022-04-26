@@ -1,6 +1,6 @@
 import logging
 import logging.config
-from app.configuration import configure_services
+from app.configuration import configure_services, configure_admin_token
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
@@ -9,7 +9,7 @@ import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from app.routers import carpool, agency
+from app.routers import carpool, agency, token
 from fastapi import FastAPI, status
 from app.services import stops
 from app.services import trips
@@ -74,9 +74,10 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
 
 app.include_router(carpool.router)
 app.include_router(agency.router)
-
+app.include_router(token.router)
 
 def configure():
+    configure_admin_token()
     configure_services()
     configure_routing()
 

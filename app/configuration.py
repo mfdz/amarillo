@@ -16,6 +16,7 @@ import app.services.gtfs_generator as gtfs_generator
 
 logger = logging.getLogger(__name__)
 
+
 def create_required_directories():
     logger.info("Checking that necessary directories exist")
     # Folder to serve GTFS(-RT) from
@@ -23,10 +24,11 @@ def create_required_directories():
     # Temp folder for GTFS generation
     assert_folder_exists(f'target')
     for agency_id in container['carpools'].agencies:
-        for subdir in ['carpool','trash','enhanced', 'failed']:
+        for subdir in ['carpool', 'trash', 'enhanced', 'failed']:
             foldername = f'data/{subdir}/{agency_id}'
             logger.debug("Checking that necessary %s exist", foldername)
             assert_folder_exists(f'data/{subdir}/{agency_id}')
+
 
 def configure_services():
     stop_sources = [
@@ -49,7 +51,7 @@ def configure_services():
             container['carpools'].agencies[agency.id] = agency
 
     print(f"Loaded agencies: {len(container['carpools'].agencies)}")
-    
+
     create_required_directories()
 
     for agency_id in container['carpools'].agencies:
@@ -65,5 +67,17 @@ def configure_services():
 
     print(f"Loaded carpools: {container['carpools'].get_all_ids()}")
 
+    container["tokens"] = {}
+    # TODO FG load from file
+
     if config.env == 'PROD':
         gtfs_generator.start_schedule()
+
+
+def configure_admin_token():
+    if config.admin_token is None:
+        raise Exception("ADMIN_TOKEN environment variable not set")
+
+    logger.info("ADMIN_TOKEN environment variable found")
+    # Note: the admin token is not persisted. When needed it is accessed
+    # via config.admin_token as above
