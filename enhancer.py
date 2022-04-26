@@ -1,10 +1,15 @@
 import pyinotify
 import json
 import time
+import logging
+import logging.config
 
 from app.configuration import configure_enhancer_services
 from app.utils.container import container
 from app.models.Carpool import Carpool
+
+logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
 
 print("Hello Enhancer")
 
