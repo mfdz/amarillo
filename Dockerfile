@@ -18,7 +18,7 @@ RUN \
 ENV ADMIN_TOKEN=''
 ENV RIDE2GO_TOKEN=''
 
-EXPOSE 8000
+EXPOSE 80
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
