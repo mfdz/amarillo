@@ -6,7 +6,7 @@ import re
 from glob import glob
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, Header, HTTPException, status, Depends
 from datetime import datetime
 
 from app.models.Carpool import Carpool
@@ -21,6 +21,14 @@ router = APIRouter(
     tags=["carpool"]
 )
 
+
+async def verify_token(token: str = Header(...)) -> str:
+    agency_conf_service = container['tokens']
+
+    agency_id = agency_conf_service.check_api_key(token)
+
+    # returning without an exception means the token is good
+    return agency_id
 
 @router.put("/",
             operation_id="updatecarpool",
@@ -37,7 +45,7 @@ router = APIRouter(
                        # maybe 405 is not needed?
                        405: {"description": "Validation exception"}},
             )
-async def put_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpool:
+async def put_carpool(carpool: Carpool = Body(..., examples=examples), token: str = Depends(verify_token)) -> Carpool:
     logger.info(f"Put trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
     await assert_carpool_exists(carpool.agency, carpool.id)
@@ -66,8 +74,8 @@ async def put_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpoo
                      "description": "Validation exception"},
                  status.HTTP_409_CONFLICT: {
                      "description": "Carpool with this id exists already."}})
-async def post_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpool:
-    logger.info("POST trip {carpool.agency}:{carpool.id}.")
+async def post_carpool(carpool: Carpool = Body(..., examples=examples), token: str = Depends(verify_token)) -> Carpool:
+    logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     # TODO DRY, implementation same as PUT
     await assert_agency_exists(carpool.agency)
     await assert_carpool_does_not_exist(carpool.agency, carpool.id)
@@ -95,7 +103,7 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples)) -> Carpo
                 # 405: {"description": "Validation exception"}
             },
             )
-async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
+async def get_carpool(agencyId: str, carpoolId: str, token: str = Depends(verify_token)) -> Carpool:
     logger.info(f"Get trip {agencyId}:{carpoolId}.")
     await assert_agency_exists(agencyId)
     await assert_carpool_exists(agencyId, carpoolId)
@@ -121,7 +129,7 @@ async def get_carpool(agencyId: str, carpoolId: str) -> Carpool:
                    # 405: {"description": "Validation exception"}
                },
                )
-async def delete_carpool(agencyId: str, carpoolId: str):
+async def delete_carpool(agencyId: str, carpoolId: str, token: str = Depends(verify_token)):
     logger.info(f"Delete trip {agencyId}:{carpoolId}.")
     await assert_agency_exists(agencyId)
     await assert_carpool_exists(agencyId, carpoolId)
@@ -131,7 +139,7 @@ async def delete_carpool(agencyId: str, carpoolId: str):
 async def _delete_carpool(agencyId: str, carpoolId: str):
     logger.info(f"Delete carpool {agencyId}:{carpoolId}.")
     cp = await load_carpool(agencyId, carpoolId)
-    logger.info(f"Loded carpool {agencyId}:{carpoolId}.")
+    logger.info(f"Loaded carpool {agencyId}:{carpoolId}.")
     # load and store, to receive pyinotify events and have file timestamp updated
     await save_carpool(cp, 'data/trash')
     logger.info(f"Saved carpool {agencyId}:{carpoolId} in trash.")
@@ -161,7 +169,7 @@ async def save_carpool(carpool, folder: str = 'data/carpool'):
 
 
 async def assert_agency_exists(agency_id: str):
-    agency_exists = os.path.exists(f"data/agency/{agency_id}.json")
+    agency_exists = os.path.exists(f"conf/agency/{agency_id}.json")
     if not agency_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

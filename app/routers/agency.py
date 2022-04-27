@@ -3,12 +3,13 @@ import os
 import time
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, status, Depends
 from datetime import datetime
 
 from pydantic import Field
 
 from app.models.Carpool import Carpool, Agency
+from app.routers.token import verify_admin_token
 from app.services.carpools import CarpoolService
 from app.tests.sampledata import examples
 from app.utils.container import container
@@ -41,9 +42,9 @@ router = APIRouter(
             },
             )
 async def get_agency(agency_id: str) -> Agency:
-    carpools: CarpoolService = container['carpools']
+    agencies: AgencyService = container['agencies']
 
-    agency = carpools.get_agency(agency_id)
+    agency = agencies.get_agency(agency_id)
 
     exists = agency is not None
 
@@ -52,7 +53,7 @@ async def get_agency(agency_id: str) -> Agency:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agency with id {agency_id} does not exist.")
 
-    print(f"Get agency {agency_id}.")
+    logger.debug(f"Get agency {agency_id}.")
 
     return agency
 
@@ -68,7 +69,7 @@ async def get_agency(agency_id: str) -> Agency:
                  status.HTTP_500_INTERNAL_SERVER_ERROR: {
                     "description": "Import error"}
             })
-async def sync(agencyId: str) -> List[Carpool]:
+async def sync(agencyId: str, admin_token: str = Depends(verify_admin_token)) -> List[Carpool]:
     if agencyId == "ride2go":
         import_function = import_ride2go
     else:
@@ -83,6 +84,7 @@ async def sync(agencyId: str) -> List[Carpool]:
         await delete_agency_carpools_older_than(agencyId, synced_files_older_than)
         return result
     except BaseException as e:
+        logger.exception("Error on sync for agency %s", agencyId)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong during import.")
