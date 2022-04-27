@@ -21,10 +21,9 @@ router = APIRouter(
 include_in_schema = True # TODO FG comment in this: config.env != 'PROD'
 
 
-# TODO FG can X_Api_Key be lower case?
-async def verify_admin_api_key(X_Api_Key: str = Header(...)):
-    if X_Api_Key != config.admin_token:
-        raise HTTPException(status_code=400, detail="X_Api_Key header invalid")
+async def verify_admin_api_key(X_API_Key: str = Header(...)):
+    if X_API_Key != config.admin_token:
+        raise HTTPException(status_code=400, detail="X_API_Key header invalid")
 
     # returning without an exception means the token is good
     return None
