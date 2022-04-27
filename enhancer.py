@@ -9,19 +9,19 @@ from app.utils.container import container
 from app.models.Carpool import Carpool
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("enhancer")
 
 print("Hello Enhancer")
 
 configure_enhancer_services()
 
-
 wm = pyinotify.WatchManager()  # Watch Manager
 mask = pyinotify.IN_DELETE | pyinotify.IN_CLOSE_WRITE
 
+
 class EventHandler(pyinotify.ProcessEvent):
     def process_IN_CLOSE_WRITE(self, event):
-        print ("Creating:", event.pathname)
+        print("Creating:", event.pathname)
 
         with open(event.pathname, 'r', encoding='utf-8') as f:
             dict = json.load(f)
@@ -31,7 +31,7 @@ class EventHandler(pyinotify.ProcessEvent):
         return
 
     def process_IN_DELETE(self, event):
-        print ("Removing:", event.pathname)
+        print("Removing:", event.pathname)
 
 
 notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
@@ -39,11 +39,14 @@ notifier.start()
 
 wdd = wm.add_watch('data/carpool', mask, rec=True)
 import time
+
 try:
     for s in range(500):
-        print(container['carpools'].get_all_ids())
+        logger.info(container['carpools'].get_all_ids())
         time.sleep(1)
 finally:
     wm.rm_watch(list(wdd.values()))
 
     notifier.stop()
+
+    print("Goodbye Enhancer")

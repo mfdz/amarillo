@@ -6,6 +6,7 @@ from glob import glob
 from app.models.Carpool import Agency, Carpool
 from app.services import stops
 from app.services import trips
+from app.services.agencyconf import AgencyConfService
 from app.services.carpools import CarpoolService
 from app.services.agencies import AgencyService
 
@@ -17,22 +18,33 @@ import app.services.gtfs_generator as gtfs_generator
 
 logger = logging.getLogger(__name__)
 
+
 def create_required_directories():
     logger.info("Checking that necessary directories exist")
     # Folder to serve GTFS(-RT) from
     assert_folder_exists('data/gtfs')
     # Temp folder for GTFS generation
     assert_folder_exists('data/tmp')
+
     for agency_id in container['agencies'].agencies:
         for subdir in ['carpool', 'trash', 'enhanced', 'failed']:
             foldername = f'data/{subdir}/{agency_id}'
             logger.debug("Checking that necessary %s exist", foldername)
             assert_folder_exists(f'data/{subdir}/{agency_id}')
 
+    # Agency configurations
+    assert_folder_exists('conf/agencyconf')
+
+
 def configure_services():
     container['agencies'] = AgencyService()
     logger.info("Loaded %d agencies", len(container['agencies'].agencies))
+
     create_required_directories()
+
+    container["tokens"] = AgencyConfService()
+    logger.info("Loaded %d agency configuration(s)", len(container['tokens'].agency_id_to_agency_conf))
+
 
 def configure_enhancer_services():
     configure_services()
@@ -52,6 +64,7 @@ def configure_enhancer_services():
     container['carpools'] = CarpoolService(container['trips_store'])
 
     logger.info("Restore carpools...")
+
     for agency_id in container['agencies'].agencies:
         for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
             with open(carpool_file_name) as carpool_file:
@@ -68,3 +81,12 @@ def configure_enhancer_services():
     if config.env == 'PROD':
         logger.info("Starting scheduler")
         gtfs_generator.start_schedule()
+
+
+def configure_admin_token():
+    if config.admin_token is None:
+        raise Exception("ADMIN_TOKEN environment variable not set")
+
+    logger.info("ADMIN_TOKEN environment variable found")
+    # Note: the admin token is not persisted. When needed it is accessed
+    # via config.admin_token as above
