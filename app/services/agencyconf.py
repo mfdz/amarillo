@@ -60,3 +60,13 @@ class AgencyConfService:
     # TODO FG list needed?
     def get_agency_ids(self) -> List[str]:
         return self.agency_id_to_agency_conf.keys()
+
+    def delete(self, agency_id):
+        # TODO FG
+        # if agency_conf is None:
+        #     return False
+        # else:
+        #     agency_conf_service.remove(agency_id)
+
+        logger.info(f"Deleted token for agency {agency_id}.")
+

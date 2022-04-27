@@ -17,6 +17,8 @@ router = APIRouter(
     tags=["agencyconf"]
 )
 
+# This endpoint is not shown in PROD installations, only in development
+include_in_schema = True # TODO FG comment in this: config.env != 'PROD'
 
 
 # TODO FG can X_Api_Key be lower case?
@@ -29,8 +31,7 @@ async def verify_admin_api_key(X_Api_Key: str = Header(...)):
 
 
 @router.get("/",
-            # TODO HB comment this in to remove from /docs
-            include_in_schema=config.env != 'PROD',  # TODO FG try out
+            include_in_schema=include_in_schema,
             operation_id="getAgencyIdsWhichHaveAConfiguration",
             summary="Get agency_ids which have a configuration",
             response_model=List[str],
@@ -38,41 +39,24 @@ async def verify_admin_api_key(X_Api_Key: str = Header(...)):
             status_code=status.HTTP_200_OK,
             )
 async def get_agency_ids(admin_api_key: str = Depends(verify_admin_api_key)) -> [str]:
-    agency_conf_service: AgencyConfService = container['agencyconf']
+    return container['agencyconf'].get_agency_ids()
 
-    return agency_conf_service.get_agency_ids()
-
-
-tmp = config.env != 'PROD' # FG
 
 @router.post("/",
-             # TODO HB comment this in to remove from /docs
-             include_in_schema=tmp,  # TODO FG try out
+             include_in_schema=include_in_schema,
              operation_id="postNewAgencyConf",
              summary="Post a new AgencyConf",
              response_model=AgencyConf)
-async def post_agency_conf(new_agency_conf: AgencyConf, admin_api_key: str = Depends(verify_admin_api_key)) -> AgencyConf:
-    agency_conf_service: AgencyConfService = container['agencyconf']
-
-    return agency_conf_service.add(new_agency_conf)
-
+async def post_agency_conf(new_agency_conf: AgencyConf,
+                           admin_api_key: str = Depends(verify_admin_api_key)) -> AgencyConf:
+    return container['agencyconf'].add(new_agency_conf)
 
 
 @router.delete("/",
                # TODO HB comment this in to remove from /docs
                # include_in_schema=False,
-               operation_id="deleteToken",
-               summary="Delete token of an agency. Returns true if the token for the agency existed, false if it didn't exist.",
+               operation_id="deleteAgencyConf",
+               summary="Delete configuration of an agency. Returns true if the token for the agency existed, false if it didn't exist.",
                response_model=bool)
-async def delete_token(agency_id: str, admin_token: str = Depends(verify_admin_api_key)) -> bool:
-    tokens = container.get('tokens')
-    token = tokens.get(agency_id)
-
-    if token is None:
-        return False
-    else:
-        del tokens[agency_id]
-
-    logger.info(f"Deleted token for agency {agency_id}.")
-
-    return True
+async def delete_agency_conf(agency_id: str, admin_api_key: str = Depends(verify_admin_api_key)) -> bool:
+    return container['agencyconf'].delete(agency_id)
