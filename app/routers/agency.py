@@ -11,6 +11,7 @@ from app.routers.carpool import store_carpool, delete_agency_carpools_older_than
 from app.services.agencies import AgencyService
 from app.services.importing.ride2go import import_ride2go
 from app.utils.container import container
+from fastapi.responses import FileResponse
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,6 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
                      "description": "Import error"}
              })
 async def sync(agencyId: str, requesting_agency_id: str = Depends(verify_api_key)) -> List[Carpool]:
-
     await verify_permission_for_same_agency_or_admin(agencyId, requesting_agency_id)
 
     if agencyId == "ride2go":
@@ -85,3 +85,9 @@ async def sync(agencyId: str, requesting_agency_id: str = Depends(verify_api_key
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong during import.")
+
+
+@router.get("/{agencyId}/file", response_class=FileResponse)
+async def get_file(agencyId: str, requesting_agency_id: str = Depends(verify_api_key)):
+    await verify_permission_for_same_agency_or_admin(agencyId, requesting_agency_id)
+    return FileResponse('data/data.zip')
