@@ -22,12 +22,12 @@ router = APIRouter(
 )
 
 
-async def verify_token(token: str = Header(...)) -> str:
+async def verify_token(X_API_Key: str = Header(...)) -> str:
     agency_conf_service = container['tokens']
 
-    agency_id = agency_conf_service.check_api_key(token)
+    agency_id = agency_conf_service.check_api_key(X_API_Key)
 
-    # returning without an exception means the token is good
+    # returning without an exception means the api_key is good
     return agency_id
 
 @router.put("/",
@@ -45,7 +45,7 @@ async def verify_token(token: str = Header(...)) -> str:
                        # maybe 405 is not needed?
                        405: {"description": "Validation exception"}},
             )
-async def put_carpool(carpool: Carpool = Body(..., examples=examples), token: str = Depends(verify_token)) -> Carpool:
+async def put_carpool(carpool: Carpool = Body(..., examples=examples), api_key: str = Depends(verify_token)) -> Carpool:
     logger.info(f"Put trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
     await assert_carpool_exists(carpool.agency, carpool.id)
@@ -74,7 +74,7 @@ async def put_carpool(carpool: Carpool = Body(..., examples=examples), token: st
                      "description": "Validation exception"},
                  status.HTTP_409_CONFLICT: {
                      "description": "Carpool with this id exists already."}})
-async def post_carpool(carpool: Carpool = Body(..., examples=examples), token: str = Depends(verify_token)) -> Carpool:
+async def post_carpool(carpool: Carpool = Body(..., examples=examples), api_key: str = Depends(verify_token)) -> Carpool:
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     # TODO DRY, implementation same as PUT
     await assert_agency_exists(carpool.agency)
@@ -103,7 +103,7 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples), token: s
                 # 405: {"description": "Validation exception"}
             },
             )
-async def get_carpool(agencyId: str, carpoolId: str, token: str = Depends(verify_token)) -> Carpool:
+async def get_carpool(agencyId: str, carpoolId: str, api_key: str = Depends(verify_token)) -> Carpool:
     logger.info(f"Get trip {agencyId}:{carpoolId}.")
     await assert_agency_exists(agencyId)
     await assert_carpool_exists(agencyId, carpoolId)
@@ -129,7 +129,7 @@ async def get_carpool(agencyId: str, carpoolId: str, token: str = Depends(verify
                    # 405: {"description": "Validation exception"}
                },
                )
-async def delete_carpool(agencyId: str, carpoolId: str, token: str = Depends(verify_token)):
+async def delete_carpool(agencyId: str, carpoolId: str, api_key: str = Depends(verify_token)):
     logger.info(f"Delete trip {agencyId}:{carpoolId}.")
     await assert_agency_exists(agencyId)
     await assert_carpool_exists(agencyId, carpoolId)
