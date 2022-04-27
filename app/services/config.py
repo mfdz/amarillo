@@ -8,6 +8,5 @@ class Config(BaseSettings):
     ride2go_query_data: str
     env: str = 'DEV'
 
+
 config = Config(_env_file='config', _env_file_encoding='utf-8')
-
-

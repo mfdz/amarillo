@@ -17,6 +17,11 @@ Run `uvicorn app.main:app`.
 
 In development, you can use `--reload`. 
 
+## Environment Variables
+
+- `env`
+- `ADMIN_TOKEN`
+
 ## Testing
 
 In the top directory, run `pytest app/tests`.

@@ -1,5 +1,5 @@
-import logging
 import logging.config
+
 from app.configuration import configure_services, configure_admin_token
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
@@ -9,16 +9,8 @@ import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from app.routers import carpool, agency, token
-from fastapi import FastAPI, status
-from app.services import stops
-from app.services import trips
-from app.services.carpools import CarpoolService
-
-from app.services.config import config
-
-from app.utils.container import container
-import app.services.gtfs_generator as gtfs_generator
+from app.routers import carpool, agency, agencyconf
+from fastapi import FastAPI
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
 from app.views import home
@@ -57,16 +49,16 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                   }],
               servers=[
                   {
+                      "description": "DABB bbnavi Amarillo service",
+                      "url": "https://amarillo.bbnavi.de"
+                  },
+                  {
                       "description": "Demo server by MFDZ",
                       "url": "http://amarillo.mfdz.de:8000"
                   },
                   {
                       "description": "Dev server for development",
                       "url": "http://amarillo.mfdz.de:8001"
-                  },
-                  {
-                      "description": "DABB bbnavi Amarillo service",
-                      "url": "https://amarillo.bbnavi.de"
                   },
                   {
                       "description": "Localhost for development",
@@ -78,7 +70,7 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
 
 app.include_router(carpool.router)
 app.include_router(agency.router)
-app.include_router(token.router)
+app.include_router(agencyconf.router)
 
 
 def configure():

@@ -9,6 +9,23 @@
     <p>
         Ein "Amarillo" ist ein <a href="https://www.cubatravelnetwork.com/de/autoverleih-in-kuba/autofahren-auf-kuba">gelb gekleideter Verkehrsregler</a>, der auf Kuba Trampern eine möglichst passsende Mitfahrgelegenheit vermittelt.
     </p>
+    <p>
+        Ebenso wie ein kubanischer Amarillo hilft auch dieser Amarillo-Dienst, passende Mitfahrgelegenheiten zu vermitteln. Mitfahrplattformen können Mitfahrangebote ihrer
+        Nutzerinnen über die Amarillo-REST-API publizieren und so Reiseplanern oder Meta-Suchmaschinen zur Verfügung stellen.
+    </p>
+    <p>
+        Amarillo reichert diese Mitfahrangebote um die mutmaßliche Fahrtroute sowie entlang 
+        dieser liegenden Zustiegs- und Ausstiegspunkte an, so dass Reiseplaner für Mitfahrene gut erreichbare Treffpunkte vorschlagen können, die mit geringen Umwegen  angefahren werden können, wie z.B. Parken-und-Mitfahren-Parkplätze, Bahnhöfe oder Bushaltestellen.
+    </p>
+    <p>
+        Für die einfache Integration in Reiseplaner stellt Amarillo die Mitfahrangebote aller
+        publizierenen Mitfahrbörsen nächtlich als regionale GTFS-Feeds bzw. minütlich als GTFS-RT Feeds bereit. Der GTFS-RT-Feed enthält alle seit gestern um Mitternacht hinzugefügten, aktualisierten oder gelöschten Mitfahrangebote als ADDED bzw. CANCELED TripUpdates. Die amarillo-spezifischen Erweiterungen werden in dieser <a href="https://github.com/mfdz/amarillo/blob/main/app/proto/realtime_extension.proto">Prototype-Extension</a> definiert.
+    </p>
+    <p>
+        Der Anbieter dieses Amarillo-Dienstes ist offen für die Aufnahme weiterer Mitfahrplattformen. Diese müssen einen Endpunkt bereitstellen, über den eine Komplett-Übertragung aller aktuellen Inserate angestoßen werden kann. Möchte die Mitfahrplatfform minutenaktuelle Mitfahrangebote bereitstellen, sollte sie die carpool-POST/PUT/DELETE-Endpunkte für jede Aktualisierung eines Inserats aufrufen.
+        Um den hierfür notwendigen API-Key zu erhalten, nehmen Sie gerne Kontakt mit uns auf.
+    </p>
+    
     <h3>Dokumentation</h3>
     <p>
         Die Dokumentation dieses Dienstes ist als <a href="/docs">OpenAPI-Dokumentation</a> verfügbar.

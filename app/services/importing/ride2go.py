@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 import requests
@@ -7,6 +8,7 @@ from app.services.config import config
 from app.services.secrets import secrets
 import re
 
+logger = logging.getLogger(__name__)
 
 def as_StopTime(stop):
     return StopTime(

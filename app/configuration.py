@@ -1,4 +1,5 @@
 # separate file so that it can be imported without initializing FastAPI
+from app.utils.container import container
 import json
 import logging
 from glob import glob
@@ -6,13 +7,12 @@ from glob import glob
 from app.models.Carpool import Agency, Carpool
 from app.services import stops
 from app.services import trips
-from app.services.agencyconf import AgencyConfService
+from app.services.agencyconf import AgencyConfService, agency_conf_directory
 from app.services.carpools import CarpoolService
 from app.services.agencies import AgencyService
 
 from app.services.config import config
 
-from app.utils.container import container
 from app.utils.utils import assert_folder_exists
 import app.services.gtfs_generator as gtfs_generator
 
@@ -33,17 +33,17 @@ def create_required_directories():
             assert_folder_exists(f'data/{subdir}/{agency_id}')
 
     # Agency configurations
-    assert_folder_exists('conf/agencyconf')
+    assert_folder_exists(agency_conf_directory)
 
 
 def configure_services():
+    container['agencyconf'] = AgencyConfService()
+    logger.info("Loaded %d agency configuration(s)", len(container['agencyconf'].agency_id_to_agency_conf))
+
     container['agencies'] = AgencyService()
     logger.info("Loaded %d agencies", len(container['agencies'].agencies))
 
     create_required_directories()
-
-    container["tokens"] = AgencyConfService()
-    logger.info("Loaded %d agency configuration(s)", len(container['tokens'].agency_id_to_agency_conf))
 
 
 def configure_enhancer_services():
