@@ -7,6 +7,7 @@ import logging.config
 from app.configuration import configure_enhancer_services
 from app.utils.container import container
 from app.models.Carpool import Carpool
+from app.utils.utils import agency_carpool_ids_from_filename
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger("enhancer")
@@ -32,6 +33,8 @@ class EventHandler(pyinotify.ProcessEvent):
 
     def process_IN_DELETE(self, event):
         logger.info("Removing: %s", event.pathname)
+        (agency_id, carpool_id) = agency_carpool_ids_from_filename(event.pathname)
+        container['carpools'].delete(agency_id, carpool_id)
 
 notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
 notifier.start()
