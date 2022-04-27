@@ -11,7 +11,7 @@ from app.models.Carpool import Carpool
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger("enhancer")
 
-print("Hello Enhancer")
+logger.info("Hello Enhancer")
 
 configure_enhancer_services()
 
@@ -21,7 +21,7 @@ mask = pyinotify.IN_DELETE | pyinotify.IN_CLOSE_WRITE
 
 class EventHandler(pyinotify.ProcessEvent):
     def process_IN_CLOSE_WRITE(self, event):
-        print("Creating:", event.pathname)
+        logger.info("Creating: %s", event.pathname)
 
         with open(event.pathname, 'r', encoding='utf-8') as f:
             dict = json.load(f)
@@ -31,8 +31,7 @@ class EventHandler(pyinotify.ProcessEvent):
         return
 
     def process_IN_DELETE(self, event):
-        print("Removing:", event.pathname)
-
+        logger.info("Removing: %s", event.pathname)
 
 notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
 notifier.start()
@@ -49,4 +48,4 @@ finally:
 
     notifier.stop()
 
-    print("Goodbye Enhancer")
+    logger.info("Goodbye Enhancer")

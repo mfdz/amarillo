@@ -54,5 +54,5 @@ def import_ride2go() -> List[Carpool]:
         return carpools
 
     except BaseException as e:
-        print(e)  # TODO add logging
-        raise e  # TODO handle better
+        logger.exception("Error on import for agency ride2go")
+        raise e

@@ -53,7 +53,7 @@ async def get_agency(agency_id: str) -> Agency:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agency with id {agency_id} does not exist.")
 
-    print(f"Get agency {agency_id}.")
+    logger.debug(f"Get agency {agency_id}.")
 
     return agency
 
