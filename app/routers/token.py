@@ -27,9 +27,9 @@ router = APIRouter(
 )
 
 
-async def verify_admin_token(X_Token: str = Header(...)) -> str:
-    if X_Token != config.admin_token:
-        raise HTTPException(status_code=400, detail="X_Token header invalid")
+async def verify_admin_token(X_API_Key: str = Header(...)) -> str:
+    if X_API_Key != config.admin_token:
+        raise HTTPException(status_code=400, detail="X-API-Key header invalid")
 
     # returning without an exception means the token is good
     return None
