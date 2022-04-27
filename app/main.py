@@ -1,5 +1,5 @@
-import logging
 import logging.config
+
 from app.configuration import configure_services, configure_admin_token
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
@@ -10,15 +10,7 @@ import mimetypes
 from starlette.staticfiles import StaticFiles
 
 from app.routers import carpool, agency, agencyconf
-from fastapi import FastAPI, status
-from app.services import stops
-from app.services import trips
-from app.services.carpools import CarpoolService
-
-from app.services.config import config
-
-from app.utils.container import container
-import app.services.gtfs_generator as gtfs_generator
+from fastapi import FastAPI
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
 from app.views import home
