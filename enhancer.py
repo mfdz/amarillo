@@ -21,6 +21,9 @@ mask = pyinotify.IN_DELETE | pyinotify.IN_CLOSE_WRITE
 
 
 class EventHandler(pyinotify.ProcessEvent):
+    # TODO FG HB should watch for both carpools and agencies
+    # in data/agency, data/agencyconf, see AgencyConfService
+
     def process_IN_CLOSE_WRITE(self, event):
         logger.info("Creating: %s", event.pathname)
 

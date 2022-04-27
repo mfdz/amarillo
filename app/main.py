@@ -9,7 +9,7 @@ import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from app.routers import carpool, agency, token
+from app.routers import carpool, agency, agencyconf
 from fastapi import FastAPI, status
 from app.services import stops
 from app.services import trips
@@ -57,6 +57,9 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                   }],
               servers=[
                   {
+                      "description": "Prod server in Brandenburg",
+                      "url": "https://amarillo.bbnavi.de:80 "
+                  },                  {
                       "description": "Demo server by MFDZ",
                       "url": "http://amarillo.mfdz.de:8000"
                   },
@@ -78,7 +81,7 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
 
 app.include_router(carpool.router)
 app.include_router(agency.router)
-app.include_router(token.router)
+app.include_router(agencyconf.router)
 
 
 def configure():

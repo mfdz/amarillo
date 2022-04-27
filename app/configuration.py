@@ -42,8 +42,8 @@ def configure_services():
 
     create_required_directories()
 
-    container["tokens"] = AgencyConfService()
-    logger.info("Loaded %d agency configuration(s)", len(container['tokens'].agency_id_to_agency_conf))
+    container['agencyconf'] = AgencyConfService()
+    logger.info("Loaded %d agency configuration(s)", len(container['agencyconf'].agency_id_to_agency_conf))
 
 
 def configure_enhancer_services():

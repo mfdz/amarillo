@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class Token(BaseModel):
+class AgencyConf(BaseModel):
     agency_id: str = Field(
         description="ID of the agency that uses this token.",
         min_length=1,
@@ -9,8 +9,8 @@ class Token(BaseModel):
         regex='^[a-zA-Z0-9]+$',
         example="mfdz")
 
-    token: str = Field(
-        description="The agency's token for using the API",
+    api_key: str = Field(
+        description="The agency's API key for using the API",
         min_length=20,
         max_length=20,
         regex=r'^[a-zA-Z0-9]+$',
@@ -18,11 +18,11 @@ class Token(BaseModel):
 
     class Config:
         schema_extra = {
-            "title": "Token",
-            "description": "Token for an agency.",
+            "title": "Agency Configuration",
+            "description": "Configuration for an agency.",
             "example":
                 {
-                  "agency_id": "mfdz",
-                  "token": "d8yLuY4DqMEUCLcfJASi"
+                    "agency_id": "mfdz",
+                    "api_key": "d8yLuY4DqMEUCLcfJASi"
                 }
         }
