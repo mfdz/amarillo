@@ -57,19 +57,16 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                   }],
               servers=[
                   {
-                      "description": "Prod server in Brandenburg",
-                      "url": "https://amarillo.bbnavi.de:80 "
-                  },                  {
+                      "description": "DABB bbnavi Amarillo service",
+                      "url": "https://amarillo.bbnavi.de"
+                  },
+                  {
                       "description": "Demo server by MFDZ",
                       "url": "http://amarillo.mfdz.de:8000"
                   },
                   {
                       "description": "Dev server for development",
                       "url": "http://amarillo.mfdz.de:8001"
-                  },
-                  {
-                      "description": "DABB bbnavi Amarillo service",
-                      "url": "https://amarillo.bbnavi.de"
                   },
                   {
                       "description": "Localhost for development",
