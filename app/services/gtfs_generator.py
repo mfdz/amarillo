@@ -43,6 +43,7 @@ def generate_gtfs():
 	logger.info("Generate GTFS")
 
 	for region in regions.values():
+		# TODO make feed producer infos configurable
 		feed_info = GtfsFeedInfo('mfdz', 'MITFAHR|DE|ZENTRALE', 'http://www.mitfahrdezentrale.de', 'de', 1)
 		exporter = GtfsExport(
 			agencies, 
@@ -60,7 +61,8 @@ def generate_gtfs_rt():
 
 def start_schedule():
 	schedule.every().day.at("00:00").do(midnight)
-	#schedule.every(10).seconds.do(midnight)
 	schedule.every(60).seconds.do(generate_gtfs_rt)
+	# Create all feeds once at startup
+	schedule.run_all()
 	job_thread = threading.Thread(target=run_schedule, daemon=True)
 	job_thread.start()
