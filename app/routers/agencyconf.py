@@ -4,6 +4,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, status, Header, Depends
 
 from app.models.AgencyConf import AgencyConf
+from app.services.agencyconf import AgencyConfService
 from app.services.config import config
 from app.utils.container import container
 
@@ -26,6 +27,15 @@ include_in_schema = config.env != 'PROD'
 async def verify_admin_api_key(X_API_Key: str = Header(...)):
     if X_API_Key != config.admin_token:
         raise HTTPException(status_code=400, detail="X_API_Key header invalid")
+
+    # returning without an exception means the token is good
+    return None
+
+# noinspection PyPep8Naming
+# X_Api_Key is upper case for the OpenAPI
+async def verify_api_key(X_API_Key: str = Header(...)):
+    agency_conf_service: AgencyConfService = container['agencyconf']
+    agency_conf_service.check_api_key(X_API_Key)
 
     # returning without an exception means the token is good
     return None

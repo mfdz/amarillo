@@ -9,7 +9,8 @@ from datetime import datetime
 from pydantic import Field
 
 from app.models.Carpool import Carpool, Agency
-from app.routers.agencyconf import verify_admin_api_key
+from app.routers.agencyconf import verify_admin_api_key, verify_api_key
+from app.services.agencies import AgencyService
 from app.services.carpools import CarpoolService
 from app.tests.sampledata import examples
 from app.utils.container import container
@@ -69,7 +70,7 @@ async def get_agency(agency_id: str) -> Agency:
                  status.HTTP_500_INTERNAL_SERVER_ERROR: {
                     "description": "Import error"}
             })
-async def sync(agencyId: str, admin_token: str = Depends(verify_admin_api_key)) -> List[Carpool]:
+async def sync(agencyId: str, admin_token: str = Depends(verify_api_key)) -> List[Carpool]:
     if agencyId == "ride2go":
         import_function = import_ride2go
     else:

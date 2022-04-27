@@ -10,6 +10,7 @@ from fastapi import APIRouter, Body, Header, HTTPException, status, Depends
 from datetime import datetime
 
 from app.models.Carpool import Carpool
+from app.routers.agencyconf import verify_api_key
 from app.tests.sampledata import examples
 from app.utils.container import container
 from app.services.importing.ride2go import import_ride2go
@@ -21,14 +22,6 @@ router = APIRouter(
     tags=["carpool"]
 )
 
-
-async def verify_api_key(X_API_Key: str = Header(...)) -> str:
-    agency_conf_service = container['agencyconf']
-
-    agency_id = agency_conf_service.check_api_key(X_API_Key)
-
-    # returning without an exception means the api_key is good
-    return agency_id
 
 @router.put("/",
             operation_id="updatecarpool",
