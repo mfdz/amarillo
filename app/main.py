@@ -65,6 +65,10 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                       "url": "http://amarillo.mfdz.de:8001"
                   },
                   {
+                      "description": "DABB bbnavi Amarillo service",
+                      "url": "https://amarillo.bbnavi.de"
+                  },
+                  {
                       "description": "Localhost for development",
                       "url": "http://localhost:8000"
                   }
