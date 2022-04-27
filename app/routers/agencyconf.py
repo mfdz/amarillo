@@ -8,9 +8,6 @@ from app.services.agencyconf import AgencyConfService
 from app.services.config import config
 from app.utils.container import container
 
-# TODO should move this to service
-# Really? -- fg
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -23,22 +20,37 @@ include_in_schema = config.env != 'PROD'
 
 
 # noinspection PyPep8Naming
-# X_Api_Key is upper case for the OpenAPI
+# X_Api_Key is upper case for OpenAPI
 async def verify_admin_api_key(X_API_Key: str = Header(...)):
     if X_API_Key != config.admin_token:
-        raise HTTPException(status_code=400, detail="X_API_Key header invalid")
+        message="X-API-Key header invalid"
+        logger.error(message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
-    # returning without an exception means the token is good
-    return None
+    return "admin"
+
 
 # noinspection PyPep8Naming
-# X_Api_Key is upper case for the OpenAPI
+# X_Api_Key is upper case for OpenAPI
 async def verify_api_key(X_API_Key: str = Header(...)):
     agency_conf_service: AgencyConfService = container['agencyconf']
-    agency_conf_service.check_api_key(X_API_Key)
 
-    # returning without an exception means the token is good
-    return None
+    return agency_conf_service.check_api_key(X_API_Key)
+
+
+async def verify_permission_for_same_agency_or_admin(agency_id_in_path_or_body, agency_id_from_api_key):
+    """Verifies that an agency is accessing something it owns or the user is admin
+
+    The agency_id is part of some paths, or when not in the path it is in the body, e.g. in PUT /carpool.
+
+    This function encapsulates the formula 'working with own stuff, or admin'.
+    """
+    is_permitted = agency_id_in_path_or_body == agency_id_from_api_key or agency_id_from_api_key == "admin"
+
+    if not is_permitted:
+        message = f"Working with {agency_id_in_path_or_body} resources is not permitted for {agency_id_from_api_key}."
+        logger.error(message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
 
 @router.get("/",
@@ -48,7 +60,7 @@ async def verify_api_key(X_API_Key: str = Header(...)):
             response_model=List[str],
             description="Returns the agency_ids but not the details.",
             status_code=status.HTTP_200_OK)
-async def get_agency_ids(admin_api_key: str = Depends(verify_admin_api_key)) -> [str]:
+async def get_agency_ids(admin_api_key: str = Depends(verify_api_key)) -> [str]:
     return container['agencyconf'].get_agency_ids()
 
 
@@ -56,14 +68,35 @@ async def get_agency_ids(admin_api_key: str = Depends(verify_admin_api_key)) -> 
              include_in_schema=include_in_schema,
              operation_id="postNewAgencyConf",
              summary="Post a new AgencyConf")
-async def post_agency_conf(new_agency_conf: AgencyConf,
-                           admin_api_key: str = Depends(verify_admin_api_key)) -> AgencyConf:
-    container['agencyconf'].add(new_agency_conf)
+async def post_agency_conf(agency_conf: AgencyConf, admin_api_key: str = Depends(verify_admin_api_key)):
+    agency_conf_service: AgencyConfService = container['agencyconf']
+    agency_conf_service.add(agency_conf)
 
 
 @router.delete("/{agency_id}",
                include_in_schema=include_in_schema,
                operation_id="deleteAgencyConf",
-               summary="Delete configuration of an agency. Returns true if the token for the agency existed, false if it didn't exist.")
-async def delete_agency_conf(agency_id: str, admin_api_key: str = Depends(verify_admin_api_key)):
-    container['agencyconf'].delete(agency_id)
+               status_code=status.HTTP_200_OK,
+               summary="Delete configuration of an agency. Returns true if the token for the agency existed, "
+                       "false if it didn't exist."
+               )
+async def delete_agency_conf(agency_id: str, requesting_agency_id: str = Depends(verify_api_key)):
+    agency_may_delete_own = requesting_agency_id == agency_id
+    admin_may_delete_everything = requesting_agency_id == "admin"
+    is_permitted = agency_may_delete_own or admin_may_delete_everything
+
+    if not is_permitted:
+        message = f"The API key for {requesting_agency_id} can not delete the configuration for {agency_id}"
+        logger.error(message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+
+    agency_conf_service: AgencyConfService = container['agencyconf']
+
+    agency_exists = agency_id in agency_conf_service.get_agency_ids()
+
+    if not agency_exists:
+        message = f"No config for {agency_id}"
+        logger.error(message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+
+    agency_conf_service.delete(agency_id)

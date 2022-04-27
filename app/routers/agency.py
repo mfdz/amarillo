@@ -1,22 +1,16 @@
 import logging
-import os
 import time
 from typing import List
 
-from fastapi import APIRouter, Body, HTTPException, status, Depends
-from datetime import datetime
-
-from pydantic import Field
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from app.models.Carpool import Carpool, Agency
-from app.routers.agencyconf import verify_admin_api_key, verify_api_key
-from app.services.agencies import AgencyService
-from app.services.carpools import CarpoolService
-from app.tests.sampledata import examples
-from app.utils.container import container
-from app.services.importing.ride2go import import_ride2go
+from app.routers.agencyconf import verify_api_key, verify_admin_api_key, verify_permission_for_same_agency_or_admin
 # TODO should move this to service
 from app.routers.carpool import store_carpool, delete_agency_carpools_older_than
+from app.services.agencies import AgencyService
+from app.services.importing.ride2go import import_ride2go
+from app.utils.container import container
 
 logger = logging.getLogger(__name__)
 
@@ -42,21 +36,20 @@ router = APIRouter(
                 # 405: {"description": "Validation exception"}
             },
             )
-async def get_agency(agency_id: str) -> Agency:
+async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key)) -> Agency:
     agencies: AgencyService = container['agencies']
-
     agency = agencies.get_agency(agency_id)
+    agency_exists = agency is not None
 
-    exists = agency is not None
+    if not agency_exists:
+        message = f"Agency with id {agency_id} does not exist."
+        logger.error(message)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
-    if not exists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Agency with id {agency_id} does not exist.")
-
-    logger.debug(f"Get agency {agency_id}.")
+    logger.info(f"Get agency {agency_id}.")
 
     return agency
+
 
 @router.post("/{agencyId}/sync",
              operation_id="sync",
@@ -68,15 +61,18 @@ async def get_agency(agency_id: str) -> Agency:
                  status.HTTP_404_NOT_FOUND: {
                      "description": "Agency does not exist"},
                  status.HTTP_500_INTERNAL_SERVER_ERROR: {
-                    "description": "Import error"}
-            })
-async def sync(agencyId: str, admin_token: str = Depends(verify_api_key)) -> List[Carpool]:
+                     "description": "Import error"}
+             })
+async def sync(agencyId: str, requesting_agency_id: str = Depends(verify_api_key)) -> List[Carpool]:
+
+    await verify_permission_for_same_agency_or_admin(agencyId, requesting_agency_id)
+
     if agencyId == "ride2go":
         import_function = import_ride2go
     else:
         raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Agency does not exist or does not support sync.")
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agency does not exist or does not support sync.")
 
     try:
         carpools = import_function()
@@ -89,5 +85,3 @@ async def sync(agencyId: str, admin_token: str = Depends(verify_api_key)) -> Lis
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong during import.")
-        
-
