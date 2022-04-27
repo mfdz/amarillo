@@ -43,8 +43,9 @@ wdd = wm.add_watch('data/carpool', mask, rec=True)
 import time
 
 try:
-    for s in range(500):
-        logger.info(container['carpools'].get_all_ids())
+    # TODO FG Is this really needed?
+    while True:
+        logger.debug("Currently stored carpool ids: %s", container['carpools'].get_all_ids())
         time.sleep(1)
 finally:
     wm.rm_watch(list(wdd.values()))
