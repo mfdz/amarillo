@@ -48,17 +48,22 @@ class AgencyConfService:
         """
 
         # TODO FG see in debugger it it works
-        key_of_agency = self.api_key_to_agency_id.get(api_key)
-        key_of_admin = config.admin_token
+        agency_id = self.api_key_to_agency_id.get(api_key)
 
-        agency_id = key_of_agency or key_of_admin
+        is_agency = agency_id is not None
+
+        if is_agency:
+            return agency_id
+
+        is_admin = api_key == config.admin_token
+
+        if is_admin:
+            return "admin"
 
         if agency_id is None:
             message = "X-Api-Key header invalid"
             logger.error(message)
             raise HTTPException(status_code=400, detail=message)
-
-        return agency_id
 
     def add(self, agency_conf: AgencyConf):
         logger.info(f"Added configuration for agency {agency_conf.agency_id}.")
