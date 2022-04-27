@@ -143,12 +143,12 @@ class TripStore():
         logger.debug("Deleted trip %s", id)
 
     def purge_trips_older_than(self, day):
-        for key in self.recent_trips.keys():
+        for key in list(self.recent_trips):
             t = self.recent_trips.get(key)
             if t and t.lastUpdated.date() < day:
                 del self.recent_trips[key]
 
-        for key in self.deleted_trips.keys():
+        for key in list(self.deleted_trips):
             t = self.deleted_trips.get(key)
             if t and t.lastUpdated.date() < day:
                 del self.deleted_trips[key]

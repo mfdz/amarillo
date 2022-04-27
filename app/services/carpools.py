@@ -14,7 +14,7 @@ class CarpoolService():
         return self.carpools.get(f"{agency_id}:{carpool_id}")
 
     def get_all_ids(self):
-        return self.carpools.keys()
+        return list(self.carpools)
 
     def put(self, agency_id: str, carpool_id: str, carpool):
         self.carpools[f"{agency_id}:{carpool_id}"] = carpool
