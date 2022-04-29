@@ -85,9 +85,3 @@ async def sync(agencyId: str, requesting_agency_id: str = Depends(verify_api_key
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong during import.")
-
-
-@router.get("/{agencyId}/file", response_class=FileResponse)
-async def get_file(agencyId: str, requesting_agency_id: str = Depends(verify_api_key)):
-    await verify_permission_for_same_agency_or_admin(agencyId, requesting_agency_id)
-    return FileResponse('data/data.zip')
