@@ -12,7 +12,7 @@ class AgencyConf(BaseModel):
     api_key: str = Field(
         description="The agency's API key for using the API",
         min_length=20,
-        max_length=20,
+        max_length=256,
         regex=r'^[a-zA-Z0-9]+$',
         example="d8yLuY4DqMEUCLcfJASi")
 
