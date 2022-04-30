@@ -30,7 +30,7 @@ async def get_regions() -> List[Region]:
     
     return list(service.regions.values())
 
-@router.get("/{regionId}",
+@router.get("/{region_id}",
             operation_id="getRegionById",
             summary="Find region by ID",
             response_model=Region,
@@ -63,7 +63,7 @@ def _assert_region_exists(region_id: str) -> Region:
 
     return region
 
-@router.get("/{regionId}/gtfs", 
+@router.get("/{region_id}/gtfs", 
     summary="Return GTFS Feed for this region",
     response_description="GTFS-Feed (zip-file)",
     response_class=FileResponse,
@@ -71,11 +71,11 @@ def _assert_region_exists(region_id: str) -> Region:
                 status.HTTP_404_NOT_FOUND: {"description": "Region not found"},
         }
     )
-async def get_file(regionId: str, user: str = Depends(verify_admin_api_key)):
-    _assert_region_exists(regionId)
-    return FileResponse(f'data/gtfs/amarillo.{regionId}.gtfs.zip')
+async def get_file(region_id: str, user: str = Depends(verify_admin_api_key)):
+    _assert_region_exists(region_id)
+    return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfs.zip')
 
-@router.get("/{regionId}/gtfs-rt",
+@router.get("/{region_id}/gtfs-rt",
     summary="Return GTFS-RT Feed for this region",
     response_description="GTFS-RT-Feed",
     response_class=FileResponse,
@@ -83,7 +83,7 @@ async def get_file(regionId: str, user: str = Depends(verify_admin_api_key)):
                 status.HTTP_404_NOT_FOUND: {"description": "Region not found"},
         }
     )
-async def get_file(regionId: str, user: str = Depends(verify_admin_api_key)):
-    _assert_region_exists(regionId)
+async def get_file(region_id: str, user: str = Depends(verify_admin_api_key)):
+    _assert_region_exists(region_id)
     # TODO support json
-    return FileResponse(f'data/gtfs/amarillo.{regionId}.gtfsrt.pbf')
+    return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfsrt.pbf')
