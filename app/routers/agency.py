@@ -21,7 +21,7 @@ router = APIRouter(
 )
 
 
-@router.get("/{agencyId}",
+@router.get("/{agency_id}",
             operation_id="getAgencyById",
             summary="Find agency by ID",
             response_model=Agency,
@@ -52,7 +52,7 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
     return agency
 
 
-@router.post("/{agencyId}/sync",
+@router.post("/{agency_id}/sync",
              operation_id="sync",
              summary="Synchronizes all carpool offers",
              response_model=List[Carpool],
@@ -64,10 +64,10 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
                  status.HTTP_500_INTERNAL_SERVER_ERROR: {
                      "description": "Import error"}
              })
-async def sync(agencyId: str, requesting_agency_id: str = Depends(verify_api_key)) -> List[Carpool]:
-    await verify_permission_for_same_agency_or_admin(agencyId, requesting_agency_id)
+async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_key)) -> List[Carpool]:
+    await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
-    if agencyId == "ride2go":
+    if agency_id == "ride2go":
         import_function = import_ride2go
     else:
         raise HTTPException(
@@ -78,10 +78,10 @@ async def sync(agencyId: str, requesting_agency_id: str = Depends(verify_api_key
         carpools = import_function()
         synced_files_older_than = time.time()
         result = [await store_carpool(cp) for cp in carpools]
-        await delete_agency_carpools_older_than(agencyId, synced_files_older_than)
+        await delete_agency_carpools_older_than(agency_id, synced_files_older_than)
         return result
     except BaseException as e:
-        logger.exception("Error on sync for agency %s", agencyId)
+        logger.exception("Error on sync for agency %s", agency_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong during import.")
