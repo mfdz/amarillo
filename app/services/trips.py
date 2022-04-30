@@ -322,8 +322,8 @@ class TripTransformer:
     def _is_pickup_stop(self, current_stop, total_distance):
         return current_stop["distance"] < 0.5 * total_distance
 
-def load_carpool(agency_id: str, carpoolId: str, folder: str ='data/enhanced') -> Carpool:
-    with open(f'{folder}/{agency_id}/{carpoolId}.json', 'r', encoding='utf-8') as f:
+def load_carpool(agency_id: str, carpool_id: str, folder: str ='data/enhanced') -> Carpool:
+    with open(f'{folder}/{agency_id}/{carpool_id}.json', 'r', encoding='utf-8') as f:
         dict = json.load(f)
         carpool = Carpool(**dict)
     return carpool
