@@ -9,7 +9,7 @@ import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from app.routers import carpool, agency, agencyconf
+from app.routers import carpool, agency, agencyconf, region
 from fastapi import FastAPI
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
@@ -71,6 +71,7 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
 app.include_router(carpool.router)
 app.include_router(agency.router)
 app.include_router(agencyconf.router)
+app.include_router(region.router)
 
 
 def configure():

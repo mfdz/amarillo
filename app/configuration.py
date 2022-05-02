@@ -4,12 +4,13 @@ import json
 import logging
 from glob import glob
 
-from app.models.Carpool import Agency, Carpool
+from app.models.Carpool import Agency, Carpool, Region
 from app.services import stops
 from app.services import trips
 from app.services.agencyconf import AgencyConfService, agency_conf_directory
 from app.services.carpools import CarpoolService
 from app.services.agencies import AgencyService
+from app.services.regions import RegionService
 
 from app.services.config import config
 
@@ -42,6 +43,9 @@ def configure_services():
 
     container['agencies'] = AgencyService()
     logger.info("Loaded %d agencies", len(container['agencies'].agencies))
+    
+    container['regions'] = RegionService()
+    logger.info("Loaded %d regions", len(container['regions'].regions))
 
     create_required_directories()
 

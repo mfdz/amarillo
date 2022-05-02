@@ -4,16 +4,14 @@ import os
 import os.path
 import re
 from glob import glob
-from typing import List
 
 from fastapi import APIRouter, Body, Header, HTTPException, status, Depends
 from datetime import datetime
 
 from app.models.Carpool import Carpool
-from app.routers.agencyconf import verify_api_key
+from app.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
 from app.tests.sampledata import examples
-from app.utils.container import container
-from app.services.importing.ride2go import import_ride2go
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +36,10 @@ router = APIRouter(
                        # maybe 405 is not needed?
                        405: {"description": "Validation exception"}},
             )
-async def put_carpool(carpool: Carpool = Body(..., examples=examples), api_key: str = Depends(verify_api_key)) -> Carpool:
+async def put_carpool(carpool: Carpool = Body(..., examples=examples),
+                      requesting_agency_id: str = Depends(verify_api_key)) -> Carpool:
+    await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
+
     logger.info(f"Put trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
     await assert_carpool_exists(carpool.agency, carpool.id)
@@ -67,7 +68,10 @@ async def put_carpool(carpool: Carpool = Body(..., examples=examples), api_key: 
                      "description": "Validation exception"},
                  status.HTTP_409_CONFLICT: {
                      "description": "Carpool with this id exists already."}})
-async def post_carpool(carpool: Carpool = Body(..., examples=examples), api_key: str = Depends(verify_api_key)) -> Carpool:
+async def post_carpool(carpool: Carpool = Body(..., examples=examples),
+                       requesting_agency_id: str = Depends(verify_api_key)) -> Carpool:
+    await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
+
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     # TODO DRY, implementation same as PUT
     await assert_agency_exists(carpool.agency)
@@ -80,7 +84,7 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples), api_key:
     return carpool
     
 
-@router.get("/{agencyId}/{carpoolId}",
+@router.get("/{agency_id}/{carpool_id}",
             operation_id="getcarpoolById",
             summary="Find carpool by ID",
             response_model=Carpool,
@@ -96,17 +100,17 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples), api_key:
                 # 405: {"description": "Validation exception"}
             },
             )
-async def get_carpool(agencyId: str, carpoolId: str, api_key: str = Depends(verify_api_key)) -> Carpool:
-    logger.info(f"Get trip {agencyId}:{carpoolId}.")
-    await assert_agency_exists(agencyId)
-    await assert_carpool_exists(agencyId, carpoolId)
+async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(verify_api_key)) -> Carpool:
+    logger.info(f"Get trip {agency_id}:{carpool_id}.")
+    await assert_agency_exists(agency_id)
+    await assert_carpool_exists(agency_id, carpool_id)
 
-    carpool = await load_carpool(agencyId, carpoolId)
+    carpool = await load_carpool(agency_id, carpool_id)
 
     return carpool
 
 
-@router.delete("/{agencyId}/{carpoolId}",
+@router.delete("/{agency_id}/{carpool_id}",
                operation_id="deletecarpool",
                summary="Deletes a carpool",
                description="carpool id to delete",
@@ -122,21 +126,23 @@ async def get_carpool(agencyId: str, carpoolId: str, api_key: str = Depends(veri
                    # 405: {"description": "Validation exception"}
                },
                )
-async def delete_carpool(agencyId: str, carpoolId: str, api_key: str = Depends(verify_api_key)):
-    logger.info(f"Delete trip {agencyId}:{carpoolId}.")
-    await assert_agency_exists(agencyId)
-    await assert_carpool_exists(agencyId, carpoolId)
-    
-    return await _delete_carpool(agencyId, carpoolId)
+async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(verify_api_key)):
+    await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
-async def _delete_carpool(agencyId: str, carpoolId: str):
-    logger.info(f"Delete carpool {agencyId}:{carpoolId}.")
-    cp = await load_carpool(agencyId, carpoolId)
-    logger.info(f"Loaded carpool {agencyId}:{carpoolId}.")
+    logger.info(f"Delete trip {agency_id}:{carpool_id}.")
+    await assert_agency_exists(agency_id)
+    await assert_carpool_exists(agency_id, carpool_id)
+    
+    return await _delete_carpool(agency_id, carpool_id)
+
+async def _delete_carpool(agency_id: str, carpool_id: str):
+    logger.info(f"Delete carpool {agency_id}:{carpool_id}.")
+    cp = await load_carpool(agency_id, carpool_id)
+    logger.info(f"Loaded carpool {agency_id}:{carpool_id}.")
     # load and store, to receive pyinotify events and have file timestamp updated
     await save_carpool(cp, 'data/trash')
-    logger.info(f"Saved carpool {agencyId}:{carpoolId} in trash.")
-    os.remove(f"data/carpool/{agencyId}/{carpoolId}.json")
+    logger.info(f"Saved carpool {agency_id}:{carpool_id} in trash.")
+    os.remove(f"data/carpool/{agency_id}/{carpool_id}.json")
 
 async def store_carpool(carpool: Carpool) -> Carpool:
     await set_lastUpdated_if_unset(carpool)
@@ -149,8 +155,8 @@ async def set_lastUpdated_if_unset(carpool):
         carpool.lastUpdated = datetime.now()
 
 
-async def load_carpool(agencyId, carpoolId) -> Carpool:
-    with open(f'data/carpool/{agencyId}/{carpoolId}.json', 'r', encoding='utf-8') as f:
+async def load_carpool(agency_id, carpool_id) -> Carpool:
+    with open(f'data/carpool/{agency_id}/{carpool_id}.json', 'r', encoding='utf-8') as f:
         dict = json.load(f)
         carpool = Carpool(**dict)
     return carpool
@@ -184,8 +190,8 @@ async def assert_carpool_does_not_exist(agency_id: str, carpool_id: str):
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Carpool with id {carpool_id} exists already.")
 
-async def delete_agency_carpools_older_than(agencyId, timestamp):
-    for carpool_file_name in glob(f'data/carpool/{agencyId}/*.json'):
+async def delete_agency_carpools_older_than(agency_id, timestamp):
+    for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
         if os.path.getctime(carpool_file_name) < timestamp:
             m = re.search(r'([a-zA-Z0-9_-]+)\.json$', carpool_file_name)
-            await _delete_carpool(agencyId, m[1])
+            await _delete_carpool(agency_id, m[1])
