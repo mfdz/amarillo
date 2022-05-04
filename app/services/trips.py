@@ -97,6 +97,7 @@ class TripStore():
                 enhanced_carpool = existing_carpool
             else:
                 enhanced_carpool = self.transformer.enhance_carpool(carpool)
+                # TODO should only store enhanced_carpool, if it has 2 or more stops
                 assert_folder_exists(f'data/enhanced/{carpool.agency}/')
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(enhanced_carpool.json())
@@ -110,9 +111,14 @@ class TripStore():
 
     def _load_carpool_if_exists(self, agency_id: str, carpool_id: str):
         if carpool_exists(agency_id, carpool_id, 'data/enhanced'):
-            return load_carpool(agency_id, carpool_id, 'data/enhanced')
-        else:
-            return None
+            try:
+                return load_carpool(agency_id, carpool_id, 'data/enhanced')
+            except Exception:
+                # An error on restore could be caused by model changes, 
+                # in such a case, it need's to be recreated
+                logger.warn("Could not restore enhanced trip %s:%s", agency_id, carpool_id)
+
+        return None
 
     def _load_as_trip(self, carpool: Carpool):
         trip = self.transformer.transform_to_trip(carpool)
