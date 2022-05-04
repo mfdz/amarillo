@@ -1,4 +1,5 @@
 import os
+import re
 
 def assert_folder_exists(foldername):
     if not os.path.isdir(foldername):

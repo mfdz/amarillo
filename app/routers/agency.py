@@ -76,7 +76,8 @@ async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_ke
 
     try:
         carpools = import_function()
-        synced_files_older_than = time.time()
+        # Reduce current time by a second to avoid inter process timestamp issues
+        synced_files_older_than = time.time() - 1
         result = [await store_carpool(cp) for cp in carpools]
         await delete_agency_carpools_older_than(agency_id, synced_files_older_than)
         return result
