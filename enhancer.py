@@ -27,11 +27,15 @@ class EventHandler(pyinotify.ProcessEvent):
     def process_IN_CLOSE_WRITE(self, event):
         logger.info("Creating: %s", event.pathname)
 
-        with open(event.pathname, 'r', encoding='utf-8') as f:
-            dict = json.load(f)
-            carpool = Carpool(**dict)
+        try:
+            with open(event.pathname, 'r', encoding='utf-8') as f:
+                dict = json.load(f)
+                carpool = Carpool(**dict)
 
-        container['carpools'].put(carpool.agency, carpool.id, carpool)
+            container['carpools'].put(carpool.agency, carpool.id, carpool)
+        except FileNotFoundError as e:
+            logger.error("Carpool could not be added, as already deleted (%s)", event.pathname)
+        
         return
 
     def process_IN_DELETE(self, event):
