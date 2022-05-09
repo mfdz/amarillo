@@ -4,7 +4,6 @@ from typing import List
 
 class Config(BaseSettings):
     admin_token: str = None
-    agencies: List[str] = []
     ride2go_query_data: str
     env: str = 'DEV'
 

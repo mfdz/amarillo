@@ -192,6 +192,6 @@ async def assert_carpool_does_not_exist(agency_id: str, carpool_id: str):
 
 async def delete_agency_carpools_older_than(agency_id, timestamp):
     for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
-        if os.path.getctime(carpool_file_name) < timestamp:
+        if os.path.getmtime(carpool_file_name) < timestamp:
             m = re.search(r'([a-zA-Z0-9_-]+)\.json$', carpool_file_name)
             await _delete_carpool(agency_id, m[1])
