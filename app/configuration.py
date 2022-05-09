@@ -60,9 +60,10 @@ def configure_enhancer_services():
         {"url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500}
     ]
     stop_store = stops.StopsStore()
-    if config.env == 'PROD':
-        for stops_source in stop_sources:
-            stop_store.register_stops(stops_source["url"], stops_source["vicinity"])
+
+    for stops_source in stop_sources:
+        stop_store.register_stops(stops_source["url"], stops_source["vicinity"])
+
     container['stops_store'] = stop_store
     container['trips_store'] = trips.TripStore(stop_store)
     container['carpools'] = CarpoolService(container['trips_store'])
@@ -81,10 +82,8 @@ def configure_enhancer_services():
                 container['carpools'].delete(carpool.agency, carpool.id)
 
     logger.info("Restored carpools: %s", container['carpools'].get_all_ids())
-
-    if config.env == 'PROD':
-        logger.info("Starting scheduler")
-        gtfs_generator.start_schedule()
+    logger.info("Starting scheduler")
+    gtfs_generator.start_schedule()
 
 
 def configure_admin_token():
