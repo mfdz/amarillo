@@ -1,6 +1,7 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
 from app.models.Carpool import Carpool, Weekday, StopTime, PickupDropoffType
 from app.services.routing import RoutingService
+from app.services.stops import is_carpooling_stop
 from app.utils.utils import assert_folder_exists
 from shapely.geometry import Point, box
 from geojson_pydantic.geometries import LineString
@@ -290,7 +291,7 @@ class TripTransformer:
                     logger.debug("Skipped stop %s", current_stop.id)
                     continue
             else:
-                if (current_stop.time-stops_frame.iloc[i-1].time) < 5000 and not i==1:
+                if (current_stop.time-stops_frame.iloc[i-1].time) < 5000 and not i==1 and not is_carpooling_stop(current_stop.id, current_stop.stop_name):
                     # skip latter stop if it's very close (<5 seconds drive) by the preceding
                     logger.debug("Skipped stop %s", current_stop.id)
                     continue
