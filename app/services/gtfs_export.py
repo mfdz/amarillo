@@ -8,6 +8,7 @@ import logging
 import re
 from app.utils.utils import assert_folder_exists
 from app.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
+from app.services.stops import is_carpooling_stop
 
 logger = logging.getLogger(__name__)
 
@@ -192,10 +193,8 @@ class GtfsExport:
             return (self.bbox[0] <= stop.stop_lon <= self.bbox[2] and 
                 self.bbox[1] <= stop.stop_lat <= self.bbox[3])
         else:
-            stop_name = stop.stop_name.lower() 
-            # mfdz: prefixed stops are custom stops which are explicitly meant to be carpooling stops
-            return stop.stop_id.startswith('mfdz:') or 'mitfahr' in stop_name or 'p&m' in stop_name 
-        
+            return is_carpooling_stop(stop.stop_id, stop.stop_name)
+            
     def _load_stored_stop(self, stop):
         gtfsstop = self._convert_stop(stop)
         stop_hash = self._stop_hash(stop)

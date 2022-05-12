@@ -55,9 +55,9 @@ def configure_enhancer_services():
 
     logger.info("Load stops...")
     stop_sources = [
-        {"url": "https://data.mfdz.de/mfdz/stops/custom.csv", "vicinity": 50},
+        {"url": "https://datahub.bbnavi.de/export/rideshare_points.geojson", "vicinity": 50},
         {"url": "https://data.mfdz.de/mfdz/stops/stops_zhv.csv", "vicinity": 50},
-        {"url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500}
+        {"url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500},      
     ]
     stop_store = stops.StopsStore()
 

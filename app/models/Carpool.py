@@ -31,7 +31,7 @@ class StopTime(BaseModel):
                     "the DHID which is available via the 'zentrales "
                     "Haltestellenverzeichnis (zHV)', published by DELFI e.V. "
                     "Note, that currently carpooling location.",
-        regex=r"^([a-zA-Z]{2,5}):\d+:\d+(:\d*(:\w+)?)?$|^osm:[nwr]\d+$",
+        regex=r"^([a-zA-Z]{2,6}):\d+:\d+(:\d*(:\w+)?)?$|^osm:[nwr]\d+$",
         example="de:12073:900340137::2")
 
     name: str = Field(

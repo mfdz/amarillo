@@ -27,8 +27,12 @@ class StopsStore():
         """
         logger.info("Load stops from %s", source)
         if source.startswith('http'):
-            with requests.get(source) as csv_source:
-                stopsDataFrame = self._load_stops(codecs.iterdecode(csv_source.iter_lines(), 'utf-8'))
+            if source.endswith('json'):
+                with requests.get(source) as json_source:
+                    stopsDataFrame = self._load_stops_geojson(json_source.json())
+            else:
+                with requests.get(source) as csv_source:
+                    stopsDataFrame = self._load_stops(codecs.iterdecode(csv_source.iter_lines(), 'utf-8'))
         else:
             with open(source, encoding='utf-8') as csv_source:
                 stopsDataFrame = self._load_stops(csv_source)
@@ -79,10 +83,35 @@ class StopsStore():
                 else:
                     lst.append(row[col])
 
+        return self._as_dataframe(id, lat, lon, stop_name)
+
+    def _load_stops_geojson(self, geojson_source):
+        id = []
+        lat = []
+        lon = []
+        stop_name = []
+        columns = ['stop_id', 'stop_lat', 'stop_lon', 'stop_name']
+        lists = [id, lat, lon, stop_name]
+        for row in geojson_source['features']:
+            coord = row['geometry']['coordinates']
+            for col, lst in zip(columns, lists):
+                if col == "stop_lat":
+                    lst.append(coord[1])
+                elif col == "stop_lon":
+                    lst.append(coord[0])
+                elif col == "stop_name":
+                    row_stop_name = self._normalize_stop_name(row['properties']['name'])
+                    lst.append(row_stop_name)
+                elif col == "stop_id":
+                    lst.append(row['id'])
+
+        return self._as_dataframe(id, lat, lon, stop_name)
+
+    def _as_dataframe(self, id, lat, lon, stop_name):
         stopsDataFrame = gpd.GeoDataFrame(data={'x':lon, 'y':lat, 'stop_name':stop_name, 'id':id})  
         
-        stopsDataFrame['geometry'] = stopsDataFrame.apply(lambda row: Point(self.projection(row['x'], row['y'])), axis=1)        
-    
+        stopsDataFrame['geometry'] = stopsDataFrame.apply(lambda row: Point(self.projection(row['x'], row['y'])), axis=1)     
+        
         return stopsDataFrame
 
     def _find_stops_around_transformed(self, stopsDataFrame, transformedLine, distance):
@@ -101,3 +130,9 @@ class StopsStore():
     def _sort_by_distance(self, stops, transformedLine):
         stops['distance']=stops.apply(lambda row: transformedLine.project(row['geometry']), axis=1)
         stops.sort_values('distance', inplace=True)
+
+def is_carpooling_stop(stop_id, name):
+    stop_name = name.lower()
+        # mfdz: or bbnavi: prefixed stops are custom stops which are explicitly meant to be carpooling stops
+    return stop_id.startswith('mfdz:') or stop_id.startswith('bbnavi:') or 'mitfahr' in stop_name or 'p&m' in stop_name 
+        
