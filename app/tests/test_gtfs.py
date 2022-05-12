@@ -1,5 +1,3 @@
-from fastapi.testclient import TestClient
-from app.main import app, configure_services
 from app.tests.sampledata import carpool_1234, data1, carpool_repeating_json
 from app.services.gtfs_export import GtfsExport
 from app.services.gtfs import GtfsRtProducer
@@ -10,7 +8,6 @@ from datetime import datetime
 import time
 import pytest
 
-client = TestClient(app)
 
 def test_gtfs_generation():
     cp = Carpool(**data1)
