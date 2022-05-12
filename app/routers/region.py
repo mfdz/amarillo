@@ -81,9 +81,15 @@ async def get_file(region_id: str, user: str = Depends(verify_admin_api_key)):
     response_class=FileResponse,
     responses={
                 status.HTTP_404_NOT_FOUND: {"description": "Region not found"},
+                status.HTTP_400_BAD_REQUEST: {"description": "Bad request, e.g. because format is not supported, i.e. neither protobuf nor json."}
         }
     )
-async def get_file(region_id: str, user: str = Depends(verify_admin_api_key)):
+async def get_file(region_id: str, format: str = 'protobuf', user: str = Depends(verify_admin_api_key)):
     _assert_region_exists(region_id)
-    # TODO support json
-    return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfsrt.pbf')
+    if format == 'json':
+        return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfsrt.json')
+    elif format == 'protobuf':
+        return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfsrt.pbf')
+    else:
+        message = "Specified format is not supported, i.e. neither protobuf nor json."
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
