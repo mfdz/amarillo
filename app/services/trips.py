@@ -264,7 +264,7 @@ class TripTransformer:
                 stop_time = cumulated_time + percent_dist * instructions[cnt]["time"]
                 stop_times.append(stop_time)
             else:
-                logger.warning("distance {} exceeds total length {}, using max arrival time {}".format(distance, cumulated_distance, cumulated_time))
+                logger.debug("distance {} exceeds total length {}, using max arrival time {}".format(distance, cumulated_distance, cumulated_time))
                 stop_times.append(cumulated_time)
         return stop_times
 
