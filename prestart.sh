@@ -1,1 +1,1 @@
- python enhancer.py > data/enhancer.log &
+ python enhancer.py &
