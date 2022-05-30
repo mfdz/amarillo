@@ -1,24 +1,16 @@
-
-import logging
 import logging.config
 
-logging.config.fileConfig('logging.conf')
-logger = logging.getLogger(__name__)
+from app.configuration import configure_services, configure_admin_token
+
+logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logger = logging.getLogger("main")
 
 import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from app.routers import carpool, gtfs_rt
-from fastapi import FastAPI, status
-from app.services import stops
-from app.services import trips
-from app.services.carpools import CarpoolService
-
-from app.services.config import config
-
-from app.utils.container import container
-import app.services.gtfs_generator as gtfs_generator
+from app.routers import carpool, agency, agencyconf, region
+from fastapi import FastAPI
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
 from app.views import home
@@ -57,8 +49,16 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                   }],
               servers=[
                   {
+                      "description": "DABB bbnavi Amarillo service",
+                      "url": "https://amarillo.bbnavi.de"
+                  },
+                  {
                       "description": "Demo server by MFDZ",
                       "url": "http://amarillo.mfdz.de:8000"
+                  },
+                  {
+                      "description": "Dev server for development",
+                      "url": "http://amarillo.mfdz.de:8001"
                   },
                   {
                       "description": "Localhost for development",
@@ -69,37 +69,22 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               )
 
 app.include_router(carpool.router)
-app.include_router(gtfs_rt.router)
+app.include_router(agency.router)
+app.include_router(agencyconf.router)
+app.include_router(region.router)
 
 
 def configure():
+    configure_admin_token()
     configure_services()
     configure_routing()
 
 
 def configure_routing():
-    mimetypes.add_type('application/x-protobuf','.pbf')
+    mimetypes.add_type('application/x-protobuf', '.pbf')
     app.mount('/static', StaticFiles(directory='static'), name='static')
-    app.mount('/gtfs', StaticFiles(directory='gtfs'), name='gtfs')
+    app.mount('/gtfs', StaticFiles(directory='data/gtfs'), name='gtfs')
     app.include_router(home.router)
-
-
-def configure_services():
-    stop_sources = [
-        {"url": "https://data.mfdz.de/mfdz/stops/custom.csv", "vicinity": 50},
-        {"url": "https://data.mfdz.de/mfdz/stops/stops_zhv.csv", "vicinity": 50},
-        {"url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500}
-    ]
-    stop_store = stops.StopsStore()
-    if config.env == 'PROD':
-        for stops_source in stop_sources:
-            stop_store.register_stops(stops_source["url"], stops_source["vicinity"])
-    container['stops_store'] = stop_store
-    container['trips_store'] = trips.TripStore(stop_store)
-    container['carpools'] = CarpoolService(container['trips_store'])
-
-    if config.env == 'PROD':
-        gtfs_generator.start_schedule()
 
 
 if __name__ == "__main__":

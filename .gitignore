@@ -136,3 +136,9 @@ secrets
 gtfs/*.zip
 gtfs/*.pbf
 gtfs/*.json
+data/carpool/
+data/enhanced/
+data/failed/
+data/trash/
+
+

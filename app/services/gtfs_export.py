@@ -6,8 +6,9 @@ import csv
 import gettext
 import logging
 import re
-import os
+from app.utils.utils import assert_folder_exists
 from app.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
+from app.services.stops import is_carpooling_stop
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class GtfsExport:
         self.bbox = bbox
             
     def export(self, gtfszip_filename, gtfsfolder):
-        self._assert_folder_exists(gtfsfolder)
+        assert_folder_exists(gtfsfolder)
         self._prepare_gtfs_feed(self.ridestore, self.stopstore)
         self._write_csvfile(gtfsfolder, 'agency.txt', self.agencies)
         self._write_csvfile(gtfsfolder, 'feed_info.txt', self.feed_info)
@@ -59,10 +60,6 @@ class GtfsExport:
         self._write_csvfile(gtfsfolder, 'stop_times.txt', self.stop_times)
         self._write_csvfile(gtfsfolder, 'shapes.txt', self.shapes)
         self._zip_files(gtfszip_filename, gtfsfolder)
-    
-    def _assert_folder_exists(self, foldername):
-        if not os.path.isdir(foldername):
-            os.makedirs(foldername)
 
     def _zip_files(self, gtfszip_filename, gtfsfolder):
         gtfsfiles = ['agency.txt', 'feed_info.txt', 'routes.txt', 'trips.txt', 
@@ -89,13 +86,13 @@ class GtfsExport:
     
     def _convert_trip(self, trip):
         self.routes_counter += 1
-        self.routes.append(self._create_route(self.routes_counter, trip))
-        self.calendar.append(self._create_calendar(self.routes_counter, trip))
+        self.routes.append(self._create_route(trip))
+        self.calendar.append(self._create_calendar(trip))
         if not trip.runs_regularly:
-            self.calendar_dates.append(self._create_calendar_date(self.routes_counter, trip))
-        self.trips.append(self._create_trip(self.routes_counter, self._trip_headsign(trip.stops.tail(1).iloc(0)[0]["stop_name"])))
-        self._append_stops_and_stop_times(self.routes_counter, trip)
-        self._append_shapes(self.routes_counter, trip)
+            self.calendar_dates.append(self._create_calendar_date(trip))
+        self.trips.append(self._create_trip(trip, self.routes_counter))
+        self._append_stops_and_stop_times(trip)
+        self._append_shapes(trip, self.routes_counter)
     
     def _trip_headsign(self, destination):
         destination = destination.replace('(Deutschland)', '')
@@ -120,10 +117,10 @@ class GtfsExport:
             logger.exception(ex)
             return destination
    
-    def _create_route(self, route_id, trip): 
-        return GtfsRoute(trip.agency, route_id, trip.route_long_name(), self.RIDESHARING_ROUTE_TYPE, trip.url, "")
+    def _create_route(self, trip): 
+        return GtfsRoute(trip.agency, trip.trip_id, trip.route_long_name(), self.RIDESHARING_ROUTE_TYPE, trip.url, "")
         
-    def _create_calendar(self, service_id, trip):
+    def _create_calendar(self, trip):
         # TODO currently, calendar is not provided by Fahrgemeinschaft.de interface.
         # We could apply some heuristics like requesting multiple days and extrapolate
         # if multiple trips are found, but better would be to have these provided by the
@@ -136,13 +133,13 @@ class GtfsExport:
         
         feed_start_date = datetime.today()
         stop_date = self._convert_stop_date(feed_start_date)
-        return GtfsCalendar(service_id, stop_date, self._convert_stop_date(feed_start_date + timedelta(days=31)), *(trip.weekdays))
+        return GtfsCalendar(trip.trip_id, stop_date, self._convert_stop_date(feed_start_date + timedelta(days=31)), *(trip.weekdays))
     
-    def _create_calendar_date(self, service_id, trip):
-        return GtfsCalendarDate(service_id, self._convert_stop_date(trip.start), self.CALENDAR_DATES_EXCEPTION_TYPE_ADDED)
+    def _create_calendar_date(self, trip):
+        return GtfsCalendarDate(trip.trip_id, self._convert_stop_date(trip.start), self.CALENDAR_DATES_EXCEPTION_TYPE_ADDED)
     
-    def _create_trip(self, route_trip_service_id, trip_headsign):
-        return GtfsTrip(route_trip_service_id, route_trip_service_id, route_trip_service_id, route_trip_service_id, trip_headsign, self.NO_BIKES_ALLOWED)
+    def _create_trip(self, trip, shape_id):
+        return GtfsTrip(trip.trip_id, trip.trip_id, trip.trip_id, shape_id, trip.trip_headsign, self.NO_BIKES_ALLOWED)
     
     def _convert_stop(self, stop):
         """
@@ -158,52 +155,27 @@ class GtfsExport:
         stop_name = "k.A." if stop.stop_name is None else stop.stop_name
         return GtfsStop(id, stop.y, stop.x, stop_name)
         
-    def _append_stops_and_stop_times(self, trip_id, trip):
+    def _append_stops_and_stop_times(self, trip):
         # Assumptions: 
         # arrival_time = departure_time
         # pickup_type, drop_off_type for origin: = coordinate/none
         # pickup_type, drop_off_type for destination: = none/coordinate
         # timepoint = approximate for origin and destination (not sure what consequences this might have for trip planners)
-        number_of_stops = len(trip.stops.index)
-        total_distance = trip.stops.iloc[number_of_stops-1]["distance"]
-        
-        first_stop_time = GtfsTimeDelta(hours = trip.start_time.hour, minutes = trip.start_time.minute, seconds = trip.start_time.second) 
-            
-        for i in range(0, number_of_stops):
-            current_stop = trip.stops.iloc[i]
-            if i == 0:
-                if (trip.stops.iloc[1].time-current_stop.time) < 1000:
-                    # skip custom stop if there is an official stop very close by
-                    logger.debug("Skipped stop {}", current_stop)
-                    continue
+        for stop_time in trip.stop_times:
+            # retrieve stop from stored_stops and mark it to be exported
+            wkn_stop = self.stored_stops.get(stop_time.stop_id)
+            if not wkn_stop:
+                logger.warning("No stop found in stop_store for %s. Will skip stop_time %s of trip %s", stop_time.stop_id, stop_time.stop_sequence, trip.trip_id)
             else:
-                if (current_stop.time-trip.stops.iloc[i-1].time) < 5000:
-                    # skip latter stop if it's very close (<5 seconds drive) by the preceding
-                    logger.debug("Skipped stop {}", current_stop)
-                    continue
-            
-            trip_time = timedelta(milliseconds=int(current_stop.time))
-            is_dropoff = self._is_dropoff_stop(current_stop, total_distance)
-            is_pickup = self._is_pickup_stop(current_stop, total_distance)
-            # TODO would be nice if possible to publish a minimum shared distance 
-            pickup_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_pickup else self.STOP_TIMES_STOP_TYPE_NONE
-            dropoff_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_dropoff else self.STOP_TIMES_STOP_TYPE_NONE
-            
-            stop = self._get_or_create_stop(current_stop)
-            next_stop_time = first_stop_time + trip_time
-            self.stop_times.append(GtfsStopTime(trip_id, str(next_stop_time), str(next_stop_time), stop.stop_id, i+1, pickup_type, dropoff_type, self.STOP_TIMES_TIMEPOINT_APPROXIMATE))
-   
-    def _is_dropoff_stop(self, current_stop, total_distance):
-        return current_stop["distance"] >= 0.5 * total_distance
+                self.stops[stop_time.stop_id] = wkn_stop
+                # Append stop_time
+                self.stop_times.append(stop_time)
         
-    def _is_pickup_stop(self, current_stop, total_distance):
-        return current_stop["distance"] < 0.5 * total_distance
-        
-    def _append_shapes(self, route_id, trip):
+    def _append_shapes(self, trip, shape_id):
         counter = 0
-        for point in trip.path['points']['coordinates']:
+        for point in trip.path.coordinates:
                 counter += 1
-                self.shapes.append(GtfsShape(route_id, point[0], point[1], counter))
+                self.shapes.append(GtfsShape(shape_id, point[0], point[1], counter))
             
     def _stop_hash(self, stop):
         return "{}#{}#{}".format(stop.stop_name,stop.x,stop.y)
@@ -221,16 +193,14 @@ class GtfsExport:
             return (self.bbox[0] <= stop.stop_lon <= self.bbox[2] and 
                 self.bbox[1] <= stop.stop_lat <= self.bbox[3])
         else:
-            stop_name = stop.stop_name.lower() 
-            # mfdz: prefixed stops are custom stops which are explicitly meant to be carpooling stops
-            return stop.stop_id.startswith('mfdz:') or 'mitfahr' in stop_name or 'p&m' in stop_name 
-        
+            return is_carpooling_stop(stop.stop_id, stop.stop_name)
+            
     def _load_stored_stop(self, stop):
         gtfsstop = self._convert_stop(stop)
         stop_hash = self._stop_hash(stop)
-        self.stored_stops[stop_hash] = gtfsstop
+        self.stored_stops[gtfsstop.stop_id] = gtfsstop
         if self._should_always_export(gtfsstop):
-            self.stops[stop_hash] = gtfsstop
+            self.stops[gtfsstop.stop_id] = gtfsstop
 
     def _get_stop_by_hash(self, stop_hash):
         return self.stops.get(stop_hash, self.stored_stops.get(stop_hash))
@@ -245,9 +215,6 @@ class GtfsExport:
             
     def _convert_stop_date(self, date_time):
         return date_time.strftime("%Y%m%d")
-        
-    def _convert_stop_time(self, date_time):
-        return date_time.strftime("%H:%M:%S")
     
     def _write_csvfile(self, gtfsfolder, filename, content):
         with open(gtfsfolder+"/"+filename, 'w', newline="\n", encoding="utf-8") as csvfile:

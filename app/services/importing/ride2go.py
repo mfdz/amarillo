@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 import requests
@@ -7,6 +8,7 @@ from app.services.config import config
 from app.services.secrets import secrets
 import re
 
+logger = logging.getLogger(__name__)
 
 def as_StopTime(stop):
     return StopTime(
@@ -35,7 +37,7 @@ def import_ride2go() -> List[Carpool]:
 
     ride2go_url = "https://ride2go.com/api/v1/trips/export"
 
-    api_key = secrets.secrets.get('ride2go')
+    api_key = secrets.ride2go_token
 
     ride2go_headers = {
         'Content-type': 'text/plain;charset=UTF-8',
@@ -54,5 +56,5 @@ def import_ride2go() -> List[Carpool]:
         return carpools
 
     except BaseException as e:
-        print(e)  # TODO add logging
-        raise e  # TODO handle better
+        logger.exception("Error on import for agency ride2go")
+        raise e

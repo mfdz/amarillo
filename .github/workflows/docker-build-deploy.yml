@@ -1,0 +1,59 @@
+name: build & deploy Docker image
+
+on:
+  push:
+    branches:
+      - deploy
+
+env:
+  DOCKER_IMAGE: registry.gitlab.tpwd.de/tpwd/bb-navi/amarillo
+  DOCKER_TAG: production
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: docker/setup-buildx-action@v1
+    - name: log in to registry.gitlab.tpwd.de
+      uses: docker/login-action@v1
+      with:
+        registry: registry.gitlab.tpwd.de
+        username: ${{ secrets.GITLAB_USERNAME }}
+        password: ${{ secrets.GITLAB_PASSWORD }}
+    - name: build & push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+        # https://github.com/docker/build-push-action/blob/9472e9021074a3cb3279ba431598b8836d40433f/docs/advanced/cache.md#github-cache
+        # https://github.com/moby/buildkit#registry-push-image-and-cache-separately
+        cache-from: type=gha
+        cache-to: type=gha,mode=max,oci-mediatypes=true,compression=zstd
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - prep
+    environment: production
+    env:
+      QUANTUM_USER: ${{ secrets.QUANTUM_USER }}
+      QUANTUM_PASSWORD: ${{ secrets.QUANTUM_PASSWORD }}
+      QUANTUM_ENDPOINT: "tpwd-bb-navi"
+      QUANTUM_STACK: "amarillo"
+      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+      RIDE2GO_TOKEN: ${{ secrets.RIDE2GO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: generate Planetary Quantum stack markup
+        run: |
+          set -o pipefail
+          docker-compose -f quantum-stack.yml config | tee stack.yml
+          echo -e "---\nversion: '1.0'\ncompose: stack.yml" >.quantum
+      - name: Deploy to Planetary Quantum
+        run: |
+          set -x
+          docker run --rm -i \
+            -v $PWD:/app -w /app \
+            -e QUANTUM_USER -e QUANTUM_PASSWORD -e QUANTUM_ENDPOINT -e QUANTUM_STACK \
+            r.planetary-quantum.com/quantum-public/cli:2 \
+            quantum-cli stacks update --create --wait

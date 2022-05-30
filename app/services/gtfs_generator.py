@@ -2,6 +2,7 @@ from app.models.Carpool import Region
 from app.services.gtfs_export import GtfsExport, GtfsFeedInfo, GtfsAgency
 from app.services.gtfs import GtfsRtProducer
 from app.utils.container import container
+from glob import glob
 import json
 import schedule
 import threading
@@ -11,13 +12,14 @@ from datetime import date, timedelta
 
 logger = logging.getLogger(__name__)
 
-# TODO define via config
-regions = [
-	Region(**{'id': 'bb', 'bbox':  [11.26, 51.36, 14.77, 53.56]}),
-	Region(**{'id': 'bw', 'bbox':  [ 7.51, 49.79, 10.50, 47.54]}),
-	Region(**{'id': 'by', 'bbox':  [ 8.97, 50.56, 13.86, 47.28]}),
-	Region(**{'id': 'nrw', 'bbox': [ 5.86, 52.53,  9.45, 50.33]})
-]
+regions = {}
+for region_file_name in glob('conf/region/*.json'):
+    with open(region_file_name) as region_file:
+        dict = json.load(region_file)
+        region = Region(**dict)
+        region_id = region.id
+        regions[region_id] = region
+
 # TODO access agencies defined via model
 agencies = [ 
 	GtfsAgency('ride2go', 'ride2go', 'http://www.ride2go.de', 'Europe/Berlin', 'de', 'info@ride2go.com'),
@@ -33,6 +35,7 @@ def run_schedule():
 		time.sleep(1)
 
 def midnight():
+	container['stops_store'].load_stop_sources()
 	yesterday = date.today()-timedelta(days=1)
 	container['trips_store'].purge_trips_older_than(yesterday)
 	generate_gtfs()
@@ -40,7 +43,8 @@ def midnight():
 def generate_gtfs():
 	logger.info("Generate GTFS")
 
-	for region in regions:
+	for region in regions.values():
+		# TODO make feed producer infos configurable
 		feed_info = GtfsFeedInfo('mfdz', 'MITFAHR|DE|ZENTRALE', 'http://www.mitfahrdezentrale.de', 'de', 1)
 		exporter = GtfsExport(
 			agencies, 
@@ -48,17 +52,18 @@ def generate_gtfs():
 			container['trips_store'], 
 			container['stops_store'], 
 			region.bbox)
-		exporter.export(f"gtfs/mfdz.{region.id}.gtfs.zip", "target/")
+		exporter.export(f"data/gtfs/amarillo.{region.id}.gtfs.zip", "data/tmp/")
 
 def generate_gtfs_rt():
 	logger.info("Generate GTFS-RT")
 	producer = GtfsRtProducer(container['trips_store'])
-	for region in regions:
-		rt = producer.export_feed(time.time(), f"gtfs/mfdz.{region.id}.gtfsrt", bbox=region.bbox)
+	for region in regions.values():
+		rt = producer.export_feed(time.time(), f"data/gtfs/amarillo.{region.id}.gtfsrt", bbox=region.bbox)
 
 def start_schedule():
 	schedule.every().day.at("00:00").do(midnight)
-	#schedule.every(10).seconds.do(midnight)
 	schedule.every(60).seconds.do(generate_gtfs_rt)
+	# Create all feeds once at startup
+	schedule.run_all()
 	job_thread = threading.Thread(target=run_schedule, daemon=True)
 	job_thread.start()

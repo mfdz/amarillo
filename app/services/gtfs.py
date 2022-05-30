@@ -97,7 +97,7 @@ class GtfsRtProducer():
 	
 	def _to_stop_times(self, trip, fromdate):
 		return [{
-		      'stopSequence': idx, 
+		      'stopSequence': stoptime.stop_sequence, 
 		      'arrival': {
 		        'time': self._to_seconds(fromdate, stoptime.arrival_time),
 		        'uncertainty': 600
@@ -115,7 +115,7 @@ class GtfsRtProducer():
 		        }
 		      }
 		    }
-			for idx, stoptime in trip.stops_and_stop_times()]
+			for stoptime in trip.stop_times]
 
 	def _as_added_updates(self, trip, fromdate):
 		return [{ 

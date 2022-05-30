@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, HttpUrl, EmailStr
 from typing import List, Union, Set, Optional, Tuple
 from datetime import time
 from pydantic import BaseModel, Field
+from geojson_pydantic.geometries import LineString
 from enum import Enum
 
 NumType = Union[float, int]
@@ -16,6 +17,11 @@ class Weekday(str, Enum):
     saturday = "saturday"
     sunday = "sunday"
 
+class PickupDropoffType(str, Enum):
+    pickup_and_dropoff = "pickup_and_dropoff"
+    only_pickup = "only_pickup"
+    only_dropoff = "only_dropoff"
+
 class StopTime(BaseModel):
     id: str = Field(
         None,
@@ -25,7 +31,7 @@ class StopTime(BaseModel):
                     "the DHID which is available via the 'zentrales "
                     "Haltestellenverzeichnis (zHV)', published by DELFI e.V. "
                     "Note, that currently carpooling location.",
-        regex=r"^([a-zA-Z]{2,5}):\d+:\d+(:\d*(:\w+)?)?$",
+        regex=r"^([a-zA-Z]{2,6}):\d+:\d+(:\d*(:\w+)?)?$|^osm:[nwr]\d+$",
         example="de:12073:900340137::2")
 
     name: str = Field(
@@ -78,6 +84,14 @@ class StopTime(BaseModel):
         lt=180,
         example="13.9934706687")
 
+    pickup_dropoff: Optional[PickupDropoffType] = Field(
+        description="If passengers may be picked up, dropped off or both at this stop. "
+                "If not specified, this service may assign this according to some custom rules. "
+                "E.g. Amarillo may allow pickup only for the first third of the distance travelled, "
+                "and dropoff only for the last third." ,
+        example="only_pickup"
+        )
+
     class Config:
         schema_extra = {
             "example": "{'id': 'de:12073:900340137::2', 'name': "
@@ -109,7 +123,7 @@ class Agency(BaseModel):
         description="Name",
         min_length=1,
         max_length=48,
-        regex=r'^[\w -\.]+$',
+        regex=r'^[\w -\.\|]+$',
         example="MITFAHR|DE|ZENTRALE")
 
     url: HttpUrl = Field(
@@ -142,16 +156,16 @@ class Agency(BaseModel):
             "title": "Agency",
             "description": "Carpool agency.",
             "example":
-                """
+                #"""
                 {
                   "id": "mfdz",
                   "name": "MITFAHR|DE|ZENTRALE",
                   "url": "http://mfdz.de",
                   "timezone": "Europe/Berlin",
                   "lang": "de",
-                  "email": ""info@mfdz.de""
+                  "email": "info@mfdz.de"
                 }
-                """
+                #"""
         }
 
 class Carpool(BaseModel):
@@ -181,7 +195,7 @@ class Carpool(BaseModel):
     stops: List[StopTime] = Field(
         ...,
         min_items=2,
-        max_items=10,
+        max_items=100,
         description="Stops which this carpool passes by and offers to pick "
                     "up/drop off passengers. This list must at minimum "
                     "include two stops, the origin and destination of this "
@@ -204,6 +218,7 @@ class Carpool(BaseModel):
                      }
                    ]""")
 
+    # TODO can be removed, as first stop has departureTime as well
     departureTime: time = Field(
         description="Time when the carpool leaves at the first stop. Note, "
                     "that this API currently does not support flexible time "
@@ -211,6 +226,7 @@ class Carpool(BaseModel):
                     "For recurring trips, the weekdays this trip will run. ",
         example="17:00")
 
+    # TODO think about using googlecal Format
     departureDate: Union[date, Set[Weekday]] = Field(
         description="Date when the trip will start, in case it is a one-time "
                     "trip. For recurring trips, specify weekdays. "
@@ -220,6 +236,9 @@ class Carpool(BaseModel):
         example='A single date 2022-04-04 or a list of weekdays ["saturday", '
                 '"sunday"]')
 
+    path: Optional[LineString] = Field(
+        description="Optional route geometry as json LineString.")
+    
     lastUpdated: Optional[datetime] = Field(
         None,
         description="LastUpdated should reflect the last time, the user "
