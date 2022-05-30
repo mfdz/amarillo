@@ -26,15 +26,10 @@ router = APIRouter(
             summary="Find agency by ID",
             response_model=Agency,
             description="Find agency by ID",
-            status_code=status.HTTP_200_OK,
             # TODO next to the status codes are "Links". There is nothing shown now.
             # Either show something there, or hide the Links, or do nothing.
-            responses={
-                status.HTTP_404_NOT_FOUND: {"description": "Carpool not found"},
-                # TODO note that automatic validations against the schema
-                # are returned with code 422, also shown in Swagger.
-                # maybe 405 is not needed?
-                # 405: {"description": "Validation exception"}
+            responses={ 
+                status.HTTP_404_NOT_FOUND: {"description": "Agency not found"},
             },
             )
 async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key)) -> Agency:

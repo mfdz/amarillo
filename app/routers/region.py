@@ -21,7 +21,6 @@ router = APIRouter(
             operation_id="getRegions",
             summary="Return all regions",
             response_model=List[Region],
-            status_code=status.HTTP_200_OK,
             responses={
             },
             )
@@ -35,16 +34,10 @@ async def get_regions() -> List[Region]:
             summary="Find region by ID",
             response_model=Region,
             description="Find region by ID",
-            status_code=status.HTTP_200_OK,
             responses={
                 status.HTTP_404_NOT_FOUND: {"description": "Region not found"},
-                # TODO note that automatic validations against the schema
-                # are returned with code 422, also shown in Swagger.
-                # maybe 405 is not needed?
-                # 405: {"description": "Validation exception"}
             },
             )
-# TODO ids should not be str, but have their own model
 async def get_region(region_id: str) -> Region:
     region = _assert_region_exists(region_id)
     logger.info(f"Get region {region_id}.")
