@@ -60,8 +60,8 @@ def configure_enhancer_services():
         {"url": "https://data.mfdz.de/mfdz/stops/parkings_osm.csv", "vicinity": 500},      
     ]
     stop_store = stops.StopsStore(stop_sources)
-    stop_source.load_stop_sources()
     
+    stop_store.load_stop_sources()
     container['stops_store'] = stop_store
     container['trips_store'] = trips.TripStore(stop_store)
     container['carpools'] = CarpoolService(container['trips_store'])
