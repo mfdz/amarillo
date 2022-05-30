@@ -20,10 +20,11 @@ router = APIRouter(
     tags=["carpool"]
 )
 
-
+# TODO Has same implementaation as post, so we just need one (keep post, delete put)
 @router.put("/",
             operation_id="updatecarpool",
             summary="Update an existing carpool",
+            # TODO can this be removed as declaration has ->  Carpool
             response_model=Carpool,
             description="Carpool object that should be updated",
             status_code=status.HTTP_202_ACCEPTED,

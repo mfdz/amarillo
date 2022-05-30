@@ -51,6 +51,7 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
 
     return agency
 
+# TODO add push batch endpoint
 
 @router.post("/{agency_id}/sync",
              operation_id="sync",

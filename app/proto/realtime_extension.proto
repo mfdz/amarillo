@@ -1,3 +1,5 @@
+// TODO Doc and license
+
 syntax = "proto2";
 
 import "gtfs-realtime.proto";

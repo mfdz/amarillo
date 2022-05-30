@@ -218,6 +218,7 @@ class Carpool(BaseModel):
                      }
                    ]""")
 
+    # TODO can be removed, as first stop has departureTime as well
     departureTime: time = Field(
         description="Time when the carpool leaves at the first stop. Note, "
                     "that this API currently does not support flexible time "
@@ -225,6 +226,7 @@ class Carpool(BaseModel):
                     "For recurring trips, the weekdays this trip will run. ",
         example="17:00")
 
+    # TODO think about using googlecal Format
     departureDate: Union[date, Set[Weekday]] = Field(
         description="Date when the trip will start, in case it is a one-time "
                     "trip. For recurring trips, specify weekdays. "

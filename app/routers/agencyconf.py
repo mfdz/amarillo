@@ -16,11 +16,12 @@ router = APIRouter(
 )
 
 # This endpoint is not shown in PROD installations, only in development
+# TODO make this an explicit config option
 include_in_schema = config.env != 'PROD'
 
 
 # noinspection PyPep8Naming
-# X_Api_Key is upper case for OpenAPI
+# X_API_Key is upper case for OpenAPI
 async def verify_admin_api_key(X_API_Key: str = Header(...)):
     if X_API_Key != config.admin_token:
         message="X-API-Key header invalid"
@@ -31,13 +32,13 @@ async def verify_admin_api_key(X_API_Key: str = Header(...)):
 
 
 # noinspection PyPep8Naming
-# X_Api_Key is upper case for OpenAPI
+# X_API_Key is upper case for OpenAPI
 async def verify_api_key(X_API_Key: str = Header(...)):
     agency_conf_service: AgencyConfService = container['agencyconf']
 
     return agency_conf_service.check_api_key(X_API_Key)
 
-
+# TODO Return code 403 Unauthoized (in response_status_codes as well...)
 async def verify_permission_for_same_agency_or_admin(agency_id_in_path_or_body, agency_id_from_api_key):
     """Verifies that an agency is accessing something it owns or the user is admin
 
@@ -72,7 +73,7 @@ async def post_agency_conf(agency_conf: AgencyConf, admin_api_key: str = Depends
     agency_conf_service: AgencyConfService = container['agencyconf']
     agency_conf_service.add(agency_conf)
 
-
+# TODO 400->403
 @router.delete("/{agency_id}",
                include_in_schema=include_in_schema,
                operation_id="deleteAgencyConf",

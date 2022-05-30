@@ -11,6 +11,7 @@ GtfsCalendar = namedtuple('GtfsCalendar', 'service_id start_date end_date monday
 GtfsCalendarDate = namedtuple('GtfsCalendarDate', 'service_id date exception_type')
 GtfsShape = namedtuple('GtfsShape','shape_id shape_pt_lon shape_pt_lat shape_pt_sequence')
 
+# TODO Move to utils
 class GtfsTimeDelta(timedelta):
     def __str__(self):
         seconds = self.total_seconds()
