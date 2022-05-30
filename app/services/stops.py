@@ -15,30 +15,35 @@ logger = logging.getLogger(__name__)
 
 class StopsStore():
     
-    def __init__(self, internal_projection = "EPSG:32632"):
+    def __init__(self, stop_sources = [], internal_projection = "EPSG:32632"):
         self.projection = Transformer.from_crs("EPSG:4326", internal_projection, always_xy=True).transform
         self.stopsDataFrames = []
+        self.stop_sources = stop_sources
     
-    def register_stops(self, source : str, distance : int = 500):
-        """Imports stops from given source and registers them with
+    
+    def load_stop_sources(self):
+        """Imports stops from  stop_sources and registers them with
         the distance they are still associated with a trip.
         E.g. bus stops should be registered with a distance of e.g. 30m,
-        while larger carpool parkings might be registered with e.g. 500m
+        while larger carpool parkings might be registered with e.g. 500m.
+
+        Subsequent calls of load_stop_sources will reload all stop_sources
+        but replace the current stops only if all stops could be loaded successfully.
         """
-        logger.info("Load stops from %s", source)
-        if source.startswith('http'):
-            if source.endswith('json'):
-                with requests.get(source) as json_source:
-                    stopsDataFrame = self._load_stops_geojson(json_source.json())
-            else:
-                with requests.get(source) as csv_source:
-                    stopsDataFrame = self._load_stops(codecs.iterdecode(csv_source.iter_lines(), 'utf-8'))
-        else:
-            with open(source, encoding='utf-8') as csv_source:
-                stopsDataFrame = self._load_stops(csv_source)
-            
-        self.stopsDataFrames.append({'distanceInMeter': distance,
-            'stops': stopsDataFrame})
+        stopsDataFrames = []
+        error_occured = False
+
+        for stops_source in self.stop_sources:
+            try:
+                stopsDataFrame =self._load_stops(stops_source["url"])
+                stopsDataFrames.append({'distanceInMeter': stops_source["vicinity"],
+                    'stops': stopsDataFrame})
+            except Exception as err:
+                error_occured = True
+                logger.error("Failed to load stops from %s to StopsStore.", stops_source["url"], exc_info=True)
+
+        if not error_occured:
+            self.stopsDataFrames = stopsDataFrames
 
     def find_additional_stops_around(self, line, stops = None):
         """Returns a GeoDataFrame with all stops in vicinity of the
@@ -65,7 +70,27 @@ class StopsStore():
         
         return normalized_stop_name
 
-    def _load_stops(self, csv_source):
+    def _load_stops(self, source : str):
+        """Loads stops from given source and registers them with
+        the distance they are still associated with a trip.
+        E.g. bus stops should be registered with a distance of e.g. 30m,
+        while larger carpool parkings might be registered with e.g. 500m
+        """
+        logger.info("Load stops from %s", source)
+        if source.startswith('http'):
+            if source.endswith('json'):
+                with requests.get(source) as json_source:
+                    stopsDataFrame = self._load_stops_geojson(json_source.json())
+            else:
+                with requests.get(source) as csv_source:
+                    stopsDataFrame = self._load_stops_csv(codecs.iterdecode(csv_source.iter_lines(), 'utf-8'))
+        else:
+            with open(source, encoding='utf-8') as csv_source:
+                stopsDataFrame = self._load_stops_csv(csv_source)
+            
+        return stopsDataFrame
+
+    def _load_stops_csv(self, csv_source):
         id = []
         lat = []
         lon = []
