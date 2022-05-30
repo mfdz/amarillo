@@ -54,8 +54,8 @@ async def put_carpool(carpool: Carpool = Body(..., examples=examples),
 
 @router.post("/",
              operation_id="addcarpool",
-             summary="Add a new carpool",
-             description="Carpool object to be created",
+             summary="Add a new or update existing carpool",
+             description="Carpool object to be created or updated",
              response_model=Carpool,
              responses={
                  status.HTTP_404_NOT_FOUND: {
@@ -68,7 +68,6 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
 
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
-    await assert_carpool_does_not_exist(carpool.agency, carpool.id)
 
     await set_lastUpdated_if_unset(carpool)
 
