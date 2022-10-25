@@ -119,6 +119,9 @@ class StopsStore():
         lists = [id, lat, lon, stop_name]
         for row in geojson_source['features']:
             coord = row['geometry']['coordinates']
+            if not coord or not row['properties'].get('name'):
+                logger.error('Stop feature {} has null coord or name'.format(row['id']))
+                continue
             for col, lst in zip(columns, lists):
                 if col == "stop_lat":
                     lst.append(coord[1])
