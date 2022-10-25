@@ -45,15 +45,23 @@ def import_ride2go() -> List[Carpool]:
     }
 
     try:
-        results = requests.get(
+        result = requests.get(
             ride2go_url,
             data=ride2go_query_data,
             headers=ride2go_headers
-        ).json()
+        )
+        if result.status_code == 200:
+            json_results = result.json()
+            carpools = [as_Carpool(cp) for cp in json_results]
 
-        carpools = [as_Carpool(cp) for cp in results]
-
-        return carpools
+            return carpools
+        else:
+            logger.error("ride2go request returned with status_code %s", result.status_code)
+            json_results = result.json()
+            if 'status' in json_results:
+                logger.error("Error was: %s", result.json()['status'])
+            
+            raise ValueError("Sync failed with error. See logs") 
 
     except BaseException as e:
         logger.exception("Error on import for agency ride2go")
