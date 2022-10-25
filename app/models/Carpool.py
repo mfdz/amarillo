@@ -151,6 +151,17 @@ class Agency(BaseModel):
             representative at the agency.""",
         example="info@mfdz.de")
 
+    terms_url: Optional[HttpUrl] = Field(
+        description="""A fully qualified URL pointing to the terms of service 
+        (also often called "terms of use" or "terms and conditions") 
+        for the service.""",
+        example="https://mfdz.de/nutzungsbedingungen")
+
+    privacy_url: Optional[HttpUrl] = Field(
+        description="""A fully qualified URL pointing to the privacy policy for the service.""",
+        example="https://mfdz.de/datenschutz")
+    
+
     class Config:
         schema_extra = {
             "title": "Agency",
@@ -163,7 +174,9 @@ class Agency(BaseModel):
                   "url": "http://mfdz.de",
                   "timezone": "Europe/Berlin",
                   "lang": "de",
-                  "email": "info@mfdz.de"
+                  "email": "info@mfdz.de",
+                  "terms_url": "https://mfdz.de/nutzungsbedingungen",
+                  "privacy_url": "https://mfdz.de/datenschutz",
                 }
                 #"""
         }
