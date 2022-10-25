@@ -1,6 +1,6 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
 from app.models.Carpool import Carpool, Weekday, StopTime, PickupDropoffType
-from app.services.routing import RoutingService
+from app.services.routing import RoutingService, RoutingException
 from app.services.stops import is_carpooling_stop
 from app.utils.utils import assert_folder_exists
 from shapely.geometry import Point, box
@@ -104,6 +104,11 @@ class TripStore():
                     f.write(enhanced_carpool.json())
             
             return self._load_as_trip(enhanced_carpool)
+        except RoutingException as err:
+            logger.warn("Failed to add carpool %s:%s to TripStore due to RoutingException %s", carpool.agency, carpool.id, err.message)
+            assert_folder_exists(f'data/failed/{carpool.agency}/')
+            with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
+                f.write(carpool.json()) 
         except Exception as err:
             logger.error("Failed to add carpool %s:%s to TripStore.", carpool.agency, carpool.id, exc_info=True)
             assert_folder_exists(f'data/failed/{carpool.agency}/')
@@ -203,10 +208,6 @@ class TripTransformer:
     def enhance_carpool(self, carpool):
 
         path = self._path_for_ride(carpool)
-        # If no path has been found: ignore
-        if not path.get("time"):
-            raise RuntimeError ('No route found.')
-
         lineString = LineString(coordinates = path["points"]["coordinates"])
         virtual_stops = self.stops_store.find_additional_stops_around(lineString, carpool.stops) 
         if not virtual_stops.empty:
@@ -260,6 +261,8 @@ class TripTransformer:
                 cnt = cnt + 1
             
             if cnt < len(instructions):
+                if instructions[cnt]["distance"] ==0:
+                    raise RoutingException("Origin and destinaction too close")
                 percent_dist = (distance - cumulated_distance) / instructions[cnt]["distance"]
                 stop_time = cumulated_time + percent_dist * instructions[cnt]["time"]
                 stop_times.append(stop_time)

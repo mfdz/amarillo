@@ -3,6 +3,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class RoutingException(Exception):
+    def __init__(self, message):
+        # Call Exception.__init__(message)
+        # to use the same Message header as the parent class
+        super().__init__(message)
+
 class RoutingService():
     def __init__(self, gh_url = 'https://api.mfdz.de/gh'):
         self.gh_service_url = gh_url
@@ -24,10 +30,12 @@ class RoutingService():
             # Found route between points
             return response.json()
         else:
-            try:    
-            	logger.error("Get directions failed: %s", response.json().get('message'))
+            try:
+                message = response.json().get('message')
             except:
-            	logger.error("Get directions failed with status code %s", status)
+                raise RoutingException("Get directions failed with status code {}".format(status))
+            else:
+                raise RoutingException(message)
 
     def _create_url(self, points, calc_points = False, instructions = False):
         """ Creates GH request URL """
