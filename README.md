@@ -2,7 +2,7 @@
 
 **CRUD for carpool offers**
 
-An Amarillo is a [yellow-dressed person](https://www.cubatravelnetwork.com/de/autoverleih-in-kuba/autofahren-auf-kuba) helping others to find a car pool in Cuba. 
+An Amarillo is a [yellow-dressed person](https://aworldkaleidoscope.com/kuba-spartipps-kuba-authentisch/) helping others to find a car pool in Cuba. 
 
 ## Setup
 
@@ -49,4 +49,4 @@ In the top directory, run `pytest app/tests`.
 Based on [tiangolo/uvicorn-gunicorn:python3.9-slim](https://github.com/tiangolo/uvicorn-gunicorn-docker)
 
 - build `docker build -t amarillo .`
-- run `docker run -p 8000:80 -e ADMIN_TOKEN=%ADMIN_TOKEN% -e RIDE2GO_TOKEN=%RIDE2GO_TOKEN% -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo-gunicorn`
+- run `docker run -p 8000:80 -e ADMIN_TOKEN=%ADMIN_TOKEN% -e RIDE2GO_TOKEN=%RIDE2GO_TOKEN% -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`
