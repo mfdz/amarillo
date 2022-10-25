@@ -87,3 +87,5 @@ cp2 = """
   "lastUpdated": "2022-03-30 12:34"
 }
 """
+
+stop_issue = {"id": "106727", "agency": "ride2go", "deeplink": "https://ride2go.com/?trip=106727", "stops": [{"id": None, "name": "Mitfahrbank Angerm\u00fcnde, Einkaufscenter, Prenzlauer Stra\u00dfe, 16278 Angerm\u00fcnde", "departureTime": None, "arrivalTime": None, "lat": 53.0220209, "lon": 13.9999447, "pickup_dropoff": None}, {"id": None, "name": "Mitfahrbank B\u00f6lkendorf, B\u00f6lkendorfer Stra\u00dfe, 16278 Angerm\u00fcnde", "departureTime": None, "arrivalTime": None, "lat": 52.949856, "lon": 14.003533, "pickup_dropoff": None}], "departureTime": "17:00:00", "departureDate": "2022-06-22", "path": None, "lastUpdated": "2022-06-22T11:04:22"}
