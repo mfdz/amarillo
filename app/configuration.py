@@ -75,7 +75,7 @@ def configure_enhancer_services():
                     carpool = Carpool(**(json.load(carpool_file)))
                     container['carpools'].put(carpool.agency, carpool.id, carpool)
             except Exception as e:
-                logger.warn("Carpool offer %s seems to have been deleted during startup", carpool_file_name)
+                logger.warn("Issue during restore of carpool %s: %s", carpool_file_name, repr(e))
                     
         # notify carpool about carpools in trash, as delete notifications must be sent
         for carpool_file_name in glob(f'data/trash/{agency_id}/*.json'):
