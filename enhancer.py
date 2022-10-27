@@ -25,8 +25,8 @@ class EventHandler(pyinotify.ProcessEvent):
     # in data/agency, data/agencyconf, see AgencyConfService
 
     def process_IN_CLOSE_WRITE(self, event):
-        logger.info("Creating: %s", event.pathname)
-
+  
+        logger.info("CLOSE_WRITE: Created %s", event.pathname)
         try:
             with open(event.pathname, 'r', encoding='utf-8') as f:
                 dict = json.load(f)
@@ -35,13 +35,17 @@ class EventHandler(pyinotify.ProcessEvent):
             container['carpools'].put(carpool.agency, carpool.id, carpool)
         except FileNotFoundError as e:
             logger.error("Carpool could not be added, as already deleted (%s)", event.pathname)
-        
-        return
+        except:
+            logger.exception("Eventhandler process_IN_CLOSE_WRITE encountered exception")        
 
     def process_IN_DELETE(self, event):
-        logger.info("Removing: %s", event.pathname)
-        (agency_id, carpool_id) = agency_carpool_ids_from_filename(event.pathname)
-        container['carpools'].delete(agency_id, carpool_id)
+        try:
+            logger.info("DELETE: Removing %s", event.pathname)
+            (agency_id, carpool_id) = agency_carpool_ids_from_filename(event.pathname)
+            container['carpools'].delete(agency_id, carpool_id)
+        except:
+            logger.exception("Eventhandler process_IN_DELETE encountered exception")
+        
 
 notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
 notifier.start()
@@ -51,9 +55,15 @@ import time
 
 try:
     # TODO FG Is this really needed?
+    cnt = 0
+    ENHANCER_LOG_INTERVAL_IN_S = 600
     while True:
-        logger.debug("Currently stored carpool ids: %s", container['carpools'].get_all_ids())
+        if cnt == ENHANCER_LOG_INTERVAL_IN_S:
+            logger.debug("Currently stored carpool ids: %s", container['carpools'].get_all_ids())
+            cnt = 0
+
         time.sleep(1)
+        cnt += 1
 finally:
     wm.rm_watch(list(wdd.values()))
 
