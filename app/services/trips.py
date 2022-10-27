@@ -102,6 +102,7 @@ class TripStore():
                 assert_folder_exists(f'data/enhanced/{carpool.agency}/')
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(enhanced_carpool.json())
+                logger.info("Added enhanced carpool %s:%s", carpool.agency, carpool.id)
             
             return self._load_as_trip(enhanced_carpool)
         except RoutingException as err:
