@@ -106,7 +106,7 @@ class TripStore():
             
             return self._load_as_trip(enhanced_carpool)
         except RoutingException as err:
-            logger.warn("Failed to add carpool %s:%s to TripStore due to RoutingException %s", carpool.agency, carpool.id, getattr(err, 'message', repr(err)))
+            logger.warning("Failed to add carpool %s:%s to TripStore due to RoutingException %s", carpool.agency, carpool.id, getattr(err, 'message', repr(err)))
             assert_folder_exists(f'data/failed/{carpool.agency}/')
             with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
                 f.write(carpool.json()) 
@@ -123,7 +123,7 @@ class TripStore():
             except Exception as e:
                 # An error on restore could be caused by model changes, 
                 # in such a case, it need's to be recreated
-                logger.warn("Could not restore enhanced trip %s:%s, reason: %s", agency_id, carpool_id, repr(e))
+                logger.warning("Could not restore enhanced trip %s:%s, reason: %s", agency_id, carpool_id, repr(e))
 
         return None
 
