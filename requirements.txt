@@ -9,7 +9,8 @@ setproctitle==1.2.3
 starlette==0.17.1
 pandas==1.4.2
 requests==2.27.1
-Shapely==1.8.1.post1
+Shapely==1.8.5.post1
+pygeos==0.13
 pyproj==3.3.0
 geojson-pydantic==0.3.3
 # Note: pyinotify is not available on MacOS yet.

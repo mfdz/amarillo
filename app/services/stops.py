@@ -1,6 +1,7 @@
 import csv
 import geopandas as gpd
 import pandas as pd
+from app.models.Carpool import StopTime
 from contextlib import closing
 from shapely.geometry import Point, LineString
 from shapely.ops import transform
@@ -61,6 +62,20 @@ class StopsStore():
         if not stops.empty:
             self._sort_by_distance(stops, transformedLine)
         return stops
+
+    def find_closest_stop(self, carpool_stop, max_search_distance):
+        transformedCoord = Point(self.projection(carpool_stop.lon, carpool_stop.lat))
+        best_dist = max_search_distance + 1
+        best_stop = None
+        for stops_with_dist in self.stopsDataFrames:
+            stops = stops_with_dist['stops']
+            s, d = stops.sindex.nearest(transformedCoord, return_all= True, return_distance=True, max_distance=max_search_distance)
+            if len(d) > 0 and d[0] < best_dist:
+                best_dist = d[0]
+                row = s[1][0]
+                best_stop = StopTime(name=stops.at[row, 'stop_name'], lat=stops.at[row, 'y'], lon=stops.at[row, 'x'])
+
+        return best_stop if best_stop else carpool_stop
 
     def _normalize_stop_name(self, stop_name):
         default_name = 'P+R-Parkplatz'

@@ -171,6 +171,8 @@ class TripStore():
 
 
 class TripTransformer:
+    REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS = True
+    REPLACEMENT_STOPS_SERACH_RADIUS_IN_M = 1000
 
     NO_BIKES_ALLOWED = 2
     RIDESHARING_ROUTE_TYPE = 1700
@@ -206,8 +208,16 @@ class TripTransformer:
     def _trip_id(self, carpool):
         return f"{carpool.agency}:{carpool.id}"
 
-    def enhance_carpool(self, carpool):
+    def _replace_stops_by_transit_stops(self, carpool, max_search_distance):
+        new_stops = []
+        for carpool_stop in carpool.stops:
+            new_stops.append(self.stops_store.find_closest_stop(carpool_stop, max_search_distance))
+        return new_stops
 
+    def enhance_carpool(self, carpool):
+        if self.REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS:
+            carpool.stops = self._replace_stops_by_transit_stops(carpool, self.REPLACEMENT_STOPS_SERACH_RADIUS_IN_M)
+ 
         path = self._path_for_ride(carpool)
         lineString = LineString(coordinates = path["points"]["coordinates"])
         virtual_stops = self.stops_store.find_additional_stops_around(lineString, carpool.stops) 
