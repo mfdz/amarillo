@@ -6,23 +6,16 @@ import csv
 import gettext
 import logging
 import re
+
 from app.utils.utils import assert_folder_exists
 from app.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
 from app.services.stops import is_carpooling_stop
+from app.services.gtfs_constants import *
+
 
 logger = logging.getLogger(__name__)
 
 class GtfsExport:
-    NO_BIKES_ALLOWED = 2
-    RIDESHARING_ROUTE_TYPE = 1700
-    CALENDAR_DATES_EXCEPTION_TYPE_ADDED = 1
-    CALENDAR_DATES_EXCEPTION_TYPE_REMOVED = 2
-    STOP_TIMES_STOP_TYPE_REGULARLY = 0
-    STOP_TIMES_STOP_TYPE_NONE = 1
-    STOP_TIMES_STOP_TYPE_PHONE_AGENCY = 2
-    STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER = 3
-    STOP_TIMES_TIMEPOINT_APPROXIMATE = 0 
-    STOP_TIMES_TIMEPOINT_EXACT = 1 
     
     stops_counter = 0
     trips_counter = 0
@@ -118,7 +111,7 @@ class GtfsExport:
             return destination
    
     def _create_route(self, trip): 
-        return GtfsRoute(trip.agency, trip.trip_id, trip.route_long_name(), self.RIDESHARING_ROUTE_TYPE, trip.url, "")
+        return GtfsRoute(trip.agency, trip.trip_id, trip.route_long_name(), RIDESHARING_ROUTE_TYPE, trip.url, "")
         
     def _create_calendar(self, trip):
         # TODO currently, calendar is not provided by Fahrgemeinschaft.de interface.
@@ -136,10 +129,10 @@ class GtfsExport:
         return GtfsCalendar(trip.trip_id, stop_date, self._convert_stop_date(feed_start_date + timedelta(days=31)), *(trip.weekdays))
     
     def _create_calendar_date(self, trip):
-        return GtfsCalendarDate(trip.trip_id, self._convert_stop_date(trip.start), self.CALENDAR_DATES_EXCEPTION_TYPE_ADDED)
+        return GtfsCalendarDate(trip.trip_id, self._convert_stop_date(trip.start), CALENDAR_DATES_EXCEPTION_TYPE_ADDED)
     
     def _create_trip(self, trip, shape_id):
-        return GtfsTrip(trip.trip_id, trip.trip_id, trip.trip_id, shape_id, trip.trip_headsign, self.NO_BIKES_ALLOWED)
+        return GtfsTrip(trip.trip_id, trip.trip_id, trip.trip_id, shape_id, trip.trip_headsign, NO_BIKES_ALLOWED)
     
     def _convert_stop(self, stop):
         """

@@ -1,5 +1,6 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
 from app.models.Carpool import Carpool, Weekday, StopTime, PickupDropoffType
+from app.services.gtfs_constants import *
 from app.services.routing import RoutingService, RoutingException
 from app.services.stops import is_carpooling_stop
 from app.utils.utils import assert_folder_exists
@@ -174,16 +175,6 @@ class TripTransformer:
     REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS = True
     REPLACEMENT_STOPS_SERACH_RADIUS_IN_M = 1000
 
-    NO_BIKES_ALLOWED = 2
-    RIDESHARING_ROUTE_TYPE = 1700
-    CALENDAR_DATES_EXCEPTION_TYPE_ADDED = 1
-    CALENDAR_DATES_EXCEPTION_TYPE_REMOVED = 2
-    STOP_TIMES_STOP_TYPE_REGULARLY = 0
-    STOP_TIMES_STOP_TYPE_NONE = 1
-    STOP_TIMES_STOP_TYPE_PHONE_AGENCY = 2
-    STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER = 3
-    STOP_TIMES_TIMEPOINT_APPROXIMATE = 0 
-    STOP_TIMES_TIMEPOINT_EXACT = 1 
     router = RoutingService()
 
     def __init__(self, stops_store):
@@ -241,9 +232,9 @@ class TripTransformer:
                 stop.departureTime, 
                 stop.id, 
                 seq_nr+1,
-                self.STOP_TIMES_STOP_TYPE_NONE if stop.pickup_dropoff == PickupDropoffType.only_dropoff else self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER, 
-                self.STOP_TIMES_STOP_TYPE_NONE if stop.pickup_dropoff == PickupDropoffType.only_pickup else self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER, 
-                self.STOP_TIMES_TIMEPOINT_APPROXIMATE) 
+                STOP_TIMES_STOP_TYPE_NONE if stop.pickup_dropoff == PickupDropoffType.only_dropoff else STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER, 
+                STOP_TIMES_STOP_TYPE_NONE if stop.pickup_dropoff == PickupDropoffType.only_pickup else STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER, 
+                STOP_TIMES_TIMEPOINT_APPROXIMATE) 
             for seq_nr, stop in enumerate(carpool.stops)]
         return stop_times
 
@@ -313,8 +304,8 @@ class TripTransformer:
             is_dropoff = self._is_dropoff_stop(current_stop, total_distance)
             is_pickup = self._is_pickup_stop(current_stop, total_distance)
             # TODO would be nice if possible to publish a minimum shared distance 
-            pickup_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_pickup else self.STOP_TIMES_STOP_TYPE_NONE
-            dropoff_type = self.STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_dropoff else self.STOP_TIMES_STOP_TYPE_NONE
+            pickup_type = STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_pickup else STOP_TIMES_STOP_TYPE_NONE
+            dropoff_type = STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_dropoff else STOP_TIMES_STOP_TYPE_NONE
             
             if is_pickup and not is_dropoff:
                 pickup_dropoff = PickupDropoffType.only_pickup

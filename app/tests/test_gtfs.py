@@ -69,7 +69,7 @@ class TestTripConverter:
                 'routeUrl' : 'https://mfdz.de/trip/123',
                 'agencyId' : 'mfdz',
                 'route_long_name' : 'abc nach xyz',
-                'route_type': 1700
+                'route_type': 1551
                 }
             },
             'stopTimeUpdate': [{
