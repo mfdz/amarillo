@@ -51,12 +51,7 @@ $ cd app/proto
 $ protoc --version
 libprotoc 3.21.6
 $ protoc --proto_path=. --python_out=../services/gtfsrt gtfs-realtime.proto realtime_extension.proto
-```
-
-Then, adapt the import in app/services/gtfsrt/realtime_extension.pb2.py:
-
-```
-import app.services.gtfsrt.gtfs_realtime_pb2 as gtfs__realtime__pb2
+$ sed 's/import gtfs_realtime_pb2/import app.services.gtfsrt.gtfs_realtime_pb2/g' ../services/gtfsrt/realtime_extension_pb2.py | sponge ../services/gtfsrt/realtime_extension_pb2.py
 ```
 
 ## Testing
