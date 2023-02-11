@@ -3,10 +3,11 @@ from app.models.Carpool import Carpool, Weekday, StopTime, PickupDropoffType
 from app.services.gtfs_constants import *
 from app.services.routing import RoutingService, RoutingException
 from app.services.stops import is_carpooling_stop
-from app.utils.utils import assert_folder_exists
-from shapely.geometry import Point, box
-from geojson_pydantic.geometries import LineString
-from datetime import datetime, timedelta, date
+from app.utils.utils import assert_folder_exists, is_older_than_days, yesterday
+from shapely.geometry import Point, LineString, box
+from geojson_pydantic.geometries import LineString as GeoJSONLineString
+from datetime import datetime, timedelta
+
 import os
 import json
 import logging
@@ -117,6 +118,12 @@ class TripStore():
             with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
                 f.write(carpool.json())
 
+    def recently_added_trips(self):
+        return list(self.recent_trips.values())
+
+    def recently_deleted_trips(self):
+        return list(self.deleted_trips.values())
+
     def _load_carpool_if_exists(self, agency_id: str, carpool_id: str):
         if carpool_exists(agency_id, carpool_id, 'data/enhanced'):
             try:
@@ -132,7 +139,7 @@ class TripStore():
         trip = self.transformer.transform_to_trip(carpool)
         id = trip.trip_id
         self.trips[id] = trip
-        if carpool.lastUpdated and carpool.lastUpdated.date() >= self._yesterday():
+        if not is_older_than_days(carpool.lastUpdated, 1):
             self.recent_trips[id] = trip
         logger.debug("Added trip %s", id)
 
@@ -156,19 +163,21 @@ class TripStore():
             
         logger.debug("Deleted trip %s", id)
 
-    def purge_trips_older_than(self, day):
+    def unflag_unrecent_updates(self):
+        """
+        Trips that were last updated before yesterday, are not recent
+        any longer. As no updates need to be sent for them any longer,
+        they will be removed from recent recent_trips and deleted_trips.
+        """
         for key in list(self.recent_trips):
             t = self.recent_trips.get(key)
-            if t and t.lastUpdated.date() < day:
+            if t and t.lastUpdated.date() < yesterday():
                 del self.recent_trips[key]
 
         for key in list(self.deleted_trips):
             t = self.deleted_trips.get(key)
-            if t and t.lastUpdated.date() < day:
+            if t and t.lastUpdated.date() < yesterday():
                 del self.deleted_trips[key]
-
-    def _yesterday(self):
-        return date.today() - timedelta(days=1)
 
 
 class TripTransformer:

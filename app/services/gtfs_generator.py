@@ -36,8 +36,8 @@ def run_schedule():
 
 def midnight():
 	container['stops_store'].load_stop_sources()
-	yesterday = date.today()-timedelta(days=1)
-	container['trips_store'].purge_trips_older_than(yesterday)
+	container['trips_store'].unflag_unrecent_updates()
+	container['carpools'].purge_outdated_offers()
 	generate_gtfs()
 
 def generate_gtfs():

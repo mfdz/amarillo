@@ -58,13 +58,13 @@ class GtfsRtProducer():
 
 	def _get_deleted(self, bbox = None):
 		return self._get_updates(
-			self.trip_store.deleted_trips.values(),
+			self.trip_store.recently_deleted_trips(),
 			self._as_delete_updates,
 			bbox)
 
 	def _get_added(self, bbox = None):
 		return self._get_updates(
-			self.trip_store.recent_trips.values(),
+			self.trip_store.recently_added_trips(),
 			self._as_added_updates,
 			bbox)
 	
