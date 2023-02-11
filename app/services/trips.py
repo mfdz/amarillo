@@ -183,6 +183,7 @@ class TripStore():
 class TripTransformer:
     REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS = True
     REPLACEMENT_STOPS_SERACH_RADIUS_IN_M = 1000
+    SIMPLIFY_TOLERANCE = 0.0001
 
     router = RoutingService()
 
@@ -219,8 +220,9 @@ class TripTransformer:
             carpool.stops = self._replace_stops_by_transit_stops(carpool, self.REPLACEMENT_STOPS_SERACH_RADIUS_IN_M)
  
         path = self._path_for_ride(carpool)
-        lineString = LineString(coordinates = path["points"]["coordinates"])
-        virtual_stops = self.stops_store.find_additional_stops_around(lineString, carpool.stops) 
+        lineString_shapely_wgs84 = LineString(coordinates = path["points"]["coordinates"]).simplify(0.0001)
+        lineString_wgs84 = GeoJSONLineString(coordinates=list(lineString_shapely_wgs84.coords))
+        virtual_stops = self.stops_store.find_additional_stops_around(lineString_wgs84, carpool.stops) 
         if not virtual_stops.empty:
             virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
             logger.debug("Virtual stops found: {}".format(virtual_stops))
@@ -230,7 +232,7 @@ class TripTransformer:
         
         enhanced_carpool = carpool.copy()
         enhanced_carpool.stops = stop_times
-        enhanced_carpool.path = lineString
+        enhanced_carpool.path = lineString_wgs84
         return enhanced_carpool
 
     def _convert_stop_times(self, carpool):
