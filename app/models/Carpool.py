@@ -283,7 +283,7 @@ class Carpool(BaseModel):
                   ],
                   "departureTime": "12:34",
                   "departureDate": "2022-03-30",
-                  "lastUpdated": "2022-03-30 12:34"
+                  "lastUpdated": "2022-03-30T12:34:00+00:00"
                 }
                 """
             }
