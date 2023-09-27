@@ -1,8 +1,9 @@
-import pyinotify
 import json
 import time
 import logging
 import logging.config
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 from app.configuration import configure_enhancer_services
 from app.utils.container import container
@@ -16,41 +17,39 @@ logger.info("Hello Enhancer")
 
 configure_enhancer_services()
 
-wm = pyinotify.WatchManager()  # Watch Manager
-mask = pyinotify.IN_DELETE | pyinotify.IN_CLOSE_WRITE
+observer = Observer()  # Watch Manager
 
 
-class EventHandler(pyinotify.ProcessEvent):
+class EventHandler(FileSystemEventHandler):
     # TODO FG HB should watch for both carpools and agencies
     # in data/agency, data/agencyconf, see AgencyConfService
 
-    def process_IN_CLOSE_WRITE(self, event):
+    def on_closed(self, event):
   
-        logger.info("CLOSE_WRITE: Created %s", event.pathname)
+        logger.info("CLOSE_WRITE: Created %s", event.src_path)
         try:
-            with open(event.pathname, 'r', encoding='utf-8') as f:
+            with open(event.src_path, 'r', encoding='utf-8') as f:
                 dict = json.load(f)
                 carpool = Carpool(**dict)
 
             container['carpools'].put(carpool.agency, carpool.id, carpool)
         except FileNotFoundError as e:
-            logger.error("Carpool could not be added, as already deleted (%s)", event.pathname)
+            logger.error("Carpool could not be added, as already deleted (%s)", event.src_path)
         except:
-            logger.exception("Eventhandler process_IN_CLOSE_WRITE encountered exception")        
+            logger.exception("Eventhandler on_closed encountered exception")        
 
-    def process_IN_DELETE(self, event):
+    def on_deleted(self, event):
         try:
-            logger.info("DELETE: Removing %s", event.pathname)
-            (agency_id, carpool_id) = agency_carpool_ids_from_filename(event.pathname)
+            logger.info("DELETE: Removing %s", event.src_path)
+            (agency_id, carpool_id) = agency_carpool_ids_from_filename(event.src_path)
             container['carpools'].delete(agency_id, carpool_id)
         except:
-            logger.exception("Eventhandler process_IN_DELETE encountered exception")
-        
+            logger.exception("Eventhandler on_deleted encountered exception")
 
-notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
-notifier.start()
 
-wdd = wm.add_watch('data/carpool', mask, rec=True)
+observer.schedule(EventHandler(), 'data/carpool', recursive=True)
+observer.start()
+
 import time
 
 try:
@@ -65,8 +64,7 @@ try:
         time.sleep(1)
         cnt += 1
 finally:
-    wm.rm_watch(list(wdd.values()))
-
-    notifier.stop()
+    observer.stop()
+    observer.join()
 
     logger.info("Goodbye Enhancer")

@@ -13,8 +13,4 @@ Shapely==1.8.5.post1
 pygeos==0.13
 pyproj==3.3.0
 geojson-pydantic==0.3.3
-# Note: pyinotify is not available on MacOS yet.
-# This is required to run enhancer.py in a proper process
-# that listens on file system changes. 
-# Consider running Amarillo e.g. via Docker
-pyinotify==0.9.6
+watchdog==3.0.0
