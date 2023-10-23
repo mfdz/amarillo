@@ -221,7 +221,7 @@ class TripTransformer:
  
         path = self._path_for_ride(carpool)
         lineString_shapely_wgs84 = LineString(coordinates = path["points"]["coordinates"]).simplify(0.0001)
-        lineString_wgs84 = GeoJSONLineString(coordinates=list(lineString_shapely_wgs84.coords))
+        lineString_wgs84 = GeoJSONLineString(type="LineString", coordinates=list(lineString_shapely_wgs84.coords))
         virtual_stops = self.stops_store.find_additional_stops_around(lineString_wgs84, carpool.stops) 
         if not virtual_stops.empty:
             virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])

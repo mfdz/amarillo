@@ -18,7 +18,7 @@ carpool_1234 = Carpool(
     agency="mfdz",
     deeplink="https://mfdz.de/trip/1234",
     stops=stops_1234,
-    departureTime="7:00",
+    departureTime="07:00",
     departureDate="2022-03-30",
 )
 
@@ -27,7 +27,7 @@ carpool_repeating = Carpool(
     agency="mfdz",
     deeplink="https://mfdz.de/trip/12345",
     stops=stops_1234,
-    departureTime="6:00",
+    departureTime="06:00",
     departureDate=[Weekday.monday, Weekday.tuesday, Weekday.wednesday,
                    Weekday.thursday, Weekday.friday],
 )

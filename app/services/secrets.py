@@ -1,5 +1,6 @@
 from typing import Dict
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 # Example: secrets = { "mfdz": "some secret" }
 class Secrets(BaseSettings):
