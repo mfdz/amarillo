@@ -1,5 +1,5 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
-from app.models.Carpool import Carpool, Weekday, StopTime, PickupDropoffType
+from app.models.Carpool import MAX_STOPS_PER_TRIP, Carpool, Weekday, StopTime, PickupDropoffType
 from app.services.gtfs_constants import *
 from app.services.routing import RoutingService, RoutingException
 from app.services.stops import is_carpooling_stop
@@ -226,6 +226,10 @@ class TripTransformer:
         if not virtual_stops.empty:
             virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
             logger.debug("Virtual stops found: {}".format(virtual_stops))
+        if len(virtual_stops) > MAX_STOPS_PER_TRIP:
+            # in case we found more than MAX_STOPS_PER_TRIP, we retain first and last 
+            # half of MAX_STOPS_PER_TRIP
+            virtual_stops = virtual_stops[:int(MAX_STOPS_PER_TRIP/2)]+virtual_stops[int(-MAX_STOPS_PER_TRIP/2):]
 
         trip_id = f"{carpool.agency}:{carpool.id}"
         stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)

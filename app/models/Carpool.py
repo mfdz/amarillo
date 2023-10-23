@@ -8,6 +8,8 @@ from enum import Enum
 
 NumType = Union[float, int]
 
+MAX_STOPS_PER_TRIP = 100
+
 class Weekday(str, Enum):
     monday = "monday"
     tuesday = "tuesday"
@@ -203,7 +205,7 @@ class Carpool(BaseModel):
     stops: List[StopTime] = Field(
         ...,
         min_length=2,
-        max_length=100,
+        max_length=MAX_STOPS_PER_TRIP,
         description="Stops which this carpool passes by and offers to pick "
                     "up/drop off passengers. This list must at minimum "
                     "include two stops, the origin and destination of this "
