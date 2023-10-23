@@ -20,12 +20,14 @@ for region_file_name in glob('conf/region/*.json'):
         region_id = region.id
         regions[region_id] = region
 
-# TODO access agencies defined via model
-agencies = [ 
-	GtfsAgency('ride2go', 'ride2go', 'http://www.ride2go.de', 'Europe/Berlin', 'de', 'info@ride2go.com'),
-	GtfsAgency('fg', 'Fahrgemeinschaft.de', 'http://www.fahrgemeinschaft.de', 'Europe/Berlin', 'de', 'hilfe@adac-mitfahrclub.de'),
-	GtfsAgency('mifaz', 'mifaz.de', 'http://www.mifaz.de', 'Europe/Berlin', 'de', 'info@mifaz.de'),
-]
+agencies = []
+for agency_file_name in glob('conf/agency/*.json'):
+    with open(agency_file_name) as agency_file:
+        dict = json.load(agency_file)
+        agency = GtfsAgency(dict["id"], dict["name"], dict["url"], dict["timezone"], dict["lang"], dict["email"])
+        agency_id = agency.agency_id
+        agencies.append(agency)
+
 def run_schedule():
 	while 1:
 		try:
