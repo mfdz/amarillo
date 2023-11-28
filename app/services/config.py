@@ -1,9 +1,9 @@
-from pydantic import BaseSettings
 from typing import List
+from pydantic_settings import BaseSettings
 
 
 class Config(BaseSettings):
-    admin_token: str = None
+    admin_token: str
     ride2go_query_data: str
     env: str = 'DEV'
 

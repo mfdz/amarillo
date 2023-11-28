@@ -1,13 +1,13 @@
 from app.models.gtfs import GtfsTimeDelta, GtfsStopTime
-from app.models.Carpool import Carpool, Weekday, StopTime, PickupDropoffType
+from app.models.Carpool import MAX_STOPS_PER_TRIP, Carpool, Weekday, StopTime, PickupDropoffType
 from app.services.gtfs_constants import *
 from app.services.routing import RoutingService, RoutingException
 from app.services.stops import is_carpooling_stop
-from app.utils.utils import assert_folder_exists, is_older_than_days, yesterday
+from app.utils.utils import assert_folder_exists, is_older_than_days, yesterday, geodesic_distance_in_m
 from shapely.geometry import Point, LineString, box
 from geojson_pydantic.geometries import LineString as GeoJSONLineString
 from datetime import datetime, timedelta
-
+import numpy as np
 import os
 import json
 import logging
@@ -99,6 +99,10 @@ class TripStore():
             if existing_carpool and existing_carpool.lastUpdated == carpool.lastUpdated:
                 enhanced_carpool = existing_carpool
             else:
+                if len(carpool.stops) < 2 or self.distance_in_m(carpool) < 1000:
+                    logger.warning("Failed to add carpool %s:%s to TripStore, distance too low", carpool.agency, carpool.id)
+                    self.handle_failed_carpool_enhancement(carpool)
+                    return
                 enhanced_carpool = self.transformer.enhance_carpool(carpool)
                 # TODO should only store enhanced_carpool, if it has 2 or more stops
                 assert_folder_exists(f'data/enhanced/{carpool.agency}/')
@@ -109,14 +113,22 @@ class TripStore():
             return self._load_as_trip(enhanced_carpool)
         except RoutingException as err:
             logger.warning("Failed to add carpool %s:%s to TripStore due to RoutingException %s", carpool.agency, carpool.id, getattr(err, 'message', repr(err)))
-            assert_folder_exists(f'data/failed/{carpool.agency}/')
-            with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
-                f.write(carpool.json()) 
+            self.handle_failed_carpool_enhancement(carpool)
         except Exception as err:
             logger.error("Failed to add carpool %s:%s to TripStore.", carpool.agency, carpool.id, exc_info=True)
-            assert_folder_exists(f'data/failed/{carpool.agency}/')
-            with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
-                f.write(carpool.json())
+            self.handle_failed_carpool_enhancement(carpool)
+
+    def handle_failed_carpool_enhancement(sellf, carpool: Carpool):
+        assert_folder_exists(f'data/failed/{carpool.agency}/')
+        with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
+            f.write(carpool.json())
+
+    def distance_in_m(self, carpool):
+        if len(carpool.stops) < 2:
+            return 0
+        s1 = carpool.stops[0]
+        s2 = carpool.stops[-1]
+        return geodesic_distance_in_m((s1.lon, s1.lat),(s2.lon, s2.lat)) 
 
     def recently_added_trips(self):
         return list(self.recent_trips.values())
@@ -221,12 +233,16 @@ class TripTransformer:
  
         path = self._path_for_ride(carpool)
         lineString_shapely_wgs84 = LineString(coordinates = path["points"]["coordinates"]).simplify(0.0001)
-        lineString_wgs84 = GeoJSONLineString(coordinates=list(lineString_shapely_wgs84.coords))
+        lineString_wgs84 = GeoJSONLineString(type="LineString", coordinates=list(lineString_shapely_wgs84.coords))
         virtual_stops = self.stops_store.find_additional_stops_around(lineString_wgs84, carpool.stops) 
         if not virtual_stops.empty:
             virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
             logger.debug("Virtual stops found: {}".format(virtual_stops))
-
+        if len(virtual_stops) > MAX_STOPS_PER_TRIP:
+            # in case we found more than MAX_STOPS_PER_TRIP, we retain first and last 
+            # half of MAX_STOPS_PER_TRIP
+            virtual_stops = virtual_stops.iloc[np.r_[0:int(MAX_STOPS_PER_TRIP/2), int(MAX_STOPS_PER_TRIP/2):]]
+            
         trip_id = f"{carpool.agency}:{carpool.id}"
         stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
         

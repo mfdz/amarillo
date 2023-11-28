@@ -37,7 +37,7 @@ class GtfsRtProducer():
 		"""
 		Exports gtfs-rt feed as .json and .pbf file to file_path
 		""" 
-		feed = self.generate_feed(timestamp, "message", bbox=None)
+		feed = self.generate_feed(timestamp, "message", bbox)
 		with open(f"{file_path}.pbf", "wb") as f:
 			f.write(feed.SerializeToString())
 		with open(f"{file_path}.json", "w") as f:

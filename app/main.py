@@ -1,6 +1,6 @@
 import logging.config
 
-from app.configuration import configure_services, configure_admin_token
+from app.configuration import configure_enhancer_services, configure_services, configure_admin_token
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger("main")
@@ -9,11 +9,15 @@ import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from app.routers import carpool, agency, agencyconf, region
+
+from app.routers import carpool, agency, agencyconf, metrics, region
 from fastapi import FastAPI
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
 from app.views import home
+
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import metrics as pfi_metrics
 
 logger.info("Hello Amarillo!")
 
@@ -72,7 +76,15 @@ app.include_router(carpool.router)
 app.include_router(agency.router)
 app.include_router(agencyconf.router)
 app.include_router(region.router)
+app.include_router(metrics.router)
 
+
+instrumentator = Instrumentator().instrument(app)
+instrumentator.add(pfi_metrics.default())
+instrumentator.add(metrics.amarillo_trips_number_total())
+
+
+instrumentator.instrument(app)
 
 def configure():
     configure_admin_token()

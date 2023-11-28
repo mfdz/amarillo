@@ -1,20 +1,17 @@
-fastapi[all]==0.75.1
-geopandas==0.10.2
-uvicorn[standard]==0.15.0
-pydantic[dotenv]==1.9.0
-protobuf==3.20.0
-rtree==1.0.0
-schedule==1.1.0
-setproctitle==1.2.3
-starlette==0.17.1
-pandas==1.4.2
-requests==2.27.1
-Shapely==1.8.5.post1
-pygeos==0.13
-pyproj==3.3.0
-geojson-pydantic==0.3.3
-# Note: pyinotify is not available on MacOS yet.
-# This is required to run enhancer.py in a proper process
-# that listens on file system changes. 
-# Consider running Amarillo e.g. via Docker
-pyinotify==0.9.6
+fastapi[all]==0.104.0
+geopandas==0.14
+uvicorn[standard]==0.23.2
+pydantic[dotenv]==2.4.2
+protobuf==3.20.3
+rtree==1.1.0
+schedule==1.2.1
+setproctitle==1.3.3
+starlette
+pandas==2.1.1
+requests==2.31.0
+Shapely==2.0.2
+pygeos==0.14
+pyproj==3.6.1
+geojson-pydantic==1.0.1
+watchdog==3.0.0
+prometheus-fastapi-instrumentator

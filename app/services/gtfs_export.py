@@ -75,7 +75,8 @@ class GtfsExport:
                 self._load_stored_stop(stop)
         cloned_trips = dict(ridestore.trips)
         for url, trip in cloned_trips.items():
-            self._convert_trip(trip)
+            if self.bbox is None or trip.intersects(self.bbox):
+                self._convert_trip(trip)
     
     def _convert_trip(self, trip):
         self.routes_counter += 1

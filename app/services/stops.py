@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class StopsStore():
     
     def __init__(self, stop_sources = [], internal_projection = "EPSG:32632"):
+        self.internal_projection = internal_projection
         self.projection = Transformer.from_crs("EPSG:4326", internal_projection, always_xy=True).transform
         self.stopsDataFrames = []
         self.stop_sources = stop_sources
@@ -151,11 +152,11 @@ class StopsStore():
         return self._as_dataframe(id, lat, lon, stop_name)
 
     def _as_dataframe(self, id, lat, lon, stop_name):
-        stopsDataFrame = gpd.GeoDataFrame(data={'x':lon, 'y':lat, 'stop_name':stop_name, 'id':id})  
-        
-        stopsDataFrame['geometry'] = stopsDataFrame.apply(lambda row: Point(self.projection(row['x'], row['y'])), axis=1)     
-        
-        return stopsDataFrame
+
+        df = gpd.GeoDataFrame(data={'x':lon, 'y':lat, 'stop_name':stop_name, 'id':id})  
+        stopsGeoDataFrame = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.x, df.y, crs='EPSG:4326'))
+        stopsGeoDataFrame.to_crs(crs=self.internal_projection, inplace=True)
+        return stopsGeoDataFrame
 
     def _find_stops_around_transformed(self, stopsDataFrame, transformedLine, distance):
         bufferedLine = transformedLine.buffer(distance)
@@ -168,7 +169,7 @@ class StopsStore():
     
     def _convert_to_dataframe(self, stops):
         return gpd.GeoDataFrame([[stop.name, stop.lon, stop.lat,
-            stop.id, Point(self.projection(stop.lon, stop.lat))] for stop in stops], columns = ['stop_name','x','y','id','geometry'])
+            stop.id, Point(self.projection(stop.lon, stop.lat))] for stop in stops], columns = ['stop_name','x','y','id','geometry'], crs=self.internal_projection)
          
     def _sort_by_distance(self, stops, transformedLine):
         stops['distance']=stops.apply(lambda row: transformedLine.project(row['geometry']), axis=1)

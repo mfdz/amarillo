@@ -1,3 +1,3 @@
-# Brandenburg
+# Bounding-Box Germany
 ride2go_query_data = '{ "southWestCoordinates": { "lat": 47.3, "lon": 5.98 }, "northEastCoordinates": { "lat": 54.99, "lon": 15.02 }, "lastModifiedSinceDays": 180 }'
 env = 'PROD'

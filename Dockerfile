@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn:python3.9-slim
+FROM tiangolo/uvicorn-gunicorn:python3.10-slim
 
 LABEL maintainer="info@mfdz.de"
 
@@ -17,6 +17,8 @@ RUN \
 
 ENV ADMIN_TOKEN=''
 ENV RIDE2GO_TOKEN=''
+ENV METRICS_USER=''
+ENV METRICS_PASSWORD=''
 
 EXPOSE 80
 

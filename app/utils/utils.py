@@ -1,6 +1,7 @@
 import os
 import re
 from datetime import datetime, date, timedelta
+from pyproj import Geod
 
 def assert_folder_exists(foldername):
     if not os.path.isdir(foldername):
@@ -31,3 +32,9 @@ def yesterday():
 
 def date_days_ago(number_of_days):
     return date.today() - timedelta(days=number_of_days)
+
+def geodesic_distance_in_m(coord1, coord2):
+    geod = Geod(ellps="WGS84")
+    lons = [coord1[0], coord2[0]]
+    lats = [coord1[1], coord2[1]]
+    return geod.line_lengths(lons, lats)[0]
