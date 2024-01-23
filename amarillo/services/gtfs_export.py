@@ -7,10 +7,10 @@ import gettext
 import logging
 import re
 
-from app.utils.utils import assert_folder_exists
-from app.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
-from app.services.stops import is_carpooling_stop
-from app.services.gtfs_constants import *
+from amarillo.utils.utils import assert_folder_exists
+from amarillo.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
+from amarillo.services.stops import is_carpooling_stop
+from amarillo.services.gtfs_constants import *
 
 
 logger = logging.getLogger(__name__)

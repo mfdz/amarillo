@@ -4,13 +4,13 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, status, Depends
 
-from app.models.Carpool import Carpool, Agency
-from app.routers.agencyconf import verify_api_key, verify_admin_api_key, verify_permission_for_same_agency_or_admin
+from amarillo.models.Carpool import Carpool, Agency
+from amarillo.routers.agencyconf import verify_api_key, verify_admin_api_key, verify_permission_for_same_agency_or_admin
 # TODO should move this to service
-from app.routers.carpool import store_carpool, delete_agency_carpools_older_than
-from app.services.agencies import AgencyService
-from app.services.importing.ride2go import import_ride2go
-from app.utils.container import container
+from amarillo.routers.carpool import store_carpool, delete_agency_carpools_older_than
+from amarillo.services.agencies import AgencyService
+from amarillo.services.importing.ride2go import import_ride2go
+from amarillo.utils.container import container
 from fastapi.responses import FileResponse
 
 logger = logging.getLogger(__name__)

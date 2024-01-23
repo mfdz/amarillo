@@ -2,10 +2,10 @@ import logging
 from typing import List
 
 import requests
-from app.models.Carpool import Carpool, StopTime
-from app.services.config import config
+from amarillo.models.Carpool import Carpool, StopTime
+from amarillo.services.config import config
 
-from app.services.secrets import secrets
+from amarillo.services.secrets import secrets
 import re
 
 logger = logging.getLogger(__name__)

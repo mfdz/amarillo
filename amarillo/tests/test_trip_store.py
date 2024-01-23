@@ -1,6 +1,6 @@
-from app.tests.sampledata import cp1, carpool_repeating
-from app.services.trips import TripStore
-from app.services.stops import StopsStore
+from amarillo.tests.sampledata import cp1, carpool_repeating
+from amarillo.services.trips import TripStore
+from amarillo.services.stops import StopsStore
 
 
 import logging

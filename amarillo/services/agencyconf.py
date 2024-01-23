@@ -6,8 +6,8 @@ import logging
 
 from fastapi import HTTPException, status
 
-from app.models.AgencyConf import AgencyConf
-from app.services.config import config
+from amarillo.models.AgencyConf import AgencyConf
+from amarillo.services.config import config
 
 logger = logging.getLogger(__name__)
 

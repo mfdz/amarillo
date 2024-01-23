@@ -2,7 +2,7 @@ import json
 from glob import glob
 from typing import Dict
 
-from app.models.Carpool import Region
+from amarillo.models.Carpool import Region
 
 
 class RegionService:

@@ -8,9 +8,9 @@ from glob import glob
 from fastapi import APIRouter, Body, Header, HTTPException, status, Depends
 from datetime import datetime
 
-from app.models.Carpool import Carpool
-from app.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
-from app.tests.sampledata import examples
+from amarillo.models.Carpool import Carpool
+from amarillo.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
+from amarillo.tests.sampledata import examples
 
 
 logger = logging.getLogger(__name__)

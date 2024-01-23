@@ -1,7 +1,7 @@
 import csv
 import geopandas as gpd
 import pandas as pd
-from app.models.Carpool import StopTime
+from amarillo.models.Carpool import StopTime
 from contextlib import closing
 from shapely.geometry import Point, LineString
 from shapely.ops import transform
