@@ -2,7 +2,7 @@ import json
 from glob import glob
 from typing import Dict
 
-from app.models.Carpool import Agency
+from amarillo.models.Carpool import Agency
 
 # TODO FG HB this service should also listen to pyinotify
 # because the (updated) agencies are needed in the enhancer

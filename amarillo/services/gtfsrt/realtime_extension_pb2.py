@@ -11,7 +11,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-import app.services.gtfsrt.gtfs_realtime_pb2 as gtfs__realtime__pb2
+import amarillo.services.gtfsrt.gtfs_realtime_pb2 as gtfs__realtime__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18realtime_extension.proto\x12\x10transit_realtime\x1a\x13gtfs-realtime.proto\"p\n\x1bMfdzTripDescriptorExtension\x12\x11\n\troute_url\x18\x01 \x01(\t\x12\x11\n\tagency_id\x18\x02 \x01(\t\x12\x17\n\x0froute_long_name\x18\x03 \x01(\t\x12\x12\n\nroute_type\x18\x04 \x01(\r\"\xb0\x02\n\x1fMfdzStopTimePropertiesExtension\x12X\n\x0bpickup_type\x18\x01 \x01(\x0e\x32\x43.transit_realtime.MfdzStopTimePropertiesExtension.DropOffPickupType\x12Y\n\x0c\x64ropoff_type\x18\x02 \x01(\x0e\x32\x43.transit_realtime.MfdzStopTimePropertiesExtension.DropOffPickupType\"X\n\x11\x44ropOffPickupType\x12\x0b\n\x07REGULAR\x10\x00\x12\x08\n\x04NONE\x10\x01\x12\x10\n\x0cPHONE_AGENCY\x10\x02\x12\x1a\n\x16\x43OORDINATE_WITH_DRIVER\x10\x03:i\n\x0ftrip_descriptor\x12 .transit_realtime.TripDescriptor\x18\xf5\x07 \x01(\x0b\x32-.transit_realtime.MfdzTripDescriptorExtension:\x90\x01\n\x14stop_time_properties\x12>.transit_realtime.TripUpdate.StopTimeUpdate.StopTimeProperties\x18\xf5\x07 \x01(\x0b\x32\x31.transit_realtime.MfdzStopTimePropertiesExtensionB\t\n\x07\x64\x65.mfdz')

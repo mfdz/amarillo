@@ -23,7 +23,7 @@ EXPOSE 80
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
-COPY ./app /app/app
+COPY ./amarillo /app/amarillo
 COPY enhancer.py /app
 COPY prestart.sh /app
 COPY ./static /app/static
@@ -33,4 +33,4 @@ COPY logging.conf /app
 COPY ./conf /app/conf
 
 # This image inherits uvicorn-gunicorn's CMD. If you'd like to start uvicorn, use this instead
-# CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uvicorn", "amarillo.main:app", "--host", "0.0.0.0", "--port", "8000"]

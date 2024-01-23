@@ -2,9 +2,9 @@ import json
 import logging
 from datetime import datetime
 from typing import Dict
-from app.models.Carpool import Carpool
-from app.services.trips import TripStore
-from app.utils.utils import yesterday, is_older_than_days
+from amarillo.models.Carpool import Carpool
+from amarillo.services.trips import TripStore
+from amarillo.utils.utils import yesterday, is_older_than_days
 
 logger = logging.getLogger(__name__)
 

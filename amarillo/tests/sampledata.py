@@ -1,4 +1,4 @@
-from app.models.Carpool import Carpool, StopTime, Weekday
+from amarillo.models.Carpool import Carpool, StopTime, Weekday
 
 # TODO use meanigful values for id and lat, lon
 stops_1234 = [
