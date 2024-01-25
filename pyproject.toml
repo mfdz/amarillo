@@ -1,3 +1,26 @@
+[project]
+name = "amarillo"
+version = "0.0.15a3"
+description = "Aggregates and enhances carpooling-offers and publishes them as GTFS(-RT)"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["amarillo", "ridesharing", "carpooling", "gtfs", "gtfs-rt"]
+dependencies = [
+    "fastapi[all]==0.109.0",
+    "geopandas==0.14",
+    "uvicorn[standard]==0.23.2",
+    "pydantic[dotenv]==2.4.2",
+    "protobuf==3.20.3",
+    "starlette~=0.35",
+    "requests==2.31.0",
+    "pyproj==3.6.1",
+    "geojson-pydantic==1.0.1",
+    "watchdog==3.0.0",
+]
+
+[tool.setuptools.packages]
+find = {}
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
@@ -72,3 +95,4 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 # See https://github.com/HBNetwork/python-decouple/issues/122
 module = ["geopandas"]
+
