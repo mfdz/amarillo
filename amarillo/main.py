@@ -49,6 +49,10 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                   }],
               servers=[
                   {
+                      "description": "MobiData BW Amarillo service",
+                      "url": "https://amarillo.mobidata-bw.de"
+                  },
+                  {
                       "description": "DABB bbnavi Amarillo service",
                       "url": "https://amarillo.bbnavi.de"
                   },
