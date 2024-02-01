@@ -23,6 +23,9 @@ EXPOSE 80
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
+# set MODULE_NAME explicitly
+ENV MODULE_NAME=amarillo.main
+
 COPY ./amarillo /app/amarillo
 COPY enhancer.py /app
 COPY prestart.sh /app
