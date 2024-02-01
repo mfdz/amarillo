@@ -62,5 +62,5 @@ In the top directory, run `pytest amarillo/tests`.
 
 Based on [tiangolo/uvicorn-gunicorn:python3.9-slim](https://github.com/tiangolo/uvicorn-gunicorn-docker)
 
-- build `docker build -t amarillo .`
+- build `docker build -t amarillo --build-arg="PLUGINS=amarillo-metrics" .`
 - run `docker run --rm --name amarillo -p 8000:80 -e MAX_WORKERS="1" -e ADMIN_TOKEN=$ADMIN_TOKEN -e RIDE2GO_TOKEN=$RIDE2GO_TOKEN -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`

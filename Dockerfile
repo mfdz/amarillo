@@ -20,8 +20,10 @@ ENV RIDE2GO_TOKEN=''
 
 EXPOSE 80
 
+ARG PLUGINS
+
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt ${PLUGINS}
 
 # set MODULE_NAME explicitly
 ENV MODULE_NAME=amarillo.main
