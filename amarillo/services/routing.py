@@ -21,7 +21,7 @@ class RoutingService():
         else:
             return {}
 	
-    def _get_directions(self, points):
+def _get_directions(self, points):
         req_url = self._create_url(points, True, True)
         logger.debug("Get directions via: {}".format(req_url))
         response = requests.get(req_url)
@@ -43,5 +43,5 @@ class RoutingService():
         for point in points:
             locations += "point={0}%2C{1}&".format(point.y, point.x)
             
-        return "{0}/route?{1}instructions={2}&calc_points={3}&points_encoded=false".format(
+        return "{0}/route?{1}instructions={2}&calc_points={3}&points_encoded=false&profile=car".format(
             self.gh_service_url, locations, instructions, calc_points)    
