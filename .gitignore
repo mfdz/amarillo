@@ -132,6 +132,7 @@ setup.ipynb
 
 *~
 /.idea/
+/.vscode/
 secrets
 gtfs/*.zip
 gtfs/*.pbf
@@ -143,3 +144,9 @@ data/trash/
 data/gtfs/
 data/tmp
 
+#these files are under app/static but they get copied to the outside directory on startup
+logging.conf
+config
+static/**
+templates/**
+conf/**
