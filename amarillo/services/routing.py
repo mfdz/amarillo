@@ -21,7 +21,7 @@ class RoutingService():
         else:
             return {}
 	
-def _get_directions(self, points):
+    def _get_directions(self, points):
         req_url = self._create_url(points, True, True)
         logger.debug("Get directions via: {}".format(req_url))
         response = requests.get(req_url)
