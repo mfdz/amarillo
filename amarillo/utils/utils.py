@@ -1,7 +1,15 @@
 import os
 import re
+import shutil
+from pathlib import Path
+import logging
+
 from datetime import datetime, date, timedelta
 from pyproj import Geod
+
+logger = logging.getLogger(__name__)
+#logging.conf may not exist yet, so we need to configure the logger to show infos
+logging.basicConfig(level=logging.INFO) 
 
 def assert_folder_exists(foldername):
     if not os.path.isdir(foldername):
@@ -38,3 +46,29 @@ def geodesic_distance_in_m(coord1, coord2):
     lons = [coord1[0], coord2[0]]
     lats = [coord1[1], coord2[1]]
     return geod.line_lengths(lons, lats)[0]
+
+
+def copy_static_files(files_and_dirs_to_copy):
+    amarillo_dir = Path(__file__).parents[1]
+    source_dir = os.path.join(amarillo_dir, "static")
+
+    destination_dir = os.getcwd()
+
+    for item in files_and_dirs_to_copy:
+        source_path = os.path.join(source_dir, item)
+        destination_path = os.path.join(destination_dir, item)
+
+        if not os.path.exists(source_path):
+            raise FileNotFoundError(source_path)
+
+        if os.path.exists(destination_path):
+            # logger.info(f"{item} already exists")
+            continue
+
+        if os.path.isfile(source_path):
+            shutil.copy2(source_path, destination_path)
+            logger.info(f"Copied {item} to {destination_path}")
+
+        if os.path.isdir(source_path):
+            shutil.copytree(source_path, destination_path)
+            logger.info(f"Copied directory {item} and its contents to {destination_path}")
