@@ -29,8 +29,6 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt ${PLUGINS}
 ENV MODULE_NAME=amarillo.main
 
 COPY ./amarillo /app/amarillo
-COPY enhancer.py /app
-COPY prestart.sh /app
 COPY ./amarillo/plugins /app/amarillo/plugins
 COPY ./amarillo/static/static /app/static
 COPY ./amarillo/static/templates /app/templates
