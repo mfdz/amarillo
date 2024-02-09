@@ -25,6 +25,7 @@ router = APIRouter(
              summary="Add a new or update existing carpool",
              description="Carpool object to be created or updated",
              response_model=Carpool,
+             response_model_exclude_none=True,
              responses={
                  status.HTTP_404_NOT_FOUND: {
                      "description": "Agency does not exist"},
@@ -48,6 +49,7 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
             operation_id="getcarpoolById",
             summary="Find carpool by ID",
             response_model=Carpool,
+            response_model_exclude_none=True,
             description="Find carpool by ID",
             responses={
                 status.HTTP_404_NOT_FOUND: {"description": "Carpool not found"},
