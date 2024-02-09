@@ -4,7 +4,7 @@ from typing import List, Union, Set, Optional, Tuple
 from datetime import time
 from pydantic import BaseModel, Field
 from geojson_pydantic.geometries import LineString
-from enum import Enum
+from enum import Enum, IntEnum
 
 NumType = Union[float, int]
 
@@ -23,6 +23,15 @@ class PickupDropoffType(str, Enum):
     pickup_and_dropoff = "pickup_and_dropoff"
     only_pickup = "only_pickup"
     only_dropoff = "only_dropoff"
+
+class YesNoEnum(IntEnum):
+    yes = 1
+    no = 2
+
+class LuggageSize(IntEnum):
+    small = 1
+    medium = 2
+    large = 3
 
 class StopTime(BaseModel):
     id: Optional[str] = Field(
@@ -111,7 +120,83 @@ class Region(BaseModel):
     bbox: Tuple[NumType, NumType, NumType, NumType] = Field(
         description="Bounding box of the region. Format is [minLon, minLat, maxLon, maxLat]",
         examples=[[10.5,49.2,11.3,51.3]])
+    
+class RidesharingInfo(BaseModel):
+    number_free_seats: int = Field(
+        description="Number of free seats",
+        ge=0,
+        examples=[3])
+    
+    same_gender: Optional[YesNoEnum] = Field(
+        None, 
+        description="Trip only for same gender:"
+                    "1: Yes"
+                    "2: No",
+        examples=[1])
+    luggage_size: Optional[LuggageSize] = Field(
+        None, 
+        description="Size of the luggage:"
+                    "1: small"
+                    "2: medium"
+                    "3: large",
+        examples=[3])
+    animal_car: Optional[YesNoEnum] = Field(
+        None, 
+        description="Animals in Car allowed:"
+                    "1: Yes"
+                    "2: No",
+        examples=[2])
 
+    car_model: Optional[str] = Field(
+        None,
+        description="Car model",
+        min_length=1,
+        max_length=48,
+        examples=["Golf"])
+    car_brand: Optional[str] = Field(
+        None,
+        description="Car brand",
+        min_length=1,
+        max_length=48,
+        examples=["VW"])
+    
+    creation_date: datetime = Field(
+        description="Date when trip was created",
+        examples=["2022-02-13T20:20:39+00:00"])
+    
+    smoking: Optional[YesNoEnum] = Field(
+        None, 
+        description="Smoking allowed:"
+                    "1: Yes"
+                    "2: No",
+        examples=[2])
+    
+    payment_method: Optional[str] = Field(
+        None,
+        description="Method of payment",
+        min_length=1,
+        max_length=48)
+
+class Driver(BaseModel):
+    driver_id: Optional[str] = Field(
+        None,
+        description="Identifies the driver.",
+        min_length=1,
+        max_length=256,
+        pattern='^[a-zA-Z0-9_-]+$',
+        examples=["789"])
+    profile_picture: Optional[HttpUrl] = Field(
+        None,
+        description="URL that contains the profile picture",
+        examples=["https://mfdz.de/driver/789/picture"])
+    rating: Optional[int] = Field(
+        None,
+        description="Rating of the driver from 1 to 5."
+                    "0 no rating yet",
+        ge=0,
+        le=5,
+        examples=[5])
+    
 class Agency(BaseModel):
     id: str = Field(
         description="ID of the agency.",
@@ -196,6 +281,17 @@ class Carpool(BaseModel):
         max_length=20,
         pattern='^[a-zA-Z0-9]+$',
         examples=["mfdz"])
+    
+    driver: Optional[Driver] = Field(
+        None, 
+        description="Driver data", 
+        examples=["""
+                {
+                    "driver_id": "123", 
+                    "profile_picture": "https://mfdz.de/driver/789/picture",
+                    "rating": 5
+                }
+                """])
 
     deeplink: HttpUrl = Field(
         description="Link to an information page providing detail information "
@@ -258,6 +354,18 @@ class Carpool(BaseModel):
                     "purge outdated offers (e.g. older than 180 days). If not "
                     "passed, the service may assume 'now'",
         examples=["2022-02-13T20:20:39+00:00"])
+    additional_ridesharing_info: Optional[RidesharingInfo] = Field(
+        None, 
+        description="Extension of GRFS to the GTFS standard", 
+        examples=["""
+                {
+                    "number_free_seats": 2, 
+                    "creation_date": "2022-02-13T20:20:39+00:00", 
+                    "same_gender": 2,
+                    "smoking": 1,
+                    "luggage_size": 3
+                }
+                """])
     model_config = ConfigDict(json_schema_extra={
         "title": "Carpool",   
         # description ...
