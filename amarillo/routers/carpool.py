@@ -38,9 +38,7 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
 
-    await set_lastUpdated_if_unset(carpool)
-
-    await save_carpool(carpool)
+    await store_carpool(carpool)
 
     return carpool
     
@@ -92,9 +90,29 @@ async def _delete_carpool(agency_id: str, carpool_id: str):
     logger.info(f"Saved carpool {agency_id}:{carpool_id} in trash.")
     os.remove(f"data/carpool/{agency_id}/{carpool_id}.json")
 
+    try:
+        from amarillo.plugins.metrics import trips_deleted_counter
+        trips_deleted_counter.inc()
+    except ImportError:
+        pass
+    
+
 async def store_carpool(carpool: Carpool) -> Carpool:
+    carpool_exists = os.path.exists(f"data/carpool/{carpool.agency}/{carpool.id}.json")
+
     await set_lastUpdated_if_unset(carpool)
     await save_carpool(carpool)
+
+    try:
+        from amarillo.plugins.metrics import trips_created_counter, trips_updated_counter
+        if(carpool_exists):
+            # logger.info("Incrementing trips updated")
+            trips_updated_counter.inc()
+        else:
+            # logger.info("Incrementing trips created")
+            trips_created_counter.inc()
+    except ImportError:
+        pass
 
     return carpool
 
