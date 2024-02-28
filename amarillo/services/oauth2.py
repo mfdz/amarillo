@@ -40,7 +40,7 @@ async def verify_optional_api_key(X_API_Key: Optional[str] = Header(None)):
 
 def authenticate_agency(agency_id: str, password: str):
     agency_conf_service : AgencyConfService = container['agencyconf']
-    agency_conf = agency_conf_service.agency_id_to_agency_conf[agency_id]
+    agency_conf = agency_conf_service.agency_id_to_agency_conf.get(agency_id, None)
     if not agency_conf:
         return False
 
