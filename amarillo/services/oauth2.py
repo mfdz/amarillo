@@ -8,7 +8,6 @@ from fastapi import Depends, HTTPException, Header, status, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel
-from amarillo.routers.agencyconf import verify_api_key
 from amarillo.services.passwords import verify_password
 from amarillo.utils.container import container
 from amarillo.services.agencies import AgencyService
@@ -89,6 +88,24 @@ async def get_current_agency(token: str = Depends(oauth2_scheme), agency_from_ap
             headers={"WWW-Authenticate": "Bearer"},
         )
         raise credentials_exception
+
+
+async def verify_admin(agency: str = Depends(get_current_agency)):
+    #TODO: maybe separate error for when admin credentials are invalid vs valid but not admin?
+    if(agency != "admin"):
+        message="This operation requires admin privileges"
+        logger.error(message)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+
+    return "admin"
+
+
+# noinspection PyPep8Naming
+# X_API_Key is upper case for OpenAPI
+async def verify_api_key(X_API_Key: str = Header(...)):
+    agency_conf_service: AgencyConfService = container['agencyconf']
+
+    return agency_conf_service.check_api_key(X_API_Key)
 
 @router.post("/token")
 async def login_for_access_token(
