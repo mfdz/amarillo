@@ -5,11 +5,12 @@ import os.path
 import re
 from glob import glob
 
-from fastapi import APIRouter, Body, Header, HTTPException, status, Depends
+from fastapi import APIRouter, Body, HTTPException, status, Depends
 from datetime import datetime
 
 from amarillo.models.Carpool import Carpool
-from amarillo.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
+from amarillo.routers.agencyconf import verify_permission_for_same_agency_or_admin
+from amarillo.services.oauth2 import get_current_agency
 from amarillo.tests.sampledata import examples
 
 
@@ -32,7 +33,7 @@ router = APIRouter(
                  
                 })
 async def post_carpool(carpool: Carpool = Body(..., examples=examples),
-                       requesting_agency_id: str = Depends(verify_api_key)) -> Carpool:
+                       requesting_agency_id: str = Depends(get_current_agency)) -> Carpool:
     await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
 
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
@@ -53,7 +54,7 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
                 status.HTTP_404_NOT_FOUND: {"description": "Carpool not found"},
             },
             )
-async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(verify_api_key)) -> Carpool:
+async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(get_current_agency)) -> Carpool:
     logger.info(f"Get trip {agency_id}:{carpool_id}.")
     await assert_agency_exists(agency_id)
     await assert_carpool_exists(agency_id, carpool_id)
@@ -72,7 +73,7 @@ async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(ve
                        "description": "Carpool or agency not found"},
                },
                )
-async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(verify_api_key)):
+async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(get_current_agency)):
     await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
     logger.info(f"Delete trip {agency_id}:{carpool_id}.")
