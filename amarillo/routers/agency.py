@@ -9,7 +9,7 @@ from amarillo.routers.agencyconf import verify_api_key, verify_admin_api_key, ve
 # TODO should move this to service
 from amarillo.routers.carpool import store_carpool, delete_agency_carpools_older_than
 from amarillo.services.agencies import AgencyService
-from amarillo.services.importing.ride2go import import_ride2go
+from amarillo.services.importing import Ride2GoImporter, NoiImporter
 from amarillo.utils.container import container
 from fastapi.responses import FileResponse
 
@@ -65,6 +65,8 @@ async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_ke
 
     if agency_id == "ride2go":
         importer = Ride2GoImporter()
+    elif agency_id == "ummadum":
+        importer = NoiImporter(agency_id, test_mode=True)
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
