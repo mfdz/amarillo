@@ -64,14 +64,14 @@ async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_ke
     await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
     if agency_id == "ride2go":
-        import_function = import_ride2go
+        importer = Ride2GoImporter()
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Agency does not exist or does not support sync.")
 
     try:
-        carpools = import_function()
+        carpools = importer.load_carpools()
         # Reduce current time by a minute to avoid inter process timestamp issues
         synced_files_older_than = time.time() - 60
         result = [await store_carpool(cp) for cp in carpools]
