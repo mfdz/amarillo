@@ -1,28 +1,37 @@
+import codecs
 import csv
+import logging
+import re
+from contextlib import closing
+from io import TextIOWrapper
+
 import geopandas as gpd
 import pandas as pd
-from amarillo.models.Carpool import StopTime
-from contextlib import closing
-from shapely.geometry import Point, LineString
-from shapely.ops import transform
-from pyproj import Proj, Transformer
-import re
 import requests
-from io import TextIOWrapper
-import codecs
-import logging
+from pyproj import Proj, Transformer
+from shapely.geometry import LineString, Point
+from shapely.ops import transform
+
+from amarillo.models.Carpool import StopTime
+
+from .stop_importer import CsvStopsImporter, GeojsonStopsImporter
 
 logger = logging.getLogger(__name__)
 
-class StopsStore():
-    
-    def __init__(self, stop_sources = [], internal_projection = "EPSG:32632"):
+
+def is_carpooling_stop(stop_id, name):
+    stop_name = name.lower()
+    # mfdz: or bbnavi: prefixed stops are custom stops which are explicitly meant to be carpooling stops
+    return stop_id.startswith('mfdz:') or stop_id.startswith('bbnavi:') or 'mitfahr' in stop_name or 'p&m' in stop_name
+
+
+class StopsStore:
+    def __init__(self, stop_sources=None, internal_projection='EPSG:32632'):
         self.internal_projection = internal_projection
-        self.projection = Transformer.from_crs("EPSG:4326", internal_projection, always_xy=True).transform
+        self.projection = Transformer.from_crs('EPSG:4326', internal_projection, always_xy=True).transform
         self.stopsDataFrames = []
-        self.stop_sources = stop_sources
-    
-    
+        self.stop_sources = stop_sources if stop_sources is not None else []
+
     def load_stop_sources(self):
         """Imports stops from  stop_sources and registers them with
         the distance they are still associated with a trip.
@@ -37,29 +46,47 @@ class StopsStore():
 
         for stops_source in self.stop_sources:
             try:
-                stopsDataFrame =self._load_stops(stops_source["url"])
-                stopsDataFrames.append({'distanceInMeter': stops_source["vicinity"],
-                    'stops': stopsDataFrame})
-            except Exception as err:
+                source_url = stops_source.get('url')
+                source_type = stops_source.get('type') or (
+                    'geojson'
+                    if source_url is not None and source_url.startswith('http') and source_url.endswith('json')
+                    else 'csv'
+                )
+                logger.info('Loading stop source %s...', stops_source.get('id'))
+                match source_type:
+                    case 'geojson':
+                        stopsDataFrame = GeojsonStopsImporter().load_stops(source_url)
+                    case 'csv':
+                        stopsDataFrame = CsvStopsImporter().load_stops(source_url)
+                    case _:
+                        logger.error('Failed to load stops, source type %s not supported', source_type)
+                        continue
+                stopsDataFrame.to_crs(crs=self.internal_projection, inplace=True)
+                stopsDataFrames.append({'distanceInMeter': stops_source['vicinity'], 'stops': stopsDataFrame})
+            except Exception:
                 error_occured = True
-                logger.error("Failed to load stops from %s to StopsStore.", stops_source["url"], exc_info=True)
+                logger.error('Failed to load stops from %s to StopsStore.', stops_source, exc_info=True)
 
         if not error_occured:
             self.stopsDataFrames = stopsDataFrames
 
-    def find_additional_stops_around(self, line, stops = None):
+    def find_additional_stops_around(self, line, stops=None):
         """Returns a GeoDataFrame with all stops in vicinity of the
         given line, sorted by distance from origin of the line.
         Note: for internal projection/distance calculations, the
-        lat/lon geometries of line and stops are converted to 
+        lat/lon geometries of line and stops are converted to
         """
         stops_frames = []
         if stops:
-            stops_frames.append(self._convert_to_dataframe(stops)) 
+            stops_frames.append(self._convert_to_dataframe(stops))
         transformedLine = transform(self.projection, LineString(line.coordinates))
         for stops_to_match in self.stopsDataFrames:
-            stops_frames.append(self._find_stops_around_transformed(stops_to_match['stops'], transformedLine, stops_to_match['distanceInMeter']))
-        stops = gpd.GeoDataFrame( pd.concat(stops_frames, ignore_index=True, sort=True)) 
+            stops_frames.append(
+                self._find_stops_around_transformed(
+                    stops_to_match['stops'], transformedLine, stops_to_match['distanceInMeter']
+                )
+            )
+        stops = gpd.GeoDataFrame(pd.concat(stops_frames, ignore_index=True, sort=True))
         if not stops.empty:
             self._sort_by_distance(stops, transformedLine)
         return stops
@@ -70,7 +97,9 @@ class StopsStore():
         best_stop = None
         for stops_with_dist in self.stopsDataFrames:
             stops = stops_with_dist['stops']
-            s, d = stops.sindex.nearest(transformedCoord, return_all= True, return_distance=True, max_distance=max_search_distance)
+            s, d = stops.sindex.nearest(
+                transformedCoord, return_all=True, return_distance=True, max_distance=max_search_distance
+            )
             if len(d) > 0 and d[0] < best_dist:
                 best_dist = d[0]
                 row = s[1][0]
@@ -78,105 +107,21 @@ class StopsStore():
 
         return best_stop if best_stop else carpool_stop
 
-    def _normalize_stop_name(self, stop_name):
-        default_name = 'P+R-Parkplatz'
-        if stop_name in ('', 'Park&Ride'):
-            return default_name
-        normalized_stop_name = re.sub(r"P(ark)?\s?[\+&]\s?R(ail|ide)?",'P+R', stop_name)
-        
-        return normalized_stop_name
-
-    def _load_stops(self, source : str):
-        """Loads stops from given source and registers them with
-        the distance they are still associated with a trip.
-        E.g. bus stops should be registered with a distance of e.g. 30m,
-        while larger carpool parkings might be registered with e.g. 500m
-        """
-        logger.info("Load stops from %s", source)
-        if source.startswith('http'):
-            if source.endswith('json'):
-                with requests.get(source) as json_source:
-                    stopsDataFrame = self._load_stops_geojson(json_source.json())
-            else:
-                with requests.get(source) as csv_source:
-                    stopsDataFrame = self._load_stops_csv(codecs.iterdecode(csv_source.iter_lines(), 'utf-8'))
-        else:
-            with open(source, encoding='utf-8') as csv_source:
-                stopsDataFrame = self._load_stops_csv(csv_source)
-            
-        return stopsDataFrame
-
-    def _load_stops_csv(self, csv_source):
-        id = []
-        lat = []
-        lon = []
-        stop_name = []
-        reader = csv.DictReader(csv_source, delimiter=';')
-        columns = ['stop_id', 'stop_lat', 'stop_lon', 'stop_name']
-        lists = [id, lat, lon, stop_name]
-        for row in reader:
-            for col, lst in zip(columns, lists):
-                if col == "stop_lat" or col == "stop_lon":
-                    lst.append(float(row[col].replace(",",".")))
-                elif col == "stop_name":
-                    row_stop_name = self._normalize_stop_name(row[col])
-                    lst.append(row_stop_name)
-                else:
-                    lst.append(row[col])
-
-        return self._as_dataframe(id, lat, lon, stop_name)
-
-    def _load_stops_geojson(self, geojson_source):
-        id = []
-        lat = []
-        lon = []
-        stop_name = []
-        columns = ['stop_id', 'stop_lat', 'stop_lon', 'stop_name']
-        lists = [id, lat, lon, stop_name]
-        for row in geojson_source['features']:
-            coord = row['geometry']['coordinates']
-            if not coord or not row['properties'].get('name'):
-                logger.error('Stop feature {} has null coord or name'.format(row['id']))
-                continue
-            for col, lst in zip(columns, lists):
-                if col == "stop_lat":
-                    lst.append(coord[1])
-                elif col == "stop_lon":
-                    lst.append(coord[0])
-                elif col == "stop_name":
-                    row_stop_name = self._normalize_stop_name(row['properties']['name'])
-                    lst.append(row_stop_name)
-                elif col == "stop_id":
-                    lst.append(row['id'])
-
-        return self._as_dataframe(id, lat, lon, stop_name)
-
-    def _as_dataframe(self, id, lat, lon, stop_name):
-
-        df = gpd.GeoDataFrame(data={'x':lon, 'y':lat, 'stop_name':stop_name, 'id':id})  
-        stopsGeoDataFrame = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.x, df.y, crs='EPSG:4326'))
-        stopsGeoDataFrame.to_crs(crs=self.internal_projection, inplace=True)
-        return stopsGeoDataFrame
-
     def _find_stops_around_transformed(self, stopsDataFrame, transformedLine, distance):
         bufferedLine = transformedLine.buffer(distance)
         sindex = stopsDataFrame.sindex
         possible_matches_index = list(sindex.intersection(bufferedLine.bounds))
         possible_matches = stopsDataFrame.iloc[possible_matches_index]
-        exact_matches = possible_matches[possible_matches.intersects(bufferedLine)]
-        
-        return exact_matches
-    
-    def _convert_to_dataframe(self, stops):
-        return gpd.GeoDataFrame([[stop.name, stop.lon, stop.lat,
-            stop.id, Point(self.projection(stop.lon, stop.lat))] for stop in stops], columns = ['stop_name','x','y','id','geometry'], crs=self.internal_projection)
-         
-    def _sort_by_distance(self, stops, transformedLine):
-        stops['distance']=stops.apply(lambda row: transformedLine.project(row['geometry']), axis=1)
-        stops.sort_values('distance', inplace=True)
 
-def is_carpooling_stop(stop_id, name):
-    stop_name = name.lower()
-        # mfdz: or bbnavi: prefixed stops are custom stops which are explicitly meant to be carpooling stops
-    return stop_id.startswith('mfdz:') or stop_id.startswith('bbnavi:') or 'mitfahr' in stop_name or 'p&m' in stop_name 
-        
+        return possible_matches[possible_matches.intersects(bufferedLine)]
+
+    def _convert_to_dataframe(self, stops):
+        return gpd.GeoDataFrame(
+            [[stop.name, stop.lon, stop.lat, stop.id, Point(self.projection(stop.lon, stop.lat))] for stop in stops],
+            columns=['stop_name', 'x', 'y', 'id', 'geometry'],
+            crs=self.internal_projection,
+        )
+
+    def _sort_by_distance(self, stops, transformedLine):
+        stops['distance'] = stops.apply(lambda row: transformedLine.project(row['geometry']), axis=1)
+        stops.sort_values('distance', inplace=True)
