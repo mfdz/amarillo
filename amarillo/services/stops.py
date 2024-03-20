@@ -14,7 +14,7 @@ from shapely.ops import transform
 
 from amarillo.models.Carpool import StopTime
 
-from .stop_importer import CsvStopsImporter, GeojsonStopsImporter
+from .stop_importer import CsvStopsImporter, GeojsonStopsImporter, GtfsStopsImporter, OverpassStopsImporter
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,10 @@ class StopsStore:
                         stopsDataFrame = GeojsonStopsImporter().load_stops(source_url)
                     case 'csv':
                         stopsDataFrame = CsvStopsImporter().load_stops(source_url)
+                    case 'overpass':
+                        stopsDataFrame = OverpassStopsImporter().load_stops(**stops_source)
+                    case 'gtfs':
+                        stopsDataFrame = GtfsStopsImporter().load_stops(**stops_source)
                     case _:
                         logger.error('Failed to load stops, source type %s not supported', source_type)
                         continue
