@@ -242,7 +242,7 @@ class TripTransformer:
         if len(virtual_stops) > MAX_STOPS_PER_TRIP:
             # in case we found more than MAX_STOPS_PER_TRIP, we retain first and last 
             # half of MAX_STOPS_PER_TRIP
-            virtual_stops = virtual_stops.iloc[np.r_[0:int(MAX_STOPS_PER_TRIP/2), int(MAX_STOPS_PER_TRIP/2):]]
+            virtual_stops = virtual_stops.iloc[np.r_[0:int(MAX_STOPS_PER_TRIP/2), -int(MAX_STOPS_PER_TRIP/2):0]]
             
         trip_id = f"{carpool.agency}:{carpool.id}"
         stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
