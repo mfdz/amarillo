@@ -1,6 +1,7 @@
 import logging.config
 
 from amarillo.configuration import configure_services, configure_admin_token
+from amarillo.services.config import config
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger("main")
@@ -49,6 +50,10 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                   }],
               servers=[
                   {
+                      "description": "This service",
+                      "url": config.amarillo_baseurl
+                  },
+                  {
                       "description": "MobiData BW Amarillo service",
                       "url": "https://amarillo.mobidata-bw.de"
                   },
@@ -63,10 +68,6 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
                   {
                       "description": "Dev server for development",
                       "url": "https://amarillo-dev.mfdz.de"
-                  },
-                  {
-                      "description": "Localhost for development",
-                      "url": "http://localhost:8000"
                   }
               ],
               redoc_url=None
