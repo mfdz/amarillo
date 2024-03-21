@@ -5,7 +5,7 @@ from pyproj import Geod
 
 def assert_folder_exists(foldername):
     if not os.path.isdir(foldername):
-        os.makedirs(foldername)
+        os.makedirs(foldername, exist_ok=True)
 
 
 def agency_carpool_ids_from_filename(carpool_filename):
