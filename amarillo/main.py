@@ -5,6 +5,10 @@ import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
+from amarillo.utils.utils import copy_static_files
+#this has to run before app.configuration is imported, otherwise we get validation error for config because the config file is not copied yet
+copy_static_files(["conf", "static", "templates", "logging.conf", "config"]) 
+
 import amarillo.plugins
 from amarillo.services.config import config
 from amarillo.configuration import configure_services, configure_admin_token

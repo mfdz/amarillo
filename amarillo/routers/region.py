@@ -45,7 +45,7 @@ async def get_region(region_id: str) -> Region:
     return region
 
 def _assert_region_exists(region_id: str) -> Region:
-    regions: regionService = container['regions']
+    regions: RegionService = container['regions']
     region = regions.get_region(region_id)
     region_exists = region is not None
 
@@ -55,34 +55,3 @@ def _assert_region_exists(region_id: str) -> Region:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
     return region
-
-@router.get("/{region_id}/gtfs", 
-    summary="Return GTFS Feed for this region",
-    response_description="GTFS-Feed (zip-file)",
-    response_class=FileResponse,
-    responses={
-                status.HTTP_404_NOT_FOUND: {"description": "Region not found"},
-        }
-    )
-async def get_file(region_id: str, user: str = Depends(verify_admin_api_key)):
-    _assert_region_exists(region_id)
-    return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfs.zip')
-
-@router.get("/{region_id}/gtfs-rt",
-    summary="Return GTFS-RT Feed for this region",
-    response_description="GTFS-RT-Feed",
-    response_class=FileResponse,
-    responses={
-                status.HTTP_404_NOT_FOUND: {"description": "Region not found"},
-                status.HTTP_400_BAD_REQUEST: {"description": "Bad request, e.g. because format is not supported, i.e. neither protobuf nor json."}
-        }
-    )
-async def get_file(region_id: str, format: str = 'protobuf', user: str = Depends(verify_admin_api_key)):
-    _assert_region_exists(region_id)
-    if format == 'json':
-        return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfsrt.json')
-    elif format == 'protobuf':
-        return FileResponse(f'data/gtfs/amarillo.{region_id}.gtfsrt.pbf')
-    else:
-        message = "Specified format is not supported, i.e. neither protobuf nor json."
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)

@@ -52,6 +52,7 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
              operation_id="sync",
              summary="Synchronizes all carpool offers",
              response_model=List[Carpool],
+             response_model_exclude_none=True,
              responses={
                  status.HTTP_200_OK: {
                      "description": "Carpool created"},
