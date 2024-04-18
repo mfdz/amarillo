@@ -8,6 +8,7 @@ from fastapi import Depends, HTTPException, Header, status, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel
+from amarillo.models.User import User
 from amarillo.services.passwords import verify_password
 from amarillo.utils.container import container
 from amarillo.services.agencies import AgencyService
@@ -30,6 +31,7 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
+    #TODO: rename to user_id
     agency_id: Union[str, None] = None
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
@@ -58,7 +60,13 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+#TODO: function verify_permission(user, permission)
+
+#TODO: rename to get_current_user, agency_from_api_key -> user_from_api_key
 async def get_current_agency(token: str = Depends(oauth2_scheme), agency_from_api_key: str = Depends(verify_optional_api_key)):
+    return (await get_current_user(token, agency_from_api_key)).user_id
+
+async def get_current_user(token: str = Depends(oauth2_scheme), agency_from_api_key: str = Depends(verify_optional_api_key)) -> User:
     if token:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -73,13 +81,16 @@ async def get_current_agency(token: str = Depends(oauth2_scheme), agency_from_ap
             token_data = TokenData(agency_id=agency_id)
         except JWTError:
             raise credentials_exception
-        user = token_data.agency_id
-        if user is None:
+        user_id = token_data.agency_id
+        if user_id is None:
             raise credentials_exception
-        return user
+
+        user_service : UserService = container['users']
+        return user_service.get_user(user_id)
     elif agency_from_api_key:
         logger.info(f"API Key provided: {agency_from_api_key}")
-        return agency_from_api_key
+        user_service : UserService = container['users']
+        return user_service.get_user(agency_from_api_key)
     else:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,6 +98,18 @@ async def get_current_agency(token: str = Depends(oauth2_scheme), agency_from_ap
             headers={"WWW-Authenticate": "Bearer"},
         )
         raise credentials_exception
+
+# TODO: use verify_permission("admin", user)
+
+def verify_permission(permission: str, user: User):
+    # permission_exception =
+
+    if user.permissions is None or permission not in user.permissions: raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"User '{user}' does not have the permission '{permission}'",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
 
 
 async def verify_admin(agency: str = Depends(get_current_agency)):

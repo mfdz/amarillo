@@ -73,7 +73,7 @@ async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(ge
                        "description": "Carpool or agency not found"},
                },
                )
-async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(get_current_agency)):
+async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(get_current_agency) ):
     await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
     logger.info(f"Delete trip {agency_id}:{carpool_id}.")
