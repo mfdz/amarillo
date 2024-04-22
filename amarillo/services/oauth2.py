@@ -32,23 +32,22 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    #TODO: rename to user_id
-    agency_id: Union[str, None] = None
+    user_id: Union[str, None] = None
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 async def verify_optional_api_key(X_API_Key: Optional[str] = Header(None)):
     if X_API_Key == None: return None
     return await verify_api_key(X_API_Key)
 
-def authenticate_agency(agency_id: str, password: str):
+def authenticate_user(user_id: str, password: str):
     user_service : UserService = container['users']
-    user_conf = user_service.user_id_to_user_conf.get(agency_id, None)
+    user_conf = user_service.user_id_to_user_conf.get(user_id, None)
     if not user_conf:
         return False
 
     if not verify_password(password, user_conf.password):
         return False
-    return agency_id
+    return user_id
 
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
@@ -62,11 +61,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     return encoded_jwt
 
 
-#TODO: rename to get_current_user, agency_from_api_key -> user_from_api_key
-async def get_current_agency(token: str = Depends(oauth2_scheme), agency_from_api_key: str = Depends(verify_optional_api_key)):
-    return (await get_current_user(token, agency_from_api_key)).user_id
-
-async def get_current_user(token: str = Depends(oauth2_scheme), agency_from_api_key: str = Depends(verify_optional_api_key)) -> User:
+async def get_current_user(token: str = Depends(oauth2_scheme), user_from_api_key: str = Depends(verify_optional_api_key)) -> User:
     if token:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -75,22 +70,22 @@ async def get_current_user(token: str = Depends(oauth2_scheme), agency_from_api_
         )
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            agency_id: str = payload.get("sub")
-            if agency_id is None:
+            user_id: str = payload.get("sub")
+            if user_id is None:
                 raise credentials_exception
-            token_data = TokenData(agency_id=agency_id)
+            token_data = TokenData(user_id=user_id)
         except JWTError:
             raise credentials_exception
-        user_id = token_data.agency_id
+        user_id = token_data.user_id
         if user_id is None:
             raise credentials_exception
 
         user_service : UserService = container['users']
         return user_service.get_user(user_id)
-    elif agency_from_api_key:
-        logger.info(f"API Key provided: {agency_from_api_key}")
+    elif user_from_api_key:
+        logger.info(f"API Key provided: {user_from_api_key}")
         user_service : UserService = container['users']
-        return user_service.get_user(agency_from_api_key)
+        return user_service.get_user(user_from_api_key)
     else:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -98,9 +93,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), agency_from_api_
             headers={"WWW-Authenticate": "Bearer"},
         )
         raise credentials_exception
-
-# TODO: use verify_permission("admin", user)
-
 
 def verify_permission(permission: str, user: User):
 
@@ -121,6 +113,7 @@ def verify_permission(permission: str, user: User):
 
         return
 
+    #permission is in agency:operation format
     def permission_matches(permission, user_permission):
         prescribed_agency, prescribed_operation = permission.split(":")
         given_agency, given_operation = user_permission.split(":")
@@ -130,17 +123,6 @@ def verify_permission(permission: str, user: User):
     if any(permission_matches(permission, p) for p in user.permissions if ":" in p): return
 
     raise permissions_exception()
-
-
-
-async def verify_admin(agency: str = Depends(get_current_agency)):
-    #TODO: maybe separate error for when admin credentials are invalid vs valid but not admin?
-    if(agency != "admin"):
-        message="This operation requires admin privileges"
-        logger.error(message)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
-
-    return "admin"
 
 
 # noinspection PyPep8Naming
@@ -154,7 +136,7 @@ async def verify_api_key(X_API_Key: str = Header(...)):
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:
-    agency = authenticate_agency(form_data.username, form_data.password)
+    agency = authenticate_user(form_data.username, form_data.password)
     if not agency:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -170,7 +152,7 @@ async def login_for_access_token(
 # TODO: eventually remove this
 @router.get("/users/me/", response_model=Agency)
 async def read_users_me(
-    current_agency: Annotated[Agency, Depends(get_current_agency)]
+    current_agency: Annotated[Agency, Depends(get_current_user)]
 ):
     agency_service : AgencyService = container['agencies']
     return  agency_service.get_agency(agency_id=current_agency)
@@ -178,6 +160,6 @@ async def read_users_me(
 # TODO: eventually remove this
 @router.get("/users/me/items/")
 async def read_own_items(
-    current_agency: Annotated[str, Depends(get_current_agency)]
+    current_agency: Annotated[str, Depends(get_current_user)]
 ):
     return [{"item_id": "Foo", "owner": current_agency}]
