@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status, Header, Depends
 
 from amarillo.models.User import User
 from amarillo.services.users import UserService
-from amarillo.services.oauth2 import get_current_agency, verify_admin
+from amarillo.services.oauth2 import get_current_user, verify_permission
 from amarillo.services.config import config
 from amarillo.utils.container import container
 
@@ -21,22 +21,6 @@ router = APIRouter(
 include_in_schema = config.env != 'PROD'
 
 
-# TODO Return code 403 Unauthoized (in response_status_codes as well...)
-async def verify_permission_for_same_agency_or_admin(agency_id_in_path_or_body, agency_id_from_api_key):
-    """Verifies that an agency is accessing something it owns or the user is admin
-
-    The agency_id is part of some paths, or when not in the path it is in the body, e.g. in PUT /carpool.
-
-    This function encapsulates the formula 'working with own stuff, or admin'.
-    """
-    is_permitted = agency_id_in_path_or_body == agency_id_from_api_key or agency_id_from_api_key == "admin"
-
-    if not is_permitted:
-        message = f"Working with {agency_id_in_path_or_body} resources is not permitted for {agency_id_from_api_key}."
-        logger.error(message)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
-
-
 @router.get("/",
             include_in_schema=include_in_schema,
             operation_id="getUserIdsWhichHaveAConfiguration",
@@ -44,7 +28,7 @@ async def verify_permission_for_same_agency_or_admin(agency_id_in_path_or_body, 
             response_model=List[str],
             description="Returns the user_ids but not the details.",
             status_code=status.HTTP_200_OK)
-async def get_user_ids(admin_api_key: str = Depends(get_current_agency)) -> [str]:
+async def get_user_ids(requesting_user: User = Depends(get_current_user)) -> [str]:
     return container['users'].get_user_ids()
 
 
@@ -52,7 +36,8 @@ async def get_user_ids(admin_api_key: str = Depends(get_current_agency)) -> [str
              include_in_schema=include_in_schema,
              operation_id="postNewUserConf",
              summary="Post a new User")
-async def post_user_conf(user_conf: User, admin_api_key: str = Depends(verify_admin)):
+async def post_user_conf(user_conf: User, requesting_user: User = Depends(get_current_user)):
+    verify_permission("admin", requesting_user)
     user_service: UserService = container['users']
     user_service.add(user_conf)
 
@@ -64,13 +49,13 @@ async def post_user_conf(user_conf: User, admin_api_key: str = Depends(verify_ad
                summary="Delete configuration of a user. Returns true if the token for the user existed, "
                        "false if it didn't exist."
                )
-async def delete_user(user_id: str, requesting_user_id: str = Depends(get_current_agency)):
-    agency_may_delete_own = requesting_user_id == user_id
-    admin_may_delete_everything = requesting_user_id == "admin"
-    is_permitted = agency_may_delete_own or admin_may_delete_everything
+async def delete_user(user_id: str, requesting_user: User = Depends(get_current_user)):
+    user_may_delete_own = requesting_user.user_id == user_id
+    admin_may_delete_everything = "admin" in requesting_user.permissions
+    is_permitted = user_may_delete_own or admin_may_delete_everything
 
     if not is_permitted:
-        message = f"The API key for {requesting_user_id} can not delete the configuration for {user_id}"
+        message = f"User '{requesting_user.user_id} can not delete the configuration for {user_id}"
         logger.error(message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 

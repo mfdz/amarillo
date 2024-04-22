@@ -9,8 +9,8 @@ from fastapi import APIRouter, Body, HTTPException, status, Depends
 from datetime import datetime
 
 from amarillo.models.Carpool import Carpool
-from amarillo.routers.users import verify_permission_for_same_agency_or_admin
-from amarillo.services.oauth2 import get_current_agency
+from amarillo.models.User import User
+from amarillo.services.oauth2 import get_current_user, verify_permission
 from amarillo.tests.sampledata import examples
 
 
@@ -33,8 +33,8 @@ router = APIRouter(
                  
                 })
 async def post_carpool(carpool: Carpool = Body(..., examples=examples),
-                       requesting_agency_id: str = Depends(get_current_agency)) -> Carpool:
-    await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
+                       requesting_user: User = Depends(get_current_user)) -> Carpool:
+    verify_permission(f"{carpool.agency}:write", requesting_user)
 
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
@@ -54,7 +54,9 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
                 status.HTTP_404_NOT_FOUND: {"description": "Carpool not found"},
             },
             )
-async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(get_current_agency)) -> Carpool:
+async def get_carpool(agency_id: str, carpool_id: str, requesting_user: User = Depends(get_current_user)) -> Carpool:
+    verify_permission(f"{agency_id}:read", requesting_user)
+
     logger.info(f"Get trip {agency_id}:{carpool_id}.")
     await assert_agency_exists(agency_id)
     await assert_carpool_exists(agency_id, carpool_id)
@@ -73,8 +75,8 @@ async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(ge
                        "description": "Carpool or agency not found"},
                },
                )
-async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(get_current_agency) ):
-    await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
+async def delete_carpool(agency_id: str, carpool_id: str, requesting_user: User = Depends(get_current_user)):
+    verify_permission(f"{agency_id}:write", requesting_user)
 
     logger.info(f"Delete trip {agency_id}:{carpool_id}.")
     await assert_agency_exists(agency_id)
