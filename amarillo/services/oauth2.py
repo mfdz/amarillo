@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional, Union
 import logging
+import logging.config
 
 from fastapi import Depends, HTTPException, Header, status, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -60,7 +61,6 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-#TODO: function verify_permission(user, permission)
 
 #TODO: rename to get_current_user, agency_from_api_key -> user_from_api_key
 async def get_current_agency(token: str = Depends(oauth2_scheme), agency_from_api_key: str = Depends(verify_optional_api_key)):
@@ -101,14 +101,35 @@ async def get_current_user(token: str = Depends(oauth2_scheme), agency_from_api_
 
 # TODO: use verify_permission("admin", user)
 
-def verify_permission(permission: str, user: User):
-    # permission_exception =
 
-    if user.permissions is None or permission not in user.permissions: raise HTTPException(
+def verify_permission(permission: str, user: User):
+
+    def permissions_exception():
+        return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"User '{user}' does not have the permission '{permission}'",
+            detail=f"User '{user.user_id}' does not have the permission '{permission}'",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    #user is admin
+    if "admin" in user.permissions: return
+
+    #permission is an operation
+    if ":" not in permission:
+        if permission not in user.permissions:
+            raise permissions_exception()
+
+        return
+
+    def permission_matches(permission, user_permission):
+        prescribed_agency, prescribed_operation = permission.split(":")
+        given_agency, given_operation = user_permission.split(":")
+
+        return (prescribed_agency == given_agency or given_agency == "all") and (prescribed_operation == given_operation or given_operation == "all")
+
+    if any(permission_matches(permission, p) for p in user.permissions if ":" in p): return
+
+    raise permissions_exception()
 
 
 

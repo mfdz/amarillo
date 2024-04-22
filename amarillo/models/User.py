@@ -1,8 +1,5 @@
-from typing import Annotated, Optional, List, Union
-from pydantic import ConfigDict, BaseModel, Field, constr
-
-MyUrlsType = constr(regex="^[a-z]$")
-
+from typing import Annotated, Optional, List
+from pydantic import ConfigDict, BaseModel, Field
 class User(BaseModel):
     #TODO: add attributes admin, permissions, fullname, email
 
@@ -24,7 +21,7 @@ class User(BaseModel):
         min_length=8,
         max_length=256,
         examples=["$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"])
-    permissions: Optional[List[str]] = Field([],
+    permissions: Optional[List[Annotated[str, Field(pattern=r'^[a-z0-9]+(:[a-z]+)?$')]]] = Field([],
         description="The permissions of this user, a list of strings in the format <agency:operation> or <operation>",
         max_length=256,
         # pattern=r'^[a-zA-Z0-9]+(:[a-zA-Z]+)?$', #TODO
