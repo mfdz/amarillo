@@ -3,3 +3,4 @@ ride2go_query_data = '{ "southWestCoordinates": { "lat": 47.3, "lon": 5.98 }, "n
 env = 'PROD'
 graphhopper_base_url = 'https://api.mfdz.de/gh'
 stop_sources_file = 'conf/stop_sources.json'
+max_age_carpool_offers_in_days = 3640
