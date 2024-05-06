@@ -1,6 +1,6 @@
-fastapi[all]==0.109.0
+fastapi[all]==0.111.0
 geopandas==0.14
-uvicorn[standard]==0.23.2
+uvicorn[standard]~=0.29.0
 pydantic[dotenv]==2.4.2
 protobuf==3.20.3
 rtree==1.1.0
@@ -14,3 +14,4 @@ pygeos==0.14
 pyproj==3.6.1
 geojson-pydantic==1.0.1
 watchdog==3.0.0
+idna>=3.7
