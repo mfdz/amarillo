@@ -29,7 +29,7 @@ class Ride2GoImporter:
             id=id,
             agency=agency,
             deeplink=dict['deeplink'],
-            stops=[self._extract_stop(s) for s in dict.get('stops')],
+            stops=[Ride2GoImporter._extract_stop(s) for s in dict.get('stops')],
             departureTime=dict.get('departTime'),
             departureDate=dict.get('departDate') if dict.get('departDate') else dict.get('weekdays'),
             lastUpdated=dict.get('lastUpdated'),
