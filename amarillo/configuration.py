@@ -53,7 +53,7 @@ def configure_services():
 def configure_enhancer_services():
     configure_services()
 
-    logger.info("Load stops...")
+    logger.info("Load stops from %s", config.stop_sources_file)
     with open(config.stop_sources_file) as stop_sources_file:
         stop_sources = json.load(stop_sources_file)
         stop_store = stops.StopsStore(stop_sources)

@@ -52,7 +52,8 @@ class StopsStore:
                     if source_url is not None and source_url.startswith('http') and source_url.endswith('json')
                     else 'csv'
                 )
-                logger.info('Loading stop source %s...', stops_source.get('id'))
+
+                logger.info('Loading stop source %s...', stops_source.get('id', stops_source.get('url')))
                 match source_type:
                     case 'geojson':
                         stopsDataFrame = GeojsonStopsImporter().load_stops(source_url)
