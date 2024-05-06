@@ -61,7 +61,7 @@ def configure_enhancer_services():
     stop_store.load_stop_sources()
     container['stops_store'] = stop_store
     container['trips_store'] = trips.TripStore(stop_store)
-    container['carpools'] = CarpoolService(container['trips_store'])
+    container['carpools'] = CarpoolService(container['trips_store'], config.max_age_carpool_offers_in_days)
 
     logger.info("Restore carpools...")
 
