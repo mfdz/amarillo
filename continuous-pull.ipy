@@ -11,6 +11,6 @@ while True:
     !git pull
     time.sleep(60)
 
-# Note: when Amarillo runs with `uvicorn main:app --reload` and not with
+# Note: when Amarillo runs with `uvicorn amarillo.main:app --reload` and not with
 # `python main.py` then there is nothing else to do. The reload happens
 # automatically.

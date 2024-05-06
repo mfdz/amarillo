@@ -1,59 +1,56 @@
 name: build & deploy Docker image
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - deploy
+      - 'main'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'main'
 
 env:
-  DOCKER_IMAGE: registry.gitlab.tpwd.de/tpwd/bb-navi/amarillo
-  DOCKER_TAG: production
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  prep:
+  build-and-push-image:
     runs-on: ubuntu-latest
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: write
     steps:
-    - uses: actions/checkout@v2
-    - uses: docker/setup-buildx-action@v1
-    - name: log in to registry.gitlab.tpwd.de
-      uses: docker/login-action@v1
-      with:
-        registry: registry.gitlab.tpwd.de
-        username: ${{ secrets.GITLAB_USERNAME }}
-        password: ${{ secrets.GITLAB_PASSWORD }}
-    - name: build & push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        push: true
-        tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-        # https://github.com/docker/build-push-action/blob/9472e9021074a3cb3279ba431598b8836d40433f/docs/advanced/cache.md#github-cache
-        # https://github.com/moby/buildkit#registry-push-image-and-cache-separately
-        cache-from: type=gha
-        cache-to: type=gha,mode=max,oci-mediatypes=true,compression=zstd
-  deploy:
-    runs-on: ubuntu-latest
-    needs:
-      - prep
-    environment: production
-    env:
-      QUANTUM_USER: ${{ secrets.QUANTUM_USER }}
-      QUANTUM_PASSWORD: ${{ secrets.QUANTUM_PASSWORD }}
-      QUANTUM_ENDPOINT: "tpwd-bb-navi"
-      QUANTUM_STACK: "amarillo"
-      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
-      RIDE2GO_TOKEN: ${{ secrets.RIDE2GO_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: generate Planetary Quantum stack markup
-        run: |
-          set -o pipefail
-          docker-compose -f quantum-stack.yml config | tee stack.yml
-          echo -e "---\nversion: '1.0'\ncompose: stack.yml" >.quantum
-      - name: Deploy to Planetary Quantum
-        run: |
-          set -x
-          docker run --rm -i \
-            -v $PWD:/app -w /app \
-            -e QUANTUM_USER -e QUANTUM_PASSWORD -e QUANTUM_ENDPOINT -e QUANTUM_STACK \
-            r.planetary-quantum.com/quantum-public/cli:2 \
-            quantum-cli stacks update --create --wait
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
+      - name: Log in to the Container registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+      # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
+      # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
+      # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
