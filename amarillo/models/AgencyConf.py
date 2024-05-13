@@ -15,12 +15,18 @@ class AgencyConf(BaseModel):
         max_length=256,
         pattern=r'^[a-zA-Z0-9]+$',
         examples=["d8yLuY4DqMEUCLcfJASi"])
+    password: str = Field(
+        description="The agency's password for generating JWT tokens",
+        min_length=8,
+        max_length=256,
+        examples=["$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"])
     model_config = ConfigDict(json_schema_extra={
         "title": "Agency Configuration",
         "description": "Configuration for an agency.",
         "example":
             {
                 "agency_id": "mfdz",
-                "api_key": "d8yLuY4DqMEUCLcfJASi"
+                "api_key": "d8yLuY4DqMEUCLcfJASi",
+                "password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
             }
     })

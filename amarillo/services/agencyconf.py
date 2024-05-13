@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 
 from amarillo.models.AgencyConf import AgencyConf
 from amarillo.services.config import config
+from amarillo.services.passwords import get_password_hash
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,8 @@ class AgencyConfService:
             message = f"Duplicate API Key for {agency_id} not permitted. Use a different key."
             logger.error(message)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+
+        agency_conf.password = get_password_hash(agency_conf.password)
 
         with open(f'{agency_conf_directory}/{agency_id}.json', 'w', encoding='utf-8') as f:
             f.write(agency_conf.json())
