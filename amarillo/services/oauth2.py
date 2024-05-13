@@ -7,9 +7,9 @@ import logging
 from fastapi import Depends, HTTPException, Header, status, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from pydantic import BaseModel
 from amarillo.routers.agencyconf import verify_api_key
+from amarillo.services.passwords import verify_password
 
 from amarillo.services.config import config
 
@@ -60,20 +60,10 @@ class User(BaseModel):
 class UserInDB(User):
     hashed_password: str
 
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 async def verify_optional_api_key(X_API_Key: Optional[str] = Header(None)):
     if X_API_Key == None: return None
     return await verify_api_key(X_API_Key)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
 
 def get_agency(db, agency_id: str):
     if agency_id in db:
