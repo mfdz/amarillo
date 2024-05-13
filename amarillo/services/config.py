@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings
 class Config(BaseSettings):
     amarillo_baseurl: str = 'http://localhost:8000/'
     admin_token: str
-    secret_key: str
     ride2go_query_data: str
     env: str = 'DEV'
     graphhopper_base_url: str = 'https://api.mfdz.de/gh'

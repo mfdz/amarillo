@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import ConfigDict, BaseModel, Field
 
 
@@ -9,13 +10,13 @@ class AgencyConf(BaseModel):
         pattern='^[a-zA-Z0-9]+$',
         examples=["mfdz"])
 
-    api_key: str = Field(
+    api_key: Optional[str] = Field(None,
         description="The agency's API key for using the API",
         min_length=20,
         max_length=256,
         pattern=r'^[a-zA-Z0-9]+$',
         examples=["d8yLuY4DqMEUCLcfJASi"])
-    password: str = Field(
+    password: Optional[str] = Field(None,
         description="The agency's password for generating JWT tokens",
         min_length=8,
         max_length=256,

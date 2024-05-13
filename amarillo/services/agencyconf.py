@@ -33,7 +33,8 @@ class AgencyConfService:
                 api_key = agency_conf.api_key
 
                 self.agency_id_to_agency_conf[agency_id] = agency_conf
-                self.api_key_to_agency_id[api_key] = agency_conf.agency_id
+                if api_key is not None:
+                    self.api_key_to_agency_id[api_key] = agency_conf.agency_id
 
     def get_agency_conf(self, agency_id: str) -> AgencyConf:
         agency_conf = self.agency_id_to_agency_conf.get(agency_id)
