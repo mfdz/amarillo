@@ -13,6 +13,7 @@ import amarillo.plugins
 from amarillo.services.config import config
 from amarillo.configuration import configure_services, configure_admin_token
 from amarillo.routers import carpool, agency, agencyconf, region
+import amarillo.services.oauth2 as oauth2
 from fastapi import FastAPI
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
@@ -82,6 +83,7 @@ app.include_router(carpool.router)
 app.include_router(agency.router)
 app.include_router(agencyconf.router)
 app.include_router(region.router)
+app.include_router(oauth2.router)
 
 
 def iter_namespace(ns_pkg):
