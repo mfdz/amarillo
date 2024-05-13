@@ -15,9 +15,9 @@ from amarillo.services.agencies import AgencyService
 from amarillo.services.agencyconf import AgencyConfService
 from amarillo.models.Carpool import Agency
 
-from amarillo.services.config import config
+from amarillo.services.secrets import secrets
 
-SECRET_KEY = config.secret_key
+SECRET_KEY = secrets.secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
