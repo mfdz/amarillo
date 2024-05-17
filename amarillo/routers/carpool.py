@@ -9,7 +9,7 @@ from fastapi import APIRouter, Body, HTTPException, status, Depends
 from datetime import datetime
 
 from amarillo.models.Carpool import Carpool
-from amarillo.routers.agencyconf import verify_permission_for_same_agency_or_admin
+from amarillo.routers.users import verify_permission_for_same_agency_or_admin
 from amarillo.services.oauth2 import get_current_agency
 from amarillo.tests.sampledata import examples
 

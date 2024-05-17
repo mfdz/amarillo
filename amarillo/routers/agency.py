@@ -5,7 +5,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from amarillo.models.Carpool import Carpool, Agency
-from amarillo.routers.agencyconf import verify_permission_for_same_agency_or_admin
+from amarillo.routers.users import verify_permission_for_same_agency_or_admin
 from amarillo.services.oauth2 import get_current_agency
 # TODO should move this to service
 from amarillo.routers.carpool import store_carpool, delete_agency_carpools_older_than
