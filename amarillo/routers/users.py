@@ -3,8 +3,8 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, status, Header, Depends
 
-from amarillo.models.AgencyConf import AgencyConf
-from amarillo.services.agencyconf import AgencyConfService
+from amarillo.models.User import User
+from amarillo.services.users import UserService
 from amarillo.services.oauth2 import get_current_agency, verify_admin
 from amarillo.services.config import config
 from amarillo.utils.container import container
@@ -12,8 +12,8 @@ from amarillo.utils.container import container
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/agencyconf",
-    tags=["agencyconf"]
+    prefix="/users",
+    tags=["users"]
 )
 
 # This endpoint is not shown in PROD installations, only in development
@@ -39,48 +39,48 @@ async def verify_permission_for_same_agency_or_admin(agency_id_in_path_or_body, 
 
 @router.get("/",
             include_in_schema=include_in_schema,
-            operation_id="getAgencyIdsWhichHaveAConfiguration",
-            summary="Get agency_ids which have a configuration",
+            operation_id="getUserIdsWhichHaveAConfiguration",
+            summary="Get user which have a configuration",
             response_model=List[str],
-            description="Returns the agency_ids but not the details.",
+            description="Returns the user_ids but not the details.",
             status_code=status.HTTP_200_OK)
-async def get_agency_ids(admin_api_key: str = Depends(get_current_agency)) -> [str]:
-    return container['agencyconf'].get_agency_ids()
+async def get_user_ids(admin_api_key: str = Depends(get_current_agency)) -> [str]:
+    return container['users'].get_user_ids()
 
 
 @router.post("/",
              include_in_schema=include_in_schema,
-             operation_id="postNewAgencyConf",
-             summary="Post a new AgencyConf")
-async def post_agency_conf(agency_conf: AgencyConf, admin_api_key: str = Depends(verify_admin)):
-    agency_conf_service: AgencyConfService = container['agencyconf']
-    agency_conf_service.add(agency_conf)
+             operation_id="postNewUserConf",
+             summary="Post a new User")
+async def post_user_conf(user_conf: User, admin_api_key: str = Depends(verify_admin)):
+    user_service: UserService = container['users']
+    user_service.add(user_conf)
 
 # TODO 400->403
-@router.delete("/{agency_id}",
+@router.delete("/{user_id}",
                include_in_schema=include_in_schema,
-               operation_id="deleteAgencyConf",
+               operation_id="deleteUser",
                status_code=status.HTTP_200_OK,
-               summary="Delete configuration of an agency. Returns true if the token for the agency existed, "
+               summary="Delete configuration of a user. Returns true if the token for the user existed, "
                        "false if it didn't exist."
                )
-async def delete_agency_conf(agency_id: str, requesting_agency_id: str = Depends(get_current_agency)):
-    agency_may_delete_own = requesting_agency_id == agency_id
-    admin_may_delete_everything = requesting_agency_id == "admin"
+async def delete_user(user_id: str, requesting_user_id: str = Depends(get_current_agency)):
+    agency_may_delete_own = requesting_user_id == user_id
+    admin_may_delete_everything = requesting_user_id == "admin"
     is_permitted = agency_may_delete_own or admin_may_delete_everything
 
     if not is_permitted:
-        message = f"The API key for {requesting_agency_id} can not delete the configuration for {agency_id}"
+        message = f"The API key for {requesting_user_id} can not delete the configuration for {user_id}"
         logger.error(message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
-    agency_conf_service: AgencyConfService = container['agencyconf']
+    user_service: UserService = container['users']
 
-    agency_exists = agency_id in agency_conf_service.get_agency_ids()
+    agency_exists = user_id in user_service.get_user_ids()
 
     if not agency_exists:
-        message = f"No config for {agency_id}"
+        message = f"No config for {user_id}"
         logger.error(message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
-    agency_conf_service.delete(agency_id)
+    user_service.delete(user_id)

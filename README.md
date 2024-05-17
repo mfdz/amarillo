@@ -29,14 +29,14 @@ There is a special *admin* user.
 For this user, the API-Key must be passed in as an environment variable when 
 Amarillo is started.
 
-The admin can create additional API-Keys in the `/agencyconf` endpoint. This 
+The admin can create additional API-Keys in the `/users` endpoint. This
 endpoint is always available but not always shown in `/docs`, especially not
 when running in production. 
-The Swagger docs for `/agencyconf` can be seen on the MFDZ demo server. 
+The Swagger docs for `/users` can be seen on the MFDZ demo server.
 
 Permissions work this way
 - the admin is allowed to call all operations on all resources. Only the admin
-  can create new API-Keys by POSTing an `AgencyConf` JSON object to `/agencyconf`. 
+  can create new API-Keys by POSTing an `users` JSON object to `/users`.
 - API-Keys for agencies are allowed to POST/PUT/GET/DELETE their own 
   resources and GET some public resources.  
 

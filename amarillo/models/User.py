@@ -1,9 +1,10 @@
 from typing import Optional
 from pydantic import ConfigDict, BaseModel, Field
 
+class User(BaseModel):
+    #TODO: add attributes admin, permissions, fullname, email
 
-class AgencyConf(BaseModel):
-    agency_id: str = Field(
+    user_id: str = Field(
         description="ID of the agency that uses this token.",
         min_length=1,
         max_length=20,

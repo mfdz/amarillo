@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from amarillo.services.passwords import verify_password
 from amarillo.utils.container import container
 from amarillo.services.agencies import AgencyService
-from amarillo.services.agencyconf import AgencyConfService
+from amarillo.services.users import UserService
 from amarillo.models.Carpool import Agency
 
 from amarillo.services.secrets import secrets
@@ -38,13 +38,12 @@ async def verify_optional_api_key(X_API_Key: Optional[str] = Header(None)):
     return await verify_api_key(X_API_Key)
 
 def authenticate_agency(agency_id: str, password: str):
-    agency_conf_service : AgencyConfService = container['agencyconf']
-    agency_conf = agency_conf_service.agency_id_to_agency_conf.get(agency_id, None)
-    if not agency_conf:
+    user_service : UserService = container['users']
+    user_conf = user_service.user_id_to_user_conf.get(agency_id, None)
+    if not user_conf:
         return False
 
-    agency_password = agency_conf.password
-    if not verify_password(password, agency_password):
+    if not verify_password(password, user_conf.password):
         return False
     return agency_id
 
@@ -103,9 +102,9 @@ async def verify_admin(agency: str = Depends(get_current_agency)):
 # noinspection PyPep8Naming
 # X_API_Key is upper case for OpenAPI
 async def verify_api_key(X_API_Key: str = Header(...)):
-    agency_conf_service: AgencyConfService = container['agencyconf']
+    user_service: UserService = container['users']
 
-    return agency_conf_service.check_api_key(X_API_Key)
+    return user_service.check_api_key(X_API_Key)
 
 @router.post("/token")
 async def login_for_access_token(
