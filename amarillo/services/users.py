@@ -65,6 +65,7 @@ class UserService:
         logger.error(message)
         raise HTTPException(status_code=400, detail=message)
 
+    #TODO: fix duplicate None api key
     def add(self, user_conf: User):
 
         user_id = user_conf.user_id

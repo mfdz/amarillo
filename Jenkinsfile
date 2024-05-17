@@ -8,7 +8,7 @@ pipeline {
         DOCKER_REGISTRY_URL = 'https://git.gerhardt.io'
         OWNER = 'amarillo'
         IMAGE_NAME = 'amarillo'
-        AMARILLO_DISTRIBUTION = '0.2'
+        AMARILLO_DISTRIBUTION = '0.1'
         TAG = "${AMARILLO_DISTRIBUTION}.${BUILD_NUMBER}"
         PLUGINS = 'amarillo-metrics amarillo-enhancer amarillo-grfs-export'
         DEPLOY_WEBHOOK_URL = 'http://amarillo.mfdz.de:8888/mitanand'
