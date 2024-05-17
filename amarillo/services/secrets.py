@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class Secrets(BaseSettings):
     model_config = ConfigDict(extra='allow') # Allow plugins to add extra values
     ride2go_token: str = Field(None, env = 'RIDE2GO_TOKEN')
-    secret_key: str
+    secret_key: str = Field(None, env = 'SECRET_KEY')
 
 # Read if file exists, otherwise no error (it's in .gitignore)
 secrets = Secrets(_env_file='secrets', _env_file_encoding='utf-8')
