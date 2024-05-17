@@ -143,7 +143,7 @@ async def save_carpool(carpool, folder: str = 'data/carpool'):
 
 
 async def assert_agency_exists(agency_id: str):
-    agency_exists = os.path.exists(f"conf/agency/{agency_id}.json")
+    agency_exists = os.path.exists(f"data/agency/{agency_id}.json")
     if not agency_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

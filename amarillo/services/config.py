@@ -9,7 +9,7 @@ class Config(BaseSettings):
     ride2go_query_data: str
     env: str = 'DEV'
     graphhopper_base_url: str = 'https://api.mfdz.de/gh'
-    stop_sources_file: str = 'conf/stop_sources.json'
+    stop_sources_file: str = 'data/stop_sources.json'
     enhancer_url: str = 'http://localhost:8001'
 
     model_config = ConfigDict(extra='allow') # Allow plugins to add extra values
