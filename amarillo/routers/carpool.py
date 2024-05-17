@@ -5,13 +5,16 @@ import os.path
 import re
 from glob import glob
 
-from fastapi import APIRouter, Body, Header, HTTPException, status, Depends
+from fastapi import APIRouter, Body, Header, HTTPException, status, Depends, BackgroundTasks
+import requests
 from datetime import datetime
 
 from amarillo.models.Carpool import Carpool
 from amarillo.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
 from amarillo.tests.sampledata import examples
 
+from amarillo.services.config import config
+from amarillo.utils.utils import assert_folder_exists
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +22,19 @@ router = APIRouter(
     prefix="/carpool",
     tags=["carpool"]
 )
+
+#TODO: housekeeping for outdated trips
+
+def enhance_trip(carpool: Carpool):
+    response = requests.post(f"{config.enhancer_url}", carpool.model_dump_json())
+    enhanced_carpool = Carpool(**json.loads(response.content))
+
+    folder = f'data/enhanced/{carpool.agency}'
+    filename = f'{folder}/{carpool.id}.json'
+
+    assert_folder_exists(folder)
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(enhanced_carpool.model_dump_json())
 
 @router.post("/",
              operation_id="addcarpool",
@@ -31,7 +47,7 @@ router = APIRouter(
                      "description": "Agency does not exist"},
                  
                 })
-async def post_carpool(carpool: Carpool = Body(..., examples=examples),
+async def post_carpool(background_tasks: BackgroundTasks, carpool: Carpool = Body(..., examples=examples),
                        requesting_agency_id: str = Depends(verify_api_key)) -> Carpool:
     await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
 
@@ -39,6 +55,8 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
     await assert_agency_exists(carpool.agency)
 
     await store_carpool(carpool)
+
+    background_tasks.add_task(enhance_trip, carpool)
 
     return carpool
     
@@ -88,7 +106,11 @@ async def _delete_carpool(agency_id: str, carpool_id: str):
     # load and store, to receive pyinotify events and have file timestamp updated
     await save_carpool(cp, 'data/trash')
     logger.info(f"Saved carpool {agency_id}:{carpool_id} in trash.")
-    os.remove(f"data/carpool/{agency_id}/{carpool_id}.json")
+    try:
+        os.remove(f"data/carpool/{agency_id}/{carpool_id}.json")
+        os.remove(f"data/enhanced/{agency_id}/{carpool_id}.json", )
+    except FileNotFoundError:
+        pass
 
     try:
         from amarillo.plugins.metrics import trips_deleted_counter
