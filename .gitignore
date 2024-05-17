@@ -144,6 +144,7 @@ data/trash/
 data/gtfs/
 data/tmp
 data/users/**
+data/**
 
 #these files are under app/static but they get copied to the outside directory on startup
 logging.conf
