@@ -15,8 +15,11 @@ RUN \
 	# Remove package index obtained by `apt update`.
 	&& rm -rf /var/lib/apt/lists/*
 
-ENV ADMIN_TOKEN=''
-ENV RIDE2GO_TOKEN=''
+ ENV ADMIN_TOKEN=''
+ ENV RIDE2GO_TOKEN=''
+ ENV SECRET_KEY=''
+ ENV METRICS_USER=''
+ ENV METRICS_PASSWORD=''
 
 EXPOSE 80
 
