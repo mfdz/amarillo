@@ -2,7 +2,7 @@
 from amarillo.utils.container import container
 import logging
 
-from amarillo.services.agencyconf import AgencyConfService, agency_conf_directory
+from amarillo.services.users import UserService, user_conf_directory
 from amarillo.services.agencies import AgencyService
 from amarillo.services.regions import RegionService
 
@@ -27,12 +27,12 @@ def create_required_directories():
             assert_folder_exists(f'data/{subdir}/{agency_id}')
 
     # Agency configurations
-    assert_folder_exists(agency_conf_directory)
+    assert_folder_exists(user_conf_directory)
 
 
 def configure_services():
-    container['agencyconf'] = AgencyConfService()
-    logger.info("Loaded %d agency configuration(s)", len(container['agencyconf'].agency_id_to_agency_conf))
+    container['users'] = UserService()
+    logger.info("Loaded %d user configuration(s)", len(container['users'].user_id_to_user_conf))
 
     container['agencies'] = AgencyService()
     logger.info("Loaded %d agencies", len(container['agencies'].agencies))

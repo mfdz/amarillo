@@ -9,8 +9,7 @@ class RegionService:
 
     def __init__(self):
         self.regions: Dict[str, Region] = {}
-
-        for region_file_name in glob('conf/region/*.json'):
+        for region_file_name in glob('data/region/*.json'):
             with open(region_file_name) as region_file:
                 dict = json.load(region_file)
                 region = Region(**dict)

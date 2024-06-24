@@ -5,11 +5,12 @@ import os.path
 import re
 from glob import glob
 
-from fastapi import APIRouter, Body, Header, HTTPException, status, Depends
+from fastapi import APIRouter, Body, HTTPException, status, Depends
 from datetime import datetime
 
 from amarillo.models.Carpool import Carpool
-from amarillo.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
+from amarillo.models.User import User
+from amarillo.services.oauth2 import get_current_user, verify_permission
 from amarillo.tests.sampledata import examples
 
 
@@ -32,15 +33,13 @@ router = APIRouter(
                  
                 })
 async def post_carpool(carpool: Carpool = Body(..., examples=examples),
-                       requesting_agency_id: str = Depends(verify_api_key)) -> Carpool:
-    await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
+                       requesting_user: User = Depends(get_current_user)) -> Carpool:
+    verify_permission(f"{carpool.agency}:write", requesting_user)
 
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
 
-    await set_lastUpdated_if_unset(carpool)
-
-    await save_carpool(carpool)
+    await store_carpool(carpool)
 
     return carpool
     
@@ -55,7 +54,9 @@ async def post_carpool(carpool: Carpool = Body(..., examples=examples),
                 status.HTTP_404_NOT_FOUND: {"description": "Carpool not found"},
             },
             )
-async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(verify_api_key)) -> Carpool:
+async def get_carpool(agency_id: str, carpool_id: str, requesting_user: User = Depends(get_current_user)) -> Carpool:
+    verify_permission(f"{agency_id}:read", requesting_user)
+
     logger.info(f"Get trip {agency_id}:{carpool_id}.")
     await assert_agency_exists(agency_id)
     await assert_carpool_exists(agency_id, carpool_id)
@@ -74,8 +75,8 @@ async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(ve
                        "description": "Carpool or agency not found"},
                },
                )
-async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(verify_api_key)):
-    await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
+async def delete_carpool(agency_id: str, carpool_id: str, requesting_user: User = Depends(get_current_user)):
+    verify_permission(f"{agency_id}:write", requesting_user)
 
     logger.info(f"Delete trip {agency_id}:{carpool_id}.")
     await assert_agency_exists(agency_id)
@@ -92,9 +93,29 @@ async def _delete_carpool(agency_id: str, carpool_id: str):
     logger.info(f"Saved carpool {agency_id}:{carpool_id} in trash.")
     os.remove(f"data/carpool/{agency_id}/{carpool_id}.json")
 
+    try:
+        from amarillo.plugins.metrics import trips_deleted_counter
+        trips_deleted_counter.inc()
+    except ImportError:
+        pass
+    
+
 async def store_carpool(carpool: Carpool) -> Carpool:
+    carpool_exists = os.path.exists(f"data/carpool/{carpool.agency}/{carpool.id}.json")
+
     await set_lastUpdated_if_unset(carpool)
     await save_carpool(carpool)
+
+    try:
+        from amarillo.plugins.metrics import trips_created_counter, trips_updated_counter
+        if(carpool_exists):
+            # logger.info("Incrementing trips updated")
+            trips_updated_counter.inc()
+        else:
+            # logger.info("Incrementing trips created")
+            trips_created_counter.inc()
+    except ImportError:
+        pass
 
     return carpool
 
@@ -116,7 +137,7 @@ async def save_carpool(carpool, folder: str = 'data/carpool'):
 
 
 async def assert_agency_exists(agency_id: str):
-    agency_exists = os.path.exists(f"conf/agency/{agency_id}.json")
+    agency_exists = os.path.exists(f"data/agency/{agency_id}.json")
     if not agency_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

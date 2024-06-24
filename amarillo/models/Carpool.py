@@ -342,7 +342,22 @@ class Carpool(BaseModel):
                     "published.",
         examples=['A single date 2022-04-04 or a list of weekdays ["saturday", '
                 '"sunday"]'])
-
+    route_color: Optional[str] = Field(
+        None,
+        pattern='^([0-9A-Fa-f]{6})$',
+        description="Route color designation that matches public facing material. "
+                    "The color difference between route_color and route_text_color "
+                    "should provide sufficient contrast when viewed on a black and "
+                    "white screen.",
+        examples=["0039A6"])
+    route_text_color: Optional[str] = Field(
+        None,
+        pattern='^([0-9A-Fa-f]{6})$',
+        description="Legible color to use for text drawn against a background of "
+                    "route_color. The color difference between route_color and "
+                    "route_text_color should provide sufficient contrast when "
+                    "viewed on a black and white screen.",
+        examples=["D4D2D2"])
     path: Optional[LineString] = Field(
         None, description="Optional route geometry as json LineString.")
     

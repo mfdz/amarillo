@@ -5,7 +5,8 @@ from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from amarillo.models.Carpool import Carpool, Agency
-from amarillo.routers.agencyconf import verify_api_key, verify_admin_api_key, verify_permission_for_same_agency_or_admin
+from amarillo.models.User import User
+from amarillo.services.oauth2 import get_current_user, verify_permission
 # TODO should move this to service
 from amarillo.routers.carpool import store_carpool, delete_agency_carpools_older_than
 from amarillo.services.agencies import AgencyService
@@ -32,7 +33,7 @@ router = APIRouter(
                 status.HTTP_404_NOT_FOUND: {"description": "Agency not found"},
             },
             )
-async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key)) -> Agency:
+async def get_agency(agency_id: str, requesting_user: User = Depends(get_current_user)) -> Agency:
     agencies: AgencyService = container['agencies']
     agency = agencies.get_agency(agency_id)
     agency_exists = agency is not None
@@ -61,8 +62,8 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
                  status.HTTP_500_INTERNAL_SERVER_ERROR: {
                      "description": "Import error"}
              })
-async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_key)) -> List[Carpool]:
-    await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
+async def sync(agency_id: str, requesting_user: User = Depends(get_current_user)) -> List[Carpool]:
+    verify_permission(f"{agency_id}:sync")
 
     if agency_id == "ride2go":
         importer = Ride2GoImporter()
