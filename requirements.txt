@@ -1,7 +1,6 @@
-amarillo-metrics==0.0.6
-fastapi[all]==0.109.0
+fastapi[all]==0.111.0
 geopandas==0.14
-uvicorn[standard]==0.23.2
+uvicorn[standard]~=0.29.0
 pydantic[dotenv]==2.4.2
 protobuf==3.20.3
 rtree==1.1.0
@@ -18,3 +17,4 @@ watchdog==3.0.0
 python-jose[cryptography]
 bcrypt==4.0.1
 passlib[bcrypt]
+idna>=3.7

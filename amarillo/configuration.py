@@ -42,6 +42,7 @@ def configure_services():
 
     create_required_directories()
 
+
 def configure_admin_token():
     if config.admin_token is None:
         message = "ADMIN_TOKEN environment variable not set"
