@@ -1,17 +1,17 @@
 pipeline {
-    agent any
+    agent { label 'builtin' }
     environment {
         GITEA_CREDS = credentials('AMARILLO-JENKINS-GITEA-USER')
-        PYPI_CREDS = credentials('AMARILLO-JENKINS-PYPI-USER')
         TWINE_REPO_URL = "https://git.gerhardt.io/api/packages/amarillo/pypi"
         PLUGINS_REPO_URL = "git.gerhardt.io/api/packages/amarillo/pypi/simple"
-        DOCKER_REGISTRY_URL = 'https://git.gerhardt.io'
+        DOCKER_REGISTRY = 'git.gerhardt.io'
+        DERIVED_DOCKERFILE = 'standard.Dockerfile'
         OWNER = 'amarillo'
+        BASE_IMAGE_NAME = 'amarillo-base'
         IMAGE_NAME = 'amarillo'
-        AMARILLO_DISTRIBUTION = '0.2'
-        TAG = "${AMARILLO_DISTRIBUTION}.${BUILD_NUMBER}"
-        PLUGINS = 'amarillo-metrics amarillo-enhancer amarillo-grfs-export'
-        DEPLOY_WEBHOOK_URL = 'http://amarillo.mfdz.de:8888/mitanand'
+        AMARILLO_DISTRIBUTION = '0.3'
+        TAG = "${AMARILLO_DISTRIBUTION}.${BUILD_NUMBER}${env.BRANCH_NAME == 'main' ? '' : '-' + env.BRANCH_NAME}"
+        DEPLOY_WEBHOOK_URL = "http://amarillo.mfdz.de:8888/${env.BRANCH_NAME}" 
         DEPLOY_SECRET = credentials('AMARILLO-JENKINS-DEPLOY-SECRET')
     }
     stages {
@@ -42,35 +42,56 @@ pipeline {
                 sh 'python3 -m twine upload --skip-existing --verbose --repository-url $TWINE_REPO_URL --username $GITEA_CREDS_USR --password $GITEA_CREDS_PSW ./dist/*'              
             }
         }
-        stage('Publish package to PyPI') {
+        stage('Build base docker image') {
             when {
-                branch 'release'
-            }
-            steps {
-                sh 'python3 -m twine upload --verbose --username $PYPI_CREDS_USR --password $PYPI_CREDS_PSW ./dist/*'              
-            }
-        }
-        stage('Build Mitanand docker image') {
-            when {
-                branch 'mitanand'
+                isDeployBranch()
             }
             steps {
                 echo 'Building image'
                 script {
-                    docker.build("${OWNER}/${IMAGE_NAME}:${TAG}",
-                    //--no-cache to make sure plugins are updated
-                     "--no-cache --build-arg='PACKAGE_REGISTRY_URL=${PLUGINS_REPO_URL}' --build-arg='PLUGINS=${PLUGINS}' --secret id=AMARILLO_REGISTRY_CREDENTIALS,env=GITEA_CREDS .")
+                    docker.build("${OWNER}/${BASE_IMAGE_NAME}:${TAG}")
                 }
             }
         }
-        stage('Push image to container registry') {
+        stage('Push base image to container registry') {
             when {
-                branch 'mitanand'
+                isDeployBranch()
             }
             steps {
                 echo 'Pushing image to registry'
                 script {
-                    docker.withRegistry(DOCKER_REGISTRY_URL, 'AMARILLO-JENKINS-GITEA-USER'){
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'AMARILLO-JENKINS-GITEA-USER'){
+                        def image = docker.image("${OWNER}/${BASE_IMAGE_NAME}:${TAG}")
+                        image.push()
+                        image.push('latest')
+                    }
+                }
+            }
+        }
+        stage('Build derived docker image') {
+            when {
+                isDeployBranch()
+            }
+            steps {
+                echo 'Building image'
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'AMARILLO-JENKINS-GITEA-USER'){
+                        docker.build("${OWNER}/${IMAGE_NAME}:${TAG}",
+                        //--no-cache to make sure plugins are updated
+                        "-f ${DERIVED_DOCKERFILE} --no-cache --build-arg='PACKAGE_REGISTRY_URL=${PLUGINS_REPO_URL}' --build-arg='DOCKER_REGISTRY=${DOCKER_REGISTRY}' --secret id=AMARILLO_REGISTRY_CREDENTIALS,env=GITEA_CREDS .")
+                    }
+
+                }
+            }
+        }
+        stage('Push derived image to container registry') {
+            when {
+                isDeployBranch()
+            }
+            steps {
+                echo 'Pushing image to registry'
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'AMARILLO-JENKINS-GITEA-USER'){
                         def image = docker.image("${OWNER}/${IMAGE_NAME}:${TAG}")
                         image.push()
                         image.push('latest')
@@ -80,7 +101,7 @@ pipeline {
         }
         stage('Notify CD script') {
             when {
-                branch 'mitanand'
+                isDeployBranch()
             }
             steps {
                 echo 'Triggering deploy webhook'
@@ -92,4 +113,8 @@ pipeline {
             }
         }
     }
+}
+
+def isDeployBranch() {
+    return anyOf { branch 'main'; branch 'dev'; branch 'mitanand' }
 }
