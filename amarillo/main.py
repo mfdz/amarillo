@@ -1,20 +1,26 @@
 import logging.config
-
-from amarillo.configuration import configure_services, configure_admin_token
-from amarillo.services.config import config
-
-logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
-logger = logging.getLogger("main")
-
+import importlib
+import pkgutil
 import uvicorn
 import mimetypes
 from starlette.staticfiles import StaticFiles
 
-from amarillo.routers import carpool, agency, agencyconf, region
+from amarillo.utils.utils import copy_static_files
+#this has to run before app.configuration is imported, otherwise we get validation error for config because the config file is not copied yet
+copy_static_files(["data", "static", "templates", "logging.conf", "config"]) 
+
+import amarillo.plugins
+from amarillo.services.config import config
+from amarillo.configuration import configure_services, configure_admin_token
+from amarillo.routers import carpool, agency, users, region
+import amarillo.services.oauth2 as oauth2
 from fastapi import FastAPI
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
 from amarillo.views import home
+
+logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logger = logging.getLogger("main")
 
 logger.info("Hello Amarillo!")
 
@@ -75,14 +81,35 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
 
 app.include_router(carpool.router)
 app.include_router(agency.router)
-app.include_router(agencyconf.router)
+app.include_router(users.router)
 app.include_router(region.router)
+app.include_router(oauth2.router)
 
+
+def iter_namespace(ns_pkg):
+     # Source: https://packaging.python.org/guides/creating-and-discovering-plugins/
+    return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
+
+def load_plugins():
+    discovered_plugins = {
+        name: importlib.import_module(name)
+        for finder, name, ispkg
+        in iter_namespace(amarillo.plugins)
+    }
+    logger.info(f"Discovered plugins: {list(discovered_plugins.keys())}")
+
+    for name, module in discovered_plugins.items():
+        if hasattr(module, "setup"):
+            logger.info(f"Running setup function for {name}")
+            module.setup(app)
+
+        else: logger.info(f"Did not find setup function for {name}")
 
 def configure():
     configure_admin_token()
     configure_services()
     configure_routing()
+    load_plugins()
 
 
 def configure_routing():

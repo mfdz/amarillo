@@ -8,7 +8,9 @@ class Config(BaseSettings):
     ride2go_query_data: str
     env: str = 'DEV'
     graphhopper_base_url: str = 'https://api.mfdz.de/gh'
-    stop_sources_file: str = 'conf/stop_sources.json'
+    stop_sources_file: str = 'data/stop_sources.json'
+
+    # not sure if this is still needed here
     max_age_carpool_offers_in_days: int = 180
 
 config = Config(_env_file='config', _env_file_encoding='utf-8')

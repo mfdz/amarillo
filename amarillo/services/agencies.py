@@ -12,8 +12,7 @@ class AgencyService:
 
     def __init__(self):
         self.agencies: Dict[str, Agency] = {}
-
-        for agency_file_name in glob('conf/agency/*.json'):
+        for agency_file_name in glob('data/agency/*.json'):
             with open(agency_file_name) as agency_file:
                 dict = json.load(agency_file)
                 agency = Agency(**dict)
