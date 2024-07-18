@@ -12,7 +12,7 @@ from datetime import datetime
 from amarillo.models.Carpool import Carpool
 from amarillo.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
 from amarillo.tests.sampledata import examples
-
+from amarillo.services.hooks import run_on_create, run_on_delete
 from amarillo.services.config import config
 from amarillo.utils.utils import assert_folder_exists
 
@@ -50,6 +50,8 @@ def enhance_trip(carpool: Carpool):
 async def post_carpool(background_tasks: BackgroundTasks, carpool: Carpool = Body(..., examples=examples),
                        requesting_agency_id: str = Depends(verify_api_key)) -> Carpool:
     await verify_permission_for_same_agency_or_admin(carpool.agency, requesting_agency_id)
+
+    background_tasks.add_task(run_on_create, carpool)
 
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
@@ -90,12 +92,14 @@ async def get_carpool(agency_id: str, carpool_id: str, api_key: str = Depends(ve
                        "description": "Carpool or agency not found"},
                },
                )
-async def delete_carpool(agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(verify_api_key)):
+async def delete_carpool(background_tasks: BackgroundTasks, agency_id: str, carpool_id: str, requesting_agency_id: str = Depends(verify_api_key)):
     await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
     logger.info(f"Delete trip {agency_id}:{carpool_id}.")
     await assert_agency_exists(agency_id)
     await assert_carpool_exists(agency_id, carpool_id)
+    cp = await load_carpool(agency_id, carpool_id)
+    background_tasks.add_task(run_on_delete, cp)
     
     return await _delete_carpool(agency_id, carpool_id)
 
@@ -111,12 +115,6 @@ async def _delete_carpool(agency_id: str, carpool_id: str):
         os.remove(f"data/enhanced/{agency_id}/{carpool_id}.json", )
     except FileNotFoundError:
         pass
-
-    try:
-        from amarillo.plugins.metrics import trips_deleted_counter
-        trips_deleted_counter.inc()
-    except ImportError:
-        pass
     
 
 async def store_carpool(carpool: Carpool) -> Carpool:
@@ -124,17 +122,6 @@ async def store_carpool(carpool: Carpool) -> Carpool:
 
     await set_lastUpdated_if_unset(carpool)
     await save_carpool(carpool)
-
-    try:
-        from amarillo.plugins.metrics import trips_created_counter, trips_updated_counter
-        if(carpool_exists):
-            # logger.info("Incrementing trips updated")
-            trips_updated_counter.inc()
-        else:
-            # logger.info("Incrementing trips created")
-            trips_created_counter.inc()
-    except ImportError:
-        pass
 
     return carpool
 
@@ -176,4 +163,6 @@ async def delete_agency_carpools_older_than(agency_id, timestamp):
         if os.path.getmtime(carpool_file_name) < timestamp:
             m = re.search(r'([a-zA-Z0-9_-]+)\.json$', carpool_file_name)
             # TODO log deletion
+            cp = await load_carpool(agency_id, m[1])
+            run_on_delete(cp)
             await _delete_carpool(agency_id, m[1])
