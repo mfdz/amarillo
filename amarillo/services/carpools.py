@@ -37,11 +37,6 @@ class CarpoolService():
             if cp and self.is_outdated(cp):
                 logger.info("Purge outdated offer %s", key)
                 self.delete(cp.agency, cp.id)
-                try:
-                    from amarillo.plugins.metrics import trips_deleted_counter
-                    trips_deleted_counter.inc()
-                except ImportError:
-                    pass
 
     def get(self, agency_id: str, carpool_id: str):
         return self.carpools.get(f"{agency_id}:{carpool_id}")
