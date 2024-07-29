@@ -65,7 +65,6 @@ class UserService:
         logger.error(message)
         raise HTTPException(status_code=400, detail=message)
 
-    #TODO: fix duplicate None api key
     def add(self, user_conf: User):
 
         user_id = user_conf.user_id
@@ -94,7 +93,8 @@ class UserService:
             f.write(user_conf.json())
 
         self.user_id_to_user_conf[user_id] = user_conf
-        self.api_key_to_user_id[api_key] = user_id
+        if api_key:
+            self.api_key_to_user_id[api_key] = user_id
 
         logger.info(f"Added configuration for user {user_id}.")
 
