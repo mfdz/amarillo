@@ -35,5 +35,9 @@ COPY ./amarillo/static/config /app
 COPY ./amarillo/static/logging.conf /app
 COPY ./amarillo/static/data /app/data
 
+# Create the error.log, otherwise we get a permission error when we try to write to it
+RUN touch /app/error.log
+RUN chmod 777 /app/error.log
+
 # This image inherits uvicorn-gunicorn's CMD. If you'd like to start uvicorn, use this instead
 # CMD ["uvicorn", "amarillo.main:app", "--host", "0.0.0.0", "--port", "8000"]
