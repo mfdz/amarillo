@@ -18,15 +18,11 @@ RUN \
  ENV ADMIN_TOKEN=''
  ENV RIDE2GO_TOKEN=''
  ENV SECRET_KEY=''
- ENV METRICS_USER=''
- ENV METRICS_PASSWORD=''
 
 EXPOSE 80
 
-ARG PLUGINS
-
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt ${PLUGINS}
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 # set MODULE_NAME explicitly
 ENV MODULE_NAME=amarillo.main
@@ -38,6 +34,10 @@ COPY ./amarillo/static/templates /app/templates
 COPY ./amarillo/static/config /app
 COPY ./amarillo/static/logging.conf /app
 COPY ./amarillo/static/data /app/data
+
+# Create the error.log, otherwise we get a permission error when we try to write to it
+RUN touch /app/error.log
+RUN chmod 777 /app/error.log
 
 # This image inherits uvicorn-gunicorn's CMD. If you'd like to start uvicorn, use this instead
 # CMD ["uvicorn", "amarillo.main:app", "--host", "0.0.0.0", "--port", "8000"]

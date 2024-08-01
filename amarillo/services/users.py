@@ -93,7 +93,8 @@ class UserService:
             f.write(user_conf.json())
 
         self.user_id_to_user_conf[user_id] = user_conf
-        self.api_key_to_user_id[api_key] = user_id
+        if api_key:
+            self.api_key_to_user_id[api_key] = user_id
 
         logger.info(f"Added configuration for user {user_id}.")
 

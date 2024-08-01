@@ -9,6 +9,7 @@ class Config(BaseSettings):
     env: str = 'DEV'
     graphhopper_base_url: str = 'https://api.mfdz.de/gh'
     stop_sources_file: str = 'data/stop_sources.json'
+    enhancer_url: str = 'http://localhost:8001'
 
     # not sure if this is still needed here
     max_age_carpool_offers_in_days: int = 180

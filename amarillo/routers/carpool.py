@@ -5,14 +5,17 @@ import os.path
 import re
 from glob import glob
 
-from fastapi import APIRouter, Body, HTTPException, status, Depends
+from fastapi import APIRouter, Body, HTTPException, status, Depends, BackgroundTasks
+import requests
 from datetime import datetime
 
 from amarillo.models.Carpool import Carpool
 from amarillo.models.User import User
 from amarillo.services.oauth2 import get_current_user, verify_permission
 from amarillo.tests.sampledata import examples
-
+from amarillo.services.hooks import run_on_create, run_on_delete
+from amarillo.services.config import config
+from amarillo.utils.utils import assert_folder_exists
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +23,20 @@ router = APIRouter(
     prefix="/carpool",
     tags=["carpool"]
 )
+
+#TODO: housekeeping for outdated trips
+
+def enhance_trip(carpool: Carpool):
+    response = requests.post(f"{config.enhancer_url}", carpool.model_dump_json())
+    enhanced_carpool = Carpool(**json.loads(response.content))
+
+    #TODO: use data/enhanced directory
+    folder = f'data/enhanced/{carpool.agency}'
+    filename = f'{folder}/{carpool.id}.json'
+
+    assert_folder_exists(folder)
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(enhanced_carpool.model_dump_json())
 
 @router.post("/",
              operation_id="addcarpool",
@@ -32,14 +49,18 @@ router = APIRouter(
                      "description": "Agency does not exist"},
                  
                 })
-async def post_carpool(carpool: Carpool = Body(..., examples=examples),
+async def post_carpool(background_tasks: BackgroundTasks, carpool: Carpool = Body(..., examples=examples),
                        requesting_user: User = Depends(get_current_user)) -> Carpool:
     verify_permission(f"{carpool.agency}:write", requesting_user)
+
+    background_tasks.add_task(run_on_create, carpool)
 
     logger.info(f"POST trip {carpool.agency}:{carpool.id}.")
     await assert_agency_exists(carpool.agency)
 
     await store_carpool(carpool)
+
+    background_tasks.add_task(enhance_trip, carpool)
 
     return carpool
     
@@ -75,12 +96,14 @@ async def get_carpool(agency_id: str, carpool_id: str, requesting_user: User = D
                        "description": "Carpool or agency not found"},
                },
                )
-async def delete_carpool(agency_id: str, carpool_id: str, requesting_user: User = Depends(get_current_user)):
+async def delete_carpool(background_tasks: BackgroundTasks, agency_id: str, carpool_id: str, requesting_user: User = Depends(get_current_user)):
     verify_permission(f"{agency_id}:write", requesting_user)
 
     logger.info(f"Delete trip {agency_id}:{carpool_id}.")
     await assert_agency_exists(agency_id)
     await assert_carpool_exists(agency_id, carpool_id)
+    cp = await load_carpool(agency_id, carpool_id)
+    background_tasks.add_task(run_on_delete, cp)
     
     return await _delete_carpool(agency_id, carpool_id)
 
@@ -91,12 +114,10 @@ async def _delete_carpool(agency_id: str, carpool_id: str):
     # load and store, to receive pyinotify events and have file timestamp updated
     await save_carpool(cp, 'data/trash')
     logger.info(f"Saved carpool {agency_id}:{carpool_id} in trash.")
-    os.remove(f"data/carpool/{agency_id}/{carpool_id}.json")
-
     try:
-        from amarillo.plugins.metrics import trips_deleted_counter
-        trips_deleted_counter.inc()
-    except ImportError:
+        os.remove(f"data/carpool/{agency_id}/{carpool_id}.json")
+        os.remove(f"data/enhanced/{agency_id}/{carpool_id}.json", )
+    except FileNotFoundError:
         pass
     
 
@@ -105,17 +126,6 @@ async def store_carpool(carpool: Carpool) -> Carpool:
 
     await set_lastUpdated_if_unset(carpool)
     await save_carpool(carpool)
-
-    try:
-        from amarillo.plugins.metrics import trips_created_counter, trips_updated_counter
-        if(carpool_exists):
-            # logger.info("Incrementing trips updated")
-            trips_updated_counter.inc()
-        else:
-            # logger.info("Incrementing trips created")
-            trips_created_counter.inc()
-    except ImportError:
-        pass
 
     return carpool
 
@@ -157,4 +167,6 @@ async def delete_agency_carpools_older_than(agency_id, timestamp):
         if os.path.getmtime(carpool_file_name) < timestamp:
             m = re.search(r'([a-zA-Z0-9_-]+)\.json$', carpool_file_name)
             # TODO log deletion
+            cp = await load_carpool(agency_id, m[1])
+            run_on_delete(cp)
             await _delete_carpool(agency_id, m[1])
