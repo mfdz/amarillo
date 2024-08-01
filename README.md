@@ -9,9 +9,7 @@ An Amarillo is a [yellow-dressed person](https://www.dreamstime.com/sancti-spiri
 - Python 3.9.2 with pip
 - python3-venv
 
-Create a virtual environment `python3 -m venv venv`.
-
-Activate the environment and install the dependencies `pip install -r requirements.txt`.
+Create a virtual environment `python3 -m venv venv`. Activate the environment with `source venv/bin/activate` and install the dependencies `pip install -r requirements.txt`.
 
 Run `uvicorn amarillo.main:app`. 
 
@@ -21,6 +19,8 @@ In development, you can use `--reload`.
 
 - `env`
 - `ADMIN_TOKEN`
+
+E.g. set the environment variable like this: `export ADMIN_TOKEN=YOUR_SECRET_TOKEN_HERE`.
 
 ## Security
 
@@ -38,7 +38,7 @@ Permissions work this way
 - the admin is allowed to call all operations on all resources. Only the admin
   can create new API-Keys by POSTing an `users` JSON object to `/users`.
 - API-Keys for agencies are allowed to POST/PUT/GET/DELETE their own 
-  resources and GET some public resources.  
+  resources and GET some public resources.
 
 ## Development
 
