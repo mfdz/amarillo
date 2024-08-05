@@ -2,6 +2,7 @@ pipeline {
     agent { label 'builtin' }
     environment {
         GITEA_CREDS = credentials('AMARILLO-JENKINS-GITEA-USER')
+        PYPI_CREDS = credentials('AMARILLO-JENKINS-PYPI-USER')
         TWINE_REPO_URL = "https://git.gerhardt.io/api/packages/amarillo/pypi"
         PLUGINS_REPO_URL = "git.gerhardt.io/api/packages/amarillo/pypi/simple"
         DOCKER_REGISTRY = 'git.gerhardt.io'
@@ -11,7 +12,7 @@ pipeline {
         IMAGE_NAME = 'amarillo'
         AMARILLO_DISTRIBUTION = '0.3'
         TAG = "${AMARILLO_DISTRIBUTION}.${BUILD_NUMBER}${env.BRANCH_NAME == 'main' ? '' : '-' + env.BRANCH_NAME}"
-        DEPLOY_WEBHOOK_URL = "http://amarillo.mfdz.de:8888/${env.BRANCH_NAME}" 
+        DEPLOY_WEBHOOK_URL = "http://amarillo.mfdz.de:8888/dev"
         DEPLOY_SECRET = credentials('AMARILLO-JENKINS-DEPLOY-SECRET')
     }
     stages {
@@ -42,10 +43,15 @@ pipeline {
                 sh 'python3 -m twine upload --skip-existing --verbose --repository-url $TWINE_REPO_URL --username $GITEA_CREDS_USR --password $GITEA_CREDS_PSW ./dist/*'              
             }
         }
-        stage('Build base docker image') {
+        stage('Publish package to PyPI') {
             when {
-                isDeployBranch()
+                branch 'main'
             }
+            steps {
+                sh 'python3 -m twine upload --verbose --username $PYPI_CREDS_USR --password $PYPI_CREDS_PSW ./dist/*'              
+            }
+        }
+        stage('Build base docker image') {
             steps {
                 echo 'Building image'
                 script {
@@ -54,9 +60,6 @@ pipeline {
             }
         }
         stage('Push base image to container registry') {
-            when {
-                isDeployBranch()
-            }
             steps {
                 echo 'Pushing image to registry'
                 script {
@@ -69,9 +72,6 @@ pipeline {
             }
         }
         stage('Build derived docker image') {
-            when {
-                isDeployBranch()
-            }
             steps {
                 echo 'Building image'
                 script {
@@ -85,9 +85,6 @@ pipeline {
             }
         }
         stage('Push derived image to container registry') {
-            when {
-                isDeployBranch()
-            }
             steps {
                 echo 'Pushing image to registry'
                 script {
@@ -101,7 +98,9 @@ pipeline {
         }
         stage('Notify CD script') {
             when {
-                isDeployBranch()
+                not {
+                    branch 'main'
+                }
             }
             steps {
                 echo 'Triggering deploy webhook'
@@ -113,8 +112,4 @@ pipeline {
             }
         }
     }
-}
-
-def isDeployBranch() {
-    return anyOf { branch 'main'; branch 'dev'; branch 'mitanand' }
 }
