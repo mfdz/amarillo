@@ -1,6 +1,6 @@
 [project]
 name = "amarillo"
-version = "0.0.17a1"
+version = "2.0.0"
 description = "Aggregates and enhances carpooling-offers and publishes them as GTFS(-RT)"
 readme = "README.md"
 license = {file = "LICENSE"}
