@@ -13,3 +13,6 @@ ENV METRICS_PASSWORD=''
 # RUN pip install $PLUGINS
 
 RUN pip install --no-cache-dir --upgrade --extra-index-url ${PACKAGE_REGISTRY_URL} ${PLUGINS}
+
+RUN useradd amarillo
+USER amarillo
