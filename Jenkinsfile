@@ -4,7 +4,8 @@ pipeline {
         GITEA_CREDS = credentials('AMARILLO-JENKINS-GITEA-USER')
         PYPI_CREDS = credentials('AMARILLO-JENKINS-PYPI-USER')
         TWINE_REPO_URL = "https://git.gerhardt.io/api/packages/amarillo/pypi"
-        PLUGINS_REPO_URL = "git.gerhardt.io/api/packages/amarillo/pypi/simple"
+        PLUGINS_REPO_URL = "https://git.gerhardt.io/api/packages/amarillo/pypi/simple"
+        PYPI_REPO_URL = "https://pypi.org/simple"
         DOCKER_REGISTRY = 'git.gerhardt.io'
         DERIVED_DOCKERFILE = 'standard.Dockerfile'
         OWNER = 'amarillo'
@@ -78,7 +79,7 @@ pipeline {
                     docker.withRegistry("https://${DOCKER_REGISTRY}", 'AMARILLO-JENKINS-GITEA-USER'){
                         docker.build("${OWNER}/${IMAGE_NAME}:${TAG}",
                         //--no-cache to make sure plugins are updated
-                        "-f ${DERIVED_DOCKERFILE} --no-cache --build-arg='PACKAGE_REGISTRY_URL=${PLUGINS_REPO_URL}' --build-arg='DOCKER_REGISTRY=${DOCKER_REGISTRY}' --secret id=AMARILLO_REGISTRY_CREDENTIALS,env=GITEA_CREDS .")
+                        "-f ${DERIVED_DOCKERFILE} --no-cache --build-arg='PACKAGE_REGISTRY_URL=${env.BRANCH_NAME == 'main' ? env.PYPI_REPO_URL : env.PLUGINS_REPO_URL}' --build-arg='DOCKER_REGISTRY=${DOCKER_REGISTRY}' --secret id=AMARILLO_REGISTRY_CREDENTIALS,env=GITEA_CREDS .")
                     }
 
                 }
