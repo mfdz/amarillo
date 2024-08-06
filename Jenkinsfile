@@ -97,20 +97,20 @@ pipeline {
                 }
             }
         }
-        stage('Notify CD script') {
-            when {
-                not {
-                    branch 'main'
-                }
-            }
-            steps {
-                echo 'Triggering deploy webhook'
-                script {
-                    def response = httpRequest contentType: 'APPLICATION_JSON',
-                        httpMode: 'POST', requestBody: '{}', authentication: 'AMARILLO-JENKINS-DEPLOY-SECRET',
-                        url: "${DEPLOY_WEBHOOK_URL}"
-                }
-            }
-        }
+        // stage('Notify CD script') {
+        //     when {
+        //         not {
+        //             branch 'main'
+        //         }
+        //     }
+        //     steps {
+        //         echo 'Triggering deploy webhook'
+        //         script {
+        //             def response = httpRequest contentType: 'APPLICATION_JSON',
+        //                 httpMode: 'POST', requestBody: '{}', authentication: 'AMARILLO-JENKINS-DEPLOY-SECRET',
+        //                 url: "${DEPLOY_WEBHOOK_URL}"
+        //         }
+        //     }
+        // }
     }
 }
