@@ -11,8 +11,8 @@ pipeline {
         OWNER = 'amarillo'
         BASE_IMAGE_NAME = 'amarillo-base'
         IMAGE_NAME = 'amarillo'
-        AMARILLO_DISTRIBUTION = '0.3'
-        TAG = "${AMARILLO_DISTRIBUTION}.${BUILD_NUMBER}${env.BRANCH_NAME == 'main' ? '' : '-' + env.BRANCH_NAME}"
+        AMARILLO_DISTRIBUTION = '2.0.0'
+        TAG = "${AMARILLO_DISTRIBUTION}${env.BRANCH_NAME == 'main' ? '' : '-' + env.BRANCH_NAME}-${BUILD_NUMBER}"
         DEPLOY_WEBHOOK_URL = "http://amarillo.mfdz.de:8888/dev"
         DEPLOY_SECRET = credentials('AMARILLO-JENKINS-DEPLOY-SECRET')
     }
