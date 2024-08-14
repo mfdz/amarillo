@@ -27,7 +27,7 @@ router = APIRouter(
 
 def enhance_trip(carpool: Carpool):
     try:
-        response = requests.post(f"{config.enhancer_url}", carpool.model_dump_json())
+        response = requests.post(f"{config.enhancer_url}", carpool.model_dump_json().encode('utf-8'))
         response.raise_for_status()
         enhanced_carpool = Carpool(**json.loads(response.content))
 
@@ -38,7 +38,7 @@ def enhance_trip(carpool: Carpool):
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(enhanced_carpool.model_dump_json())
     except Exception as e:
-        logger.error(f"Error during call to enhancer: {e}")
+        logger.error(f"Error enhancing trip '{carpool.id}': {e}")
 
 
 @router.post("/",
