@@ -26,15 +26,20 @@ router = APIRouter(
 #TODO: housekeeping for outdated trips
 
 def enhance_trip(carpool: Carpool):
-    response = requests.post(f"{config.enhancer_url}", carpool.model_dump_json())
-    enhanced_carpool = Carpool(**json.loads(response.content))
+    try:
+        response = requests.post(f"{config.enhancer_url}", carpool.model_dump_json())
+        response.raise_for_status()
+        enhanced_carpool = Carpool(**json.loads(response.content))
 
-    folder = f'data/enhanced/{carpool.agency}'
-    filename = f'{folder}/{carpool.id}.json'
+        folder = f'data/enhanced/{carpool.agency}'
+        filename = f'{folder}/{carpool.id}.json'
 
-    assert_folder_exists(folder)
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(enhanced_carpool.model_dump_json())
+        assert_folder_exists(folder)
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(enhanced_carpool.model_dump_json())
+    except Exception as e:
+        logger.error(f"Error during call to enhancer: {e}")
+
 
 @router.post("/",
              operation_id="addcarpool",
