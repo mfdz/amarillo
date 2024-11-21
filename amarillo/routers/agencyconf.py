@@ -36,7 +36,9 @@ async def verify_admin_api_key(X_API_Key: str = Header(...)):
 async def verify_api_key(X_API_Key: str = Header(...)):
     agency_conf_service: AgencyConfService = container['agencyconf']
 
-    return agency_conf_service.check_api_key(X_API_Key)
+    agency_id = agency_conf_service.check_api_key(X_API_Key)
+    logger.info(f"API key used: {agency_id}")
+    return agency_id
 
 # TODO Return code 403 Unauthoized (in response_status_codes as well...)
 async def verify_permission_for_same_agency_or_admin(agency_id_in_path_or_body, agency_id_from_api_key):
