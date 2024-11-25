@@ -113,7 +113,7 @@ pipeline {
                 }
             }
         }
-        stage('Push derived image to container registry') {
+        stage('Push mitanand image to container registry') {
             steps {
                 echo 'Pushing image to registry'
                 script {
