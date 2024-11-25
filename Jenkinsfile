@@ -8,9 +8,11 @@ pipeline {
         PYPI_REPO_URL = "https://pypi.org/simple"
         DOCKER_REGISTRY = 'git.gerhardt.io'
         DERIVED_DOCKERFILE = 'standard.Dockerfile'
+        MITANAND_DOCKERFILE = 'mitanand.Dockerfile'
         OWNER = 'amarillo'
         BASE_IMAGE_NAME = 'amarillo-base'
         IMAGE_NAME = 'amarillo'
+        MITANAND_IMAGE_NAME = 'amarillo-mitanand'
         AMARILLO_DISTRIBUTION = '2.0.0'
         TAG = "${AMARILLO_DISTRIBUTION}${env.BRANCH_NAME == 'main' ? '' : '-' + env.BRANCH_NAME}-${BUILD_NUMBER}"
         DEPLOY_WEBHOOK_URL = "http://amarillo.mfdz.de:8888/dev"
@@ -91,6 +93,32 @@ pipeline {
                 script {
                     docker.withRegistry("https://${DOCKER_REGISTRY}", 'AMARILLO-JENKINS-GITEA-USER'){
                         def image = docker.image("${OWNER}/${IMAGE_NAME}:${TAG}")
+                        image.push()
+                        image.push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Build mitanand docker image') {
+            steps {
+                echo 'Building image'
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'AMARILLO-JENKINS-GITEA-USER'){
+                        docker.build("${OWNER}/${MITANAND_IMAGE_NAME}:${TAG}",
+                        //--no-cache to make sure plugins are updated
+                        "-f ${MITANAND_DOCKERFILE} --no-cache --build-arg='PACKAGE_REGISTRY_URL=${env.BRANCH_NAME == 'main' ? env.PYPI_REPO_URL : env.PLUGINS_REPO_URL}' --build-arg='DOCKER_REGISTRY=${DOCKER_REGISTRY}' --secret id=AMARILLO_REGISTRY_CREDENTIALS,env=GITEA_CREDS .")
+                    }
+
+                }
+            }
+        }
+        stage('Push derived image to container registry') {
+            steps {
+                echo 'Pushing image to registry'
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'AMARILLO-JENKINS-GITEA-USER'){
+                        def image = docker.image("${OWNER}/${MITANAND_IMAGE_NAME}:${TAG}")
                         image.push()
                         image.push('latest')
                     }
