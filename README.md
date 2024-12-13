@@ -54,6 +54,10 @@ $ protoc --proto_path=. --python_out=../services/gtfsrt gtfs-realtime.proto real
 $ sed 's/import gtfs_realtime_pb2/import amarillo.services.gtfsrt.gtfs_realtime_pb2/g' ../services/gtfsrt/realtime_extension_pb2.py | sponge ../services/gtfsrt/realtime_extension_pb2.py
 ```
 
+### Develop Amarillo and its plugins together
+
+To the develop Amarillo and its plugins concurrently, clone this repo and all of the repos you would like to make changes to. Install the local version of the plugin(s) into the virtual environment, simply using `pip install /path/to/plugin`, or `pip install -e /path/to/plugin` if your environment supports editable installs.
+
 ## Testing
 
 In the top directory, run `pytest amarillo/tests`.
