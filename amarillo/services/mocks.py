@@ -11,7 +11,7 @@ mock_added = {
       '[transit_realtime.trip_descriptor]': { 
         'routeUrl' : 'http://myurl',
         'agencyId' : 'mifaz',
-        'route_long_name' : 'Angermünde nach Biesenbrow'}
+        'route_long_name' : 'Angermünde -> Biesenbrow'}
     },
     'stopTimeUpdate': [{
       'stopSequence': 1, 
