@@ -6,7 +6,7 @@ class AgencyConf(BaseModel):
         description="ID of the agency that uses this token.",
         min_length=1,
         max_length=20,
-        pattern='^[a-zA-Z0-9]+$',
+        pattern=r'^[a-zA-Z0-9]+$',
         examples=["mfdz"])
 
     api_key: str = Field(
