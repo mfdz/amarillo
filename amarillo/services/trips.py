@@ -213,7 +213,7 @@ class TripTransformer:
 
     def transform_to_trip(self, carpool):
         stop_times = self._convert_stop_times(carpool)
-        route_name = carpool.stops[0].name + " nach " + carpool.stops[-1].name
+        route_name = carpool.stops[0].name + " -> " + carpool.stops[-1].name
         headsign = carpool.stops[-1].name
         trip_id = self._trip_id(carpool)
         path = carpool.path
