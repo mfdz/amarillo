@@ -42,34 +42,11 @@ app = FastAPI(title="Amarillo - The Carpooling Intermediary",
               openapi_tags=[
                   {
                       "name": "carpool",
-                      # "description": "Find out more about Amarillo - the carpooling intermediary",
                       "externalDocs": {
                           "description": "Find out more about Amarillo - the carpooling intermediary",
                           "url": "https://github.com/mfdz/amarillo",
                       },
                   }],
-              servers=[
-                  {
-                      "description": "This service",
-                      "url": config.amarillo_baseurl
-                  },
-                  {
-                      "description": "MobiData BW Amarillo service",
-                      "url": "https://amarillo.mobidata-bw.de"
-                  },
-                  {
-                      "description": "DABB bbnavi Amarillo service",
-                      "url": "https://amarillo.bbnavi.de"
-                  },
-                  {
-                      "description": "Demo server by MFDZ",
-                      "url": "https://amarillo.mfdz.de"
-                  },
-                  {
-                      "description": "Dev server for development",
-                      "url": "https://amarillo-dev.mfdz.de"
-                  }
-              ],
               redoc_url=None
               )
 
