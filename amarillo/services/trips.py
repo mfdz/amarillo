@@ -104,7 +104,10 @@ class TripStore():
                     self.handle_failed_carpool_enhancement(carpool)
                     return
                 enhanced_carpool = self.transformer.enhance_carpool(carpool)
-                # TODO should only store enhanced_carpool, if it has 2 or more stops
+                if len(enhanced_carpool.stops) < 2:
+                    logger.warning("Failed to add carpool %s:%s to TripStore, less than two stops after enhancement", carpool.agency, carpool.id)
+                    self.handle_failed_carpool_enhancement(carpool)
+                    return
                 assert_folder_exists(f'data/enhanced/{carpool.agency}/')
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(enhanced_carpool.json())
