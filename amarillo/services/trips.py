@@ -81,8 +81,8 @@ class TripStore():
         deleted_trips   Dict of recently deleted trips.
     """
 
-    def __init__(self, stops_store):
-        self.transformer = TripTransformer(stops_store)
+    def __init__(self, stops_store, agency_conf_service):
+        self.transformer = TripTransformer(stops_store, agency_conf_service)
         self.stops_store = stops_store
         self.trips = {}
         self.deleted_trips = {}
@@ -194,14 +194,15 @@ class TripStore():
 
 
 class TripTransformer:
-    REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS = True
     REPLACEMENT_STOPS_SERACH_RADIUS_IN_M = 1000
     SIMPLIFY_TOLERANCE = 0.0001
 
     router = RoutingService(config.graphhopper_base_url)
 
-    def __init__(self, stops_store):
+    def __init__(self, stops_store, agency_conf_service):
         self.stops_store = stops_store
+        self.agency_conf_service = agency_conf_service
+        
 
     def transform_to_trip(self, carpool):
         stop_times = self._convert_stop_times(carpool)
@@ -228,28 +229,50 @@ class TripTransformer:
             new_stops.append(self.stops_store.find_closest_stop(carpool_stop, max_search_distance))
         return new_stops
 
+    def _should_add_dropoff_pickup_stops(self, carpool):
+        agency_conf = self.agency_conf_service.get_agency_conf(carpool.agency)
+        return agency_conf.add_dropoffs_and_pickups
+
+    def _should_replace_carpool_stops_by_closest_transit_stops(self, carpool):
+        agency_conf = self.agency_conf_service.get_agency_conf(carpool.agency)
+        return agency_conf.replace_carpool_stops_by_closest_transit_stops
+
     def enhance_carpool(self, carpool):
-        if self.REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS:
+        if self._should_replace_carpool_stops_by_closest_transit_stops(carpool):
             carpool.stops = self._replace_stops_by_transit_stops(carpool, self.REPLACEMENT_STOPS_SERACH_RADIUS_IN_M)
  
         path = self._path_for_ride(carpool)
         lineString_shapely_wgs84 = LineString(coordinates = path["points"]["coordinates"]).simplify(0.0001)
         lineString_wgs84 = GeoJSONLineString(type="LineString", coordinates=list(lineString_shapely_wgs84.coords))
-        virtual_stops = self.stops_store.find_additional_stops_around(lineString_wgs84, carpool.stops) 
-        if not virtual_stops.empty:
-            virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
-            logger.debug("Virtual stops found: {}".format(virtual_stops))
-        if len(virtual_stops) > MAX_STOPS_PER_TRIP:
-            # in case we found more than MAX_STOPS_PER_TRIP, we retain first and last 
-            # half of MAX_STOPS_PER_TRIP
-            virtual_stops = virtual_stops.iloc[np.r_[0:int(MAX_STOPS_PER_TRIP/2), -int(MAX_STOPS_PER_TRIP/2):0]]
-            
-        trip_id = f"{carpool.agency}:{carpool.id}"
-        stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
-        
-        enhanced_carpool = carpool.copy()
-        enhanced_carpool.stops = stop_times
+        enhanced_carpool = carpool.model_copy(deep=True)
         enhanced_carpool.path = lineString_wgs84
+        trip_id = f"{carpool.agency}:{carpool.id}"
+        
+        if self._should_add_dropoff_pickup_stops(carpool):
+            virtual_stops = self.stops_store.find_additional_stops_around(lineString_wgs84, carpool.stops) 
+            if not virtual_stops.empty:
+                virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
+                logger.debug("Virtual stops found: {}".format(virtual_stops))
+            if len(virtual_stops) > MAX_STOPS_PER_TRIP:
+                # in case we found more than MAX_STOPS_PER_TRIP, we retain first and last 
+                # half of MAX_STOPS_PER_TRIP
+                virtual_stops = virtual_stops.iloc[np.r_[0:int(MAX_STOPS_PER_TRIP/2), -int(MAX_STOPS_PER_TRIP/2):0]]
+                
+            enhanced_carpool.stops = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
+        else: 
+            for stop in enhanced_carpool.stops:
+                # be sure that externally specified stop is complete, i.e. has stop_id, departure/arrival time, and possibly pickup/dropoff
+                if not stop.id:
+                    raise Exception("When trip's stops remain unchanged, stop.id is mandatory")
+                if not stop.arrivalTime and not stop.departureTime:
+                    raise Exception("When trip's stops remain unchanged, at least one of stop.arrivalTime or stop.departureTime must be set")
+                elif not stop.arrivalTime:
+                    stop.arrivalTime = stop.departureTime
+                elif not stop.departureTime:
+                    stop.departureTime = stop.arrivalTime
+                if not stop.pickup_dropoff:
+                    stop.pickup_dropoff=PickupDropoffType.pickup_and_dropoff
+
         return enhanced_carpool
 
     def _convert_stop_times(self, carpool):

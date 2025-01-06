@@ -1,13 +1,14 @@
 from amarillo.tests.sampledata import cp1, carpool_repeating
 from amarillo.services.trips import TripStore
 from amarillo.services.stops import StopsStore
+from amarillo.services.agencyconf import AgencyConfService
 
 
 import logging
 logger = logging.getLogger(__name__)
 
 def test_trip_store_put_one_time_carpool():
-    trip_store = TripStore(StopsStore())
+    trip_store = TripStore(StopsStore(), AgencyConfService())
 
     t = trip_store.put_carpool(cp1)
     assert t != None
@@ -16,7 +17,7 @@ def test_trip_store_put_one_time_carpool():
     assert t.stop_times[-1].stop_id == 'de:12073:900340137::3'
 
 def test_trip_store_put_repeating_carpool():
-    trip_store = TripStore(StopsStore())
+    trip_store = TripStore(StopsStore(), AgencyConfService())
 
     t = trip_store.put_carpool(carpool_repeating)
     assert t != None

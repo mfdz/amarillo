@@ -3,6 +3,7 @@ from amarillo.services.gtfs_export import GtfsExport
 from amarillo.services.gtfs import GtfsRtProducer
 from amarillo.services.stops import StopsStore
 from amarillo.services.trips import TripStore
+from amarillo.services.agencyconf import AgencyConfService
 from amarillo.models.Carpool import Carpool
 from datetime import datetime
 import time
@@ -12,7 +13,7 @@ import pytest
 def test_gtfs_generation():
     cp = Carpool(**data1)
     stops_store = StopsStore()
-    trips_store = TripStore(stops_store)
+    trips_store = TripStore(stops_store, AgencyConfService())
     trips_store.put_carpool(cp)
 
     exporter = GtfsExport(None, None, trips_store, stops_store)
@@ -22,7 +23,7 @@ def test_correct_stops():
     cp = Carpool(**stop_issue)
     stops_store = StopsStore([{"url": "https://datahub.bbnavi.de/export/rideshare_points.geojson", "vicinity": 250}])
     stops_store.load_stop_sources()
-    trips_store = TripStore(stops_store)
+    trips_store = TripStore(stops_store, AgencyConfService())
     trips_store.put_carpool(cp)
     assert len(trips_store.trips) == 1
 
@@ -31,7 +32,7 @@ class TestTripConverter:
 
     def setup_method(self, method):
         self.stops_store = StopsStore([{"url": "https://datahub.bbnavi.de/export/rideshare_points.geojson", "vicinity": 50}])
-        self.trips_store = TripStore(self.stops_store)    
+        self.trips_store = TripStore(self.stops_store, AgencyConfService())    
 
     def test_as_one_time_trip_as_delete_update(self):
         cp = Carpool(**data1)
@@ -68,7 +69,7 @@ class TestTripConverter:
               '[transit_realtime.trip_descriptor]': { 
                 'routeUrl' : 'https://mfdz.de/trip/123',
                 'agencyId' : 'mfdz',
-                'route_long_name' : 'abc nach xyz',
+                'route_long_name' : 'abc -> xyz',
                 'route_type': 1551
                 }
             },

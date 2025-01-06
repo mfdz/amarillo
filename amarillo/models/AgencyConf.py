@@ -15,12 +15,24 @@ class AgencyConf(BaseModel):
         max_length=256,
         pattern=r'^[a-zA-Z0-9]+$',
         examples=["d8yLuY4DqMEUCLcfJASi"])
+
+    add_dropoffs_and_pickups: bool = Field(
+        description="Should Amarillo add pickup/dropoff points along the route?",
+        default=True,
+        examples=[False])
+
+    replace_carpool_stops_by_closest_transit_stops: bool = Field(
+        description="Should Amarillo replace carpool stops by closest transit stops? Should be True for agencies allowing origin/destination addresses to provide privacy.",
+        default=True,
+        examples=[True])
+
     model_config = ConfigDict(json_schema_extra={
         "title": "Agency Configuration",
         "description": "Configuration for an agency.",
         "example":
             {
                 "agency_id": "mfdz",
-                "api_key": "d8yLuY4DqMEUCLcfJASi"
+                "api_key": "d8yLuY4DqMEUCLcfJASi",
+                "add_dropoffs_and_pickups": True
             }
     })

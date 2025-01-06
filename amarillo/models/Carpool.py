@@ -27,7 +27,8 @@ class PickupDropoffType(str, Enum):
 class StopTime(BaseModel):
     id: Optional[str] = Field(
         None,
-        description="Optional Stop ID. If given, it should conform to the "
+        description="CONDITIONALLY REQUIRED Stop ID. It is required, if no stop enhancement "
+                    "is performed for this agency. If given, it should conform to the "
                     "IFOPT specification. For official transit stops, "
                     "it should be their official IFOPT. In Germany, this is "
                     "the DHID which is available via the 'zentrales "
@@ -53,8 +54,9 @@ class StopTime(BaseModel):
                     "trip schedule begins. If there are not separate times for "
                     "arrival and departure at a stop, the same value for arrivalTime "
                     "and departureTime. Note, that arrivalTime/departureTime of "
-                    "the stops are not mandatory, and might then be estimated by "
-                    "this service.",
+                    "the stops are CONDITIONALLY REQUIRED. If for the trip's agency "
+                    "no stop enhancement should be performed, at least one of "
+                    "departureTime or arrivalTime must be provided.",
         pattern=r"^[0-9][0-9]:[0-5][0-9](:[0-5][0-9])?$",
         examples=["17:00"]
     )
@@ -67,9 +69,10 @@ class StopTime(BaseModel):
                     "and departureTime. For times occurring after midnight on the "
                     "service day, the time as a value greater than 24:00:00 in "
                     "HH:MM:SS local time for the day on which the trip schedule "
-                    "begins. Note, that arrivalTime/departureTime of the stops "
-                    "are not mandatory, and might then be estimated by this "
-                    "service.",
+                    "begins. Note, that arrivalTime/departureTime of "
+                    "the stops are CONDITIONALLY REQUIRED. If for the trip's agency "
+                    "no stop enhancement should be performed, at least one of "
+                    "departureTime or arrivalTime must be provided.",
         pattern=r"^[0-9][0-9]:[0-5][0-9](:[0-5][0-9])?$",
         examples=["18:00"])
 
