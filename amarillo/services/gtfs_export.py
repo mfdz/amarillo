@@ -34,8 +34,6 @@ class GtfsExport:
         self.shapes = []
         self.agencies = agencies
         self.feed_info = feed_info
-        self.localized_to = " nach "
-        self.localized_short_name = "Mitfahrgelegenheit"
         self.stopstore = stopstore
         self.ridestore = ridestore
         self.bbox = bbox
