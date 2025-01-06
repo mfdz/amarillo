@@ -77,8 +77,7 @@ class TripStore():
     carpool offer enhanced with all stops this 
 
     Attributes:
-        trips           Dict of currently valid trips.
-        deleted_trips   Dict of recently deleted trips.
+        stops_store     Stops store 
     """
 
     def __init__(self, stops_store, agency_conf_service):
