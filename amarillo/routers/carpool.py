@@ -7,8 +7,10 @@ from glob import glob
 
 from fastapi import APIRouter, Body, Header, HTTPException, status, Depends, BackgroundTasks
 import requests
+from requests.exceptions import ConnectionError 
 from datetime import datetime
 
+from amarillo.utils.container import container
 from amarillo.models.Carpool import Carpool
 from amarillo.routers.agencyconf import verify_api_key, verify_permission_for_same_agency_or_admin
 from amarillo.tests.sampledata import examples
@@ -37,8 +39,27 @@ def enhance_trip(carpool: Carpool):
         assert_folder_exists(folder)
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(enhanced_carpool.model_dump_json())
+    except ConnectionError:
+        logger.error("Could not connect to enhancer: make sure amarillo-enhancer is running and your ENHANCER_URL environment variable is configured correctly")
     except Exception as e:
         logger.error(f"Error enhancing trip '{carpool.id}': {e}")
+
+
+def enhance_missing_carpools():
+    logger.info(f"Enhancing missing restored trips...")
+    for agency_id in container['agencies'].agencies:
+        for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
+
+            #If the same carpool is not found in /enhanced
+            if not os.path.isfile(carpool_file_name.replace("/carpool", "/enhanced")):
+                # TODO: also enhance carpools where the enhanced version is outdated?
+                logger.info(f"Enhancing restored trip {carpool_file_name}")
+                try:
+                    with open(carpool_file_name) as carpool_file:
+                        carpool = Carpool(**(json.load(carpool_file)))
+                        enhance_trip(carpool)
+                except Exception as e:
+                    logger.warning("Issue during restore of carpool %s: %s", carpool_file_name, repr(e))
 
 
 @router.post("/",

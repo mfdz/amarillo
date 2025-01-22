@@ -1,4 +1,5 @@
 # separate file so that it can be imported without initializing FastAPI
+from amarillo.routers.carpool import enhance_missing_carpools
 from amarillo.utils.container import container
 import logging
 
@@ -41,6 +42,7 @@ def configure_services():
     logger.info("Loaded %d regions", len(container['regions'].regions))
 
     create_required_directories()
+    enhance_missing_carpools()
 
 def configure_admin_token():
     if config.admin_token is None:
