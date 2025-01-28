@@ -86,7 +86,7 @@ class AgencyConfService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
         with open(f'{agency_conf_directory}/{agency_id}.json', 'w', encoding='utf-8') as f:
-            f.write(agency_conf.json())
+            f.write(agency_conf.model_dump_json())
 
         self.agency_id_to_agency_conf[agency_id] = agency_conf
         self.api_key_to_agency_id[api_key] = agency_id

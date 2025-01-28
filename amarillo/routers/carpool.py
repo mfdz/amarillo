@@ -110,7 +110,7 @@ async def load_carpool(agency_id, carpool_id) -> Carpool:
 
 async def save_carpool(carpool, folder: str = 'data/carpool'):
     with open(f'{folder}/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
-        f.write(carpool.json())
+        f.write(carpool.model_dump_json())
 
 
 async def assert_agency_exists(agency_id: str):
