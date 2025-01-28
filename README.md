@@ -2,7 +2,7 @@
 
 **CRUD for carpool offers**
 
-An Amarillo is a [yellow-dressed person](https://www.dreamstime.com/sancti-spiritus-cuba-feb-road-spot-amarillos-yellow-ones-who-stop-cars-oblige-driver-to-give-lift-people-waiting-image130186034) helping others to find a car pool in Cuba. 
+An Amarillo is a [yellow-dressed person](https://oncubanews.com/canaldigital/galerias/por-el-camino/los-amarillos/) helping others to find a car pool in Cuba. 
 
 ## Setup
 
