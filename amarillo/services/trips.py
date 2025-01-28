@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class Trip:
 
-    def __init__(self, trip_id, route_name, headsign, url, calendar, departureTime, path, agency, lastUpdated, stop_times, bbox):
+    def __init__(self, trip_id, route_name, headsign, url, calendar, departureTime, path, agency, lastUpdated, stop_times, bbox, additional_service_days, non_service_days):
         if isinstance(calendar, set):
             self.runs_regularly = True
             self.weekdays = [ 
@@ -46,6 +46,8 @@ class Trip:
         self.bbox = bbox
         self.route_name = route_name
         self.trip_headsign = headsign
+        self.additional_service_days = additional_service_days
+        self.non_service_days = non_service_days
 
     def path_as_line_string(self):
         return path
@@ -59,7 +61,7 @@ class Trip:
     def next_trip_dates(self, start_date, day_count=14):
         if self.runs_regularly:
             for single_date in (start_date + timedelta(n) for n in range(day_count)):
-                if self.weekdays[single_date.weekday()]==1:
+                if self.weekdays[single_date.weekday()]==1 and single_date not in self.non_service_days or single_date in self.additional_service_days:
                     yield single_date.strftime("%Y%m%d")
         else:
             yield self.start.strftime("%Y%m%d")
@@ -217,8 +219,14 @@ class TripTransformer:
             min([pt[1] for pt in path.coordinates]),
             max([pt[0] for pt in path.coordinates]),
             max([pt[1] for pt in path.coordinates]))
-            
-        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, carpool.path, carpool.agency, carpool.lastUpdated, stop_times, bbox)
+
+        if carpool.exceptionDates is None:
+            additional_service_days = []
+            non_service_days = []
+        else:
+            additional_service_days = [exception.date for exception in carpool.exceptionDates if exception.exceptionType=='added']
+            non_service_days = [exception.date for exception in carpool.exceptionDates if exception.exceptionType=='removed']
+        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, carpool.path, carpool.agency, carpool.lastUpdated, stop_times, bbox, additional_service_days, non_service_days)
 
         return trip
 

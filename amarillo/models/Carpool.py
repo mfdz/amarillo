@@ -1,4 +1,4 @@
-from datetime import time, date, datetime
+from datetime import time, date as dt_date, datetime
 from pydantic import ConfigDict, BaseModel, Field, HttpUrl, EmailStr
 from typing import List, Union, Set, Optional, Tuple
 from datetime import time
@@ -9,6 +9,7 @@ from enum import Enum
 NumType = Union[float, int]
 
 MAX_STOPS_PER_TRIP = 100
+MAX_EXCEPTION_DATES = 90
 
 class Weekday(str, Enum):
     monday = "monday"
@@ -18,6 +19,10 @@ class Weekday(str, Enum):
     friday = "friday"
     saturday = "saturday"
     sunday = "sunday"
+
+class ExceptionType(str, Enum):
+    added = "added"
+    removed = "removed"
 
 class PickupDropoffType(str, Enum):
     pickup_and_dropoff = "pickup_and_dropoff"
@@ -182,6 +187,18 @@ class Agency(BaseModel):
             #"""
     })
 
+class ExceptionDate(BaseModel):
+    date: dt_date = Field(
+        description="Date on which this ride is exceptionally offered or not offered.",
+        examples=["2025-01-01"])
+
+    exceptionType: ExceptionType = Field(
+        description="""Type of exception, i.e. if the offer is running 
+            (though not specified by departureDate) or not 
+            (even though it usually, according to departureDate,
+            runs on this weekday)""",
+        examples=["added", "removed"])
+
 class Carpool(BaseModel):
     id: str = Field(
         description="ID of the carpool. Should be supplied and managed by the "
@@ -241,7 +258,7 @@ class Carpool(BaseModel):
         examples=["17:00"])
 
     # TODO think about using googlecal Format
-    departureDate: Union[date, Set[Weekday]] = Field(
+    departureDate: Union[dt_date, Set[Weekday]] = Field(
         description="Date when the trip will start, in case it is a one-time "
                     "trip. For recurring trips, specify weekdays. "
                     "Note, that when for different weekdays different "
@@ -249,6 +266,12 @@ class Carpool(BaseModel):
                     "published.",
         examples=['A single date 2022-04-04 or a list of weekdays ["saturday", '
                 '"sunday"]'])
+
+    exceptionDates: Optional[List[ExceptionDate]] = Field(None,
+        description="List of exceptions to a weekly schedule. All dates of the list must be unique, no more than 90 days are accepted",
+        max_length=MAX_EXCEPTION_DATES,
+        examples=[{"date": "2025-01-01", "exceptionType": "removed"}, 
+            {"date": "2025-01-02", "exceptionType": "added"}])
 
     path: Optional[LineString] = Field(
         None, description="Optional route geometry as json LineString.")

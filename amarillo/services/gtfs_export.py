@@ -77,11 +77,27 @@ class GtfsExport:
                 self._convert_trip(trip)
     
     def _convert_trip(self, trip):
+        """
+        Appends all required gtfs records for this trip to the
+        GTFS feeds files. I.e. it creates a new route, trip,
+        calendar, calendar_dates (in case it's no regular trip or
+        some dates are exceptionally served/unserved), stop_times 
+        and shapes. 
+        """
         self.routes_counter += 1
         self.routes.append(self._create_route(trip))
         self.calendar.append(self._create_calendar(trip))
         if not trip.runs_regularly:
             self.calendar_dates.append(self._create_calendar_date(trip))
+        else:
+            # Append exceptions from regular schedule to calendar_dates
+            if trip.additional_service_days and len(trip.additional_service_days) > 0:
+                calendar_dates = [GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_ADDED) for d in trip.additional_service_days]
+                self.calendar_dates.extend(calendar_dates)
+            if trip.non_service_days and len(trip.non_service_days) > 0:
+                calendar_dates = [GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_REMOVED) for d in trip.non_service_days]
+                self.calendar_dates.extend(calendar_dates)
+
         self.trips.append(self._create_trip(trip, self.routes_counter))
         self._append_stops_and_stop_times(trip)
         self._append_shapes(trip, self.routes_counter)
