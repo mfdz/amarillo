@@ -2,6 +2,7 @@ import logging
 import json
 import os
 import os.path
+from pathlib import Path
 import re
 from glob import glob
 
@@ -44,22 +45,37 @@ def enhance_trip(carpool: Carpool):
     except Exception as e:
         logger.error(f"Error enhancing trip '{carpool.id}': {e}")
 
-
 def enhance_missing_carpools():
     logger.info(f"Enhancing missing restored trips...")
     for agency_id in container['agencies'].agencies:
         for carpool_file_name in glob(f'data/carpool/{agency_id}/*.json'):
+            carpool_id = Path(carpool_file_name).stem
+            carpool = _load_carpool_if_exists(agency_id, carpool_id, folder='data/carpool')
+            if not carpool:
+                # logger.warning(f"Failed loading carpool {agency_id}:{carpool_id}.")
+                continue
 
-            #If the same carpool is not found in /enhanced
-            if not os.path.isfile(carpool_file_name.replace("/carpool", "/enhanced")):
-                # TODO: also enhance carpools where the enhanced version is outdated?
+            existing_enhanced_carpool = _load_carpool_if_exists(agency_id, carpool.id, folder='data/enhanced')
+            if not existing_enhanced_carpool or existing_enhanced_carpool.lastUpdated != carpool.lastUpdated:
                 logger.info(f"Enhancing restored trip {carpool_file_name}")
                 try:
-                    with open(carpool_file_name) as carpool_file:
-                        carpool = Carpool(**(json.load(carpool_file)))
-                        enhance_trip(carpool)
+                    enhance_trip(carpool)
                 except Exception as e:
                     logger.warning("Issue during restore of carpool %s: %s", carpool_file_name, repr(e))
+
+def carpool_exists(agency_id: str, carpool_id: str, folder: str ='data/enhanced'):
+    return os.path.exists(f"{folder}/{agency_id}/{carpool_id}.json")
+
+def _load_carpool_if_exists(agency_id: str, carpool_id: str, folder: str ='data/enhanced'):
+    if carpool_exists(agency_id, carpool_id, folder):
+        try:
+            return _load_carpool_from_path(f"{folder}/{agency_id}/{carpool_id}.json")
+        except Exception as e:
+            # An error on restore could be caused by model changes, 
+            # in such a case, it need's to be recreated
+            logger.warning(f"Could not restore trip {folder}/{agency_id}/{carpool_id}.json: {repr(e)}")
+
+    return None
 
 
 @router.post("/",
@@ -156,12 +172,14 @@ async def set_lastUpdated_if_unset(carpool):
         carpool.lastUpdated = datetime.now()
 
 
-async def load_carpool(agency_id, carpool_id) -> Carpool:
-    with open(f'data/carpool/{agency_id}/{carpool_id}.json', 'r', encoding='utf-8') as f:
+async def load_carpool(agency_id, carpool_id, folder: str ='data/carpool') -> Carpool:
+    return _load_carpool_from_path(f'{folder}/{agency_id}/{carpool_id}.json')
+
+def _load_carpool_from_path(path: str):
+    with open(path, 'r', encoding='utf-8') as f:
         dict = json.load(f)
         carpool = Carpool(**dict)
     return carpool
-
 
 async def save_carpool(carpool, folder: str = 'data/carpool'):
     with open(f'{folder}/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
