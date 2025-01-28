@@ -110,7 +110,7 @@ class TripStore():
                     return
                 assert_folder_exists(f'data/enhanced/{carpool.agency}/')
                 with open(filename, 'w', encoding='utf-8') as f:
-                    f.write(enhanced_carpool.json())
+                    f.write(enhanced_carpool.model_dump_json())
                 logger.info("Added enhanced carpool %s:%s", carpool.agency, carpool.id)
             
             return self._load_as_trip(enhanced_carpool)
@@ -124,7 +124,7 @@ class TripStore():
     def handle_failed_carpool_enhancement(sellf, carpool: Carpool):
         assert_folder_exists(f'data/failed/{carpool.agency}/')
         with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
-            f.write(carpool.json())
+            f.write(carpool.model_dump_json())
 
     def distance_in_m(self, carpool):
         if len(carpool.stops) < 2:
