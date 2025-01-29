@@ -65,6 +65,20 @@ carpool_repeating_json = {
     'departureDate': ["monday"],
 }
 
+carpool_with_exception_dates = {
+    'id': "carpool_with_exception_dates",
+    'agency': "mfdz",
+    'deeplink': "https://mfdz.de/trip/123",
+    'stops': [
+        {'id': "mfdz:12073:001", 'name': "abc", 'lat': 53.11901, 'lon': 14.015776},
+        {'id': "de:12073:900340137::3", 'name': "xyz", 'lat': 53.011459, 'lon': 13.94945}],
+    'departureTime': "15:00",
+    'departureDate': ["monday"],
+    'exceptionDates': [ 
+        { "date": "2025-01-01", "exceptionType": "removed"},
+        { "date": "2025-01-02", "exceptionType": "added"}
+    ]
+}
 
 cp1 = Carpool(**data1)
 
