@@ -23,3 +23,6 @@ class AgencyService:
     def get_agency(self, agency_id: str) -> Agency:
         agency = self.agencies.get(agency_id)
         return agency
+
+    def get_all_agencies(self):
+        return self.agencies

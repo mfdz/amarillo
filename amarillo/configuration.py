@@ -14,6 +14,8 @@ from amarillo.services.regions import RegionService
 
 from amarillo.services.config import config
 
+from amarillo.services.sync import Syncer
+from amarillo.stores.filebasedstore import FileBasedStore
 from amarillo.utils.utils import assert_folder_exists
 import amarillo.services.gtfs_generator as gtfs_generator
 
@@ -43,7 +45,7 @@ def configure_services():
 
     container['agencies'] = AgencyService()
     logger.info("Loaded %d agencies", len(container['agencies'].agencies))
-    
+
     container['regions'] = RegionService()
     logger.info("Loaded %d regions", len(container['regions'].regions))
 
@@ -57,7 +59,7 @@ def configure_enhancer_services():
     with open(config.stop_sources_file) as stop_sources_file:
         stop_sources = json.load(stop_sources_file)
         stop_store = stops.StopsStore(stop_sources)
-    
+
     stop_store.load_stop_sources()
     container['stops_store'] = stop_store
     container['trips_store'] = trips.TripStore(stop_store, container['agencyconf'])
@@ -73,7 +75,7 @@ def configure_enhancer_services():
                     container['carpools'].put(carpool.agency, carpool.id, carpool)
             except Exception as e:
                 logger.warning("Issue during restore of carpool %s: %s", carpool_file_name, repr(e))
-                    
+
         # notify carpool about carpools in trash, as delete notifications must be sent
         for carpool_file_name in glob(f'data/trash/{agency_id}/*.json'):
             with open(carpool_file_name) as carpool_file:
@@ -82,6 +84,7 @@ def configure_enhancer_services():
 
     logger.info("Restored carpools: %s", container['carpools'].get_all_ids())
     logger.info("Starting scheduler")
+    Syncer(FileBasedStore(), container["agencies"]).schedule_full_sync(config.daily_sync_time)
     gtfs_generator.start_schedule()
 
 

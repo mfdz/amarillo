@@ -21,6 +21,17 @@ class Syncer:
         self.store = store
         self.agency_service = agency_service
 
+    def perform_full_sync(self):
+        agencies = self.agency_service.get_all_agencies()
+        for agency_id in agencies:
+            try:
+                asyncio.run(self.sync(agency_id))
+            except Exception as e:
+                logger.exception(f"Could not import {agency_id}: {e}")
+
+    def schedule_full_sync(self, time_str):
+        schedule.every().day.at(time_str).do(self.perform_full_sync)
+
     async def sync(self, agency_id):
         if agency_id == "ride2go":
             importer = Ride2GoImporter()
