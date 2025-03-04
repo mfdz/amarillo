@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Dict
 from amarillo.models.Carpool import Carpool
 from amarillo.services.config import config
-from amarillo.services.trips import TripStore
 from amarillo.utils.utils import yesterday, is_older_than_days
 
 logger = logging.getLogger(__name__)
