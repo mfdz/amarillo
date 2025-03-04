@@ -13,5 +13,8 @@ class Config(BaseSettings):
     # Syn per default at 11:30pm so all updates are done at midnight
     # when gtfs re-generation will happen
     daily_sync_time: str = '23:00'
+    # To stay backwards compatible, we keep the endpoint per default,
+    # but will print a warning.
+    publish_deprecated_gtfs_endpoint: bool = True
 
 config = Config(_env_file='config', _env_file_encoding='utf-8')
