@@ -7,6 +7,7 @@ class Secrets(BaseSettings):
     ride2go_token: str = Field(None)
     bessermitfahren_url: Optional[str] = Field(None)
     pendlerportal_url: Optional[str] = Field(None)
+    mycarpoolapp_url: Optional[str] = Field(None)
 
     # TODO: admin_token should be moved here instead of config
 
