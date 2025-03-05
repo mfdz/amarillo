@@ -391,18 +391,20 @@ class Carpool(BaseModel):
                   "agency": "mfdz",
                   "deeplink": "http://mfdz.de",
                   "stops": [
-                    {
-                      "id": "de:12073:900340137::2", "name": "ABC", 
-                      "lat": 45, "lon": 9
-                    },
-                    {
-                      "id": "de:12073:900340137::3", "name": "XYZ", 
-                      "lat": 45, "lon": 9
-                    }
+                      {
+                      "name": "Stuttgart",
+                      "lat": 48.783138,
+                      "lon": 9.181288
+                      },
+                      {
+                      "name": "Ulm",
+                      "lat": 48.39892,
+                      "lon": 9.98419
+                      }
                   ],
                   "departureTime": "12:34",
-                  "departureDate": "2022-03-30",
-                  "lastUpdated": "2022-03-30T12:34:00+00:00"
-                }
+                  "departureDate": "2025-05-01",
+                  "lastUpdated": "2025-02-18T12:34:00+00:00"
+                  }
                 """
         })
