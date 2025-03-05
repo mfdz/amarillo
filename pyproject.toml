@@ -1,21 +1,22 @@
 [project]
 name = "amarillo"
-version = "2.0.0"
+version = "2.0.1"
 description = "Aggregates and enhances carpooling-offers and publishes them as GTFS(-RT)"
 readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["amarillo", "ridesharing", "carpooling", "gtfs", "gtfs-rt"]
 dependencies = [
-    "fastapi[all]==0.109.0",
-    "geopandas==0.14",
-    "uvicorn[standard]==0.23.2",
+    "fastapi[all]==0.111.0",
+    "uvicorn[standard]~=0.29.0",
     "pydantic[dotenv]==2.4.2",
-    "protobuf==3.20.3",
+    "rtree==1.1.0",
+    "setproctitle==1.3.3",
     "starlette~=0.35",
     "requests==2.31.0",
     "pyproj==3.6.1",
     "geojson-pydantic==1.0.1",
-    "watchdog==3.0.0",
+    "idna>=3.7",
+    "numpy==1.26.4",
 ]
 
 [tool.setuptools.packages]

@@ -4,17 +4,6 @@ LABEL maintainer="info@mfdz.de"
 
 WORKDIR /app
 
-RUN \
-	apt update \
-	&& apt install -y \
-	# GDAL headers are required for fiona, which is required for geopandas.
-	# Also gcc is used to compile C++ code.
-	libgdal-dev g++ \
-	# libspatialindex is required for rtree.
-	libspatialindex-dev \
-	# Remove package index obtained by `apt update`.
-	&& rm -rf /var/lib/apt/lists/*
-
 ENV ADMIN_TOKEN=''
 ENV RIDE2GO_TOKEN=''
 
