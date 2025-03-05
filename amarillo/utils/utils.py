@@ -47,6 +47,12 @@ def geodesic_distance_in_m(coord1, coord2):
     lats = [coord1[1], coord2[1]]
     return geod.line_lengths(lons, lats)[0]
 
+def carpool_distance_in_m(carpool):
+    if len(carpool.stops) < 2:
+        return 0
+    s1 = carpool.stops[0]
+    s2 = carpool.stops[-1]
+    return geodesic_distance_in_m((s1.lon, s1.lat),(s2.lon, s2.lat)) 
 
 def copy_static_files(files_and_dirs_to_copy):
     amarillo_dir = Path(__file__).parents[1]

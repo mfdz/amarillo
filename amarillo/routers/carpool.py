@@ -41,9 +41,19 @@ def enhance_trip(carpool: Carpool):
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(enhanced_carpool.model_dump_json())
     except ConnectionError:
+        handle_failed_carpool_enhancement(carpool)
         logger.error("Could not connect to enhancer: make sure amarillo-enhancer is running and your ENHANCER_URL environment variable is configured correctly")
+    except requests.HTTPError as e:
+        handle_failed_carpool_enhancement(carpool)
+        logger.error(f"Error enhancing trip '{carpool.agency}:{carpool.id}': {e.response.status_code} {e.response.json()}")
     except Exception as e:
-        logger.error(f"Error enhancing trip '{carpool.id}': {e}")
+        handle_failed_carpool_enhancement(carpool)
+        logger.error(f"Error enhancing trip '{carpool.agency}:{carpool.id}': {e}")
+
+def handle_failed_carpool_enhancement(carpool: Carpool):
+    assert_folder_exists(f'data/failed/{carpool.agency}/')
+    with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
+        f.write(carpool.model_dump_json())
 
 def enhance_missing_carpools():
     logger.info(f"Enhancing missing restored trips...")
