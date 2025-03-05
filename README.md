@@ -6,12 +6,17 @@ An Amarillo is a [yellow-dressed person](https://www.dreamstime.com/sancti-spiri
 
 ## Setup
 
-- Python 3.9.2 with pip
+- Python 3.10 with pip
 - python3-venv
 
-Create a virtual environment `python3 -m venv venv`.
+Create a virtual environment:
+`python3 -m venv venv`.
 
-Activate the environment and install the dependencies `pip install -r requirements.txt`.
+Activate the environment:
+`. venv/bin/activate`
+
+Install the dependencies: `pip install -r requirements.txt`.
+
 
 Run `uvicorn amarillo.main:app`. 
 
@@ -66,5 +71,5 @@ In the top directory, run `pytest amarillo/tests`.
 
 Based on [tiangolo/uvicorn-gunicorn:python3.10-slim](https://github.com/tiangolo/uvicorn-gunicorn-docker)
 
-- build `docker build -t amarillo --build-arg="PLUGINS=amarillo-metrics" .`
+- build `docker build -t amarillo .`
 - run `docker run --rm --name amarillo -p 8000:80 -e MAX_WORKERS="1" -e ADMIN_TOKEN=$ADMIN_TOKEN -e RIDE2GO_TOKEN=$RIDE2GO_TOKEN -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`
