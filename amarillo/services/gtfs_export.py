@@ -8,7 +8,7 @@ import logging
 import re
 
 from amarillo.utils.utils import assert_folder_exists
-from amarillo.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
+from amarillo.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape, format_calendar
 from amarillo.services.stops import is_carpooling_stop
 from amarillo.services.gtfs_constants import *
 
@@ -85,19 +85,18 @@ class GtfsExport:
         and shapes. 
         """
         self.routes_counter += 1
-        self.routes.append(self._create_route(trip))
-        self.calendar.append(self._create_calendar(trip))
+        calendar = self._create_calendar(trip)
+        trip_calendar_dates = []
         if not trip.runs_regularly:
-            self.calendar_dates.append(self._create_calendar_date(trip))
+            trip_calendar_dates = [self._create_calendar_date(trip)]
         else:
             # Append exceptions from regular schedule to calendar_dates
-            if trip.additional_service_days and len(trip.additional_service_days) > 0:
-                calendar_dates = [GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_ADDED) for d in trip.additional_service_days]
-                self.calendar_dates.extend(calendar_dates)
-            if trip.non_service_days and len(trip.non_service_days) > 0:
-                calendar_dates = [GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_REMOVED) for d in trip.non_service_days]
-                self.calendar_dates.extend(calendar_dates)
-
+            trip_calendar_dates.extend([GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_ADDED) for d in trip.additional_service_days or []])
+            trip_calendar_dates.extend([GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_REMOVED) for d in trip.non_service_days or []])
+                
+        self.routes.append(self._create_route(trip, calendar, trip_calendar_dates))
+        self.calendar.append(calendar)
+        self.calendar_dates.extend(trip_calendar_dates)
         self.trips.append(self._create_trip(trip, self.routes_counter))
         self._append_stops_and_stop_times(trip)
         self._append_shapes(trip, self.routes_counter)
@@ -125,8 +124,9 @@ class GtfsExport:
             logger.exception(ex)
             return destination
    
-    def _create_route(self, trip): 
-        return GtfsRoute(trip.agency, trip.trip_id, trip.route_long_name(), RIDESHARING_ROUTE_TYPE, trip.url, "")
+    def _create_route(self, trip, calendar: GtfsCalendar, calendar_dates: list[GtfsCalendarDate]): 
+        calendar_desc = format_calendar(calendar, calendar_dates)
+        return GtfsRoute(trip.agency, trip.trip_id, trip.route_long_name(), RIDESHARING_ROUTE_TYPE, trip.url, "", calendar_desc)
         
     def _create_calendar(self, trip):
         # TODO currently, calendar is not provided by Fahrgemeinschaft.de interface.
