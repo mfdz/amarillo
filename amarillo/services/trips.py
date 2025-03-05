@@ -88,8 +88,7 @@ class TripStore():
         self.trips = {}
         self.deleted_trips = {}
         self.recent_trips = {}
-
-
+          
     def put_carpool(self, carpool: Carpool):
         """
         Adds carpool to the TripStore.
@@ -97,8 +96,12 @@ class TripStore():
         id = "{}:{}".format(carpool.agency, carpool.id)
         filename = f'data/enhanced/{carpool.agency}/{carpool.id}.json'
         try:
-            existing_carpool = self._load_carpool_if_exists(carpool.agency, carpool.id)
+            existing_carpool = self._load_enhanced_carpool_if_exists(carpool.agency, carpool.id)
+            if existing_carpool is not None:
+                logger.info(f"Received put for already enhanced carpool {carpool.agency}:{carpool.id}.")
+                # todo must compare agains unenhanced
             if existing_carpool and existing_carpool.lastUpdated == carpool.lastUpdated:
+                logger.info(f"Skip enhancement for {carpool.agency}:{carpool.id} as existing is equivalent.")
                 enhanced_carpool = existing_carpool
             else:
                 if len(carpool.stops) < 2 or self.distance_in_m(carpool) < 1000:
@@ -141,7 +144,7 @@ class TripStore():
     def recently_deleted_trips(self):
         return list(self.deleted_trips.values())
 
-    def _load_carpool_if_exists(self, agency_id: str, carpool_id: str):
+    def _load_enhanced_carpool_if_exists(self, agency_id: str, carpool_id: str):
         if carpool_exists(agency_id, carpool_id, 'data/enhanced'):
             try:
                 return load_carpool(agency_id, carpool_id, 'data/enhanced')
