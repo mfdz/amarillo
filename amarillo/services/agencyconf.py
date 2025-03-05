@@ -38,7 +38,7 @@ class AgencyConfService:
         agency_conf = self.agency_id_to_agency_conf.get(agency_id)
         return agency_conf
 
-    def check_api_key(self, api_key: str) -> str:
+    def check_api_key(self, api_key: str, role: str | None = None) -> str:
         """Check if the API key is valid
 
         The agencies' api keys are checked first, and the admin's key.
@@ -52,7 +52,12 @@ class AgencyConfService:
         is_agency = agency_id is not None
 
         if is_agency:
-            return agency_id
+            if role is not None:
+                agency_conf = self.get_agency_conf(agency_id)
+                if role in agency_conf.roles:
+                    return agency_id
+            else:
+                return agency_id
 
         is_admin = api_key == config.admin_token
 

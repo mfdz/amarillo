@@ -1,4 +1,10 @@
 from pydantic import ConfigDict, BaseModel, Field
+from enum import Enum
+
+
+class AgencyRole(str, Enum):
+    consumer = "consumer"
+    carpool_agency = "carpool_agency"
 
 
 class AgencyConf(BaseModel):
@@ -26,13 +32,20 @@ class AgencyConf(BaseModel):
         default=True,
         examples=[True])
 
-    model_config = ConfigDict(json_schema_extra={
-        "title": "Agency Configuration",
-        "description": "Configuration for an agency.",
+    roles: list[AgencyRole] = Field(
+        description="Roles this agency has.",
+        default=[],
+        examples=[["carpool_agency"], ["consumer"]],
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Agency Configuration",
+            "description": "Configuration for an agency.",
         "example":
             {
                 "agency_id": "mfdz",
                 "api_key": "d8yLuY4DqMEUCLcfJASi",
                 "add_dropoffs_and_pickups": True
-            }
+        }
     })
