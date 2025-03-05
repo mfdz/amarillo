@@ -6,10 +6,10 @@ from fastapi import APIRouter, HTTPException, status, Depends
 
 from amarillo.models.Carpool import Carpool, Agency
 from amarillo.routers.agencyconf import verify_api_key, verify_admin_api_key, verify_permission_for_same_agency_or_admin
-# TODO should move this to service
-from amarillo.routers.carpool import store_carpool, delete_agency_carpools_older_than
 from amarillo.services.agencies import AgencyService
 from amarillo.services.importing import Ride2GoImporter, NoiImporter, AmarilloImporter
+from amarillo.services.sync import Syncer
+from amarillo.stores.filebasedstore import FileBasedStore
 from amarillo.utils.container import container
 from fastapi.responses import FileResponse
 
@@ -19,6 +19,8 @@ router = APIRouter(
     prefix="/agency",
     tags=["agency"]
 )
+
+store = FileBasedStore()
 
 
 @router.get("/{agency_id}",
@@ -63,26 +65,15 @@ async def get_agency(agency_id: str, admin_api_key: str = Depends(verify_api_key
 async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_key)) -> List[Carpool]:
     await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
-    if agency_id == "ride2go":
-        importer = Ride2GoImporter()
-    elif agency_id == "ummadum":
-        importer = NoiImporter(agency_id, test_mode=True)
-    elif agency_id in ["bessermitfahren"]:
-        importer = AmarilloImporter(agency_id)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Agency does not exist or does not support sync.")
-
     try:
-        carpools = importer.load_carpools()
-        # Reduce current time by a minute to avoid inter process timestamp issues
-        synced_files_older_than = time.time() - 60
-        result = [await store_carpool(cp) for cp in carpools]
-        await delete_agency_carpools_older_than(agency_id, synced_files_older_than)
-        return result
-    except BaseException as e:
+        return await Syncer(store, container["agencies"]).sync(agency_id)
+
+    except BaseException:
         logger.exception("Error on sync for agency %s", agency_id)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Something went wrong during import.")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong during import."
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agency does not exist or does not support sync."
+        )
