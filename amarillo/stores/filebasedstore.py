@@ -23,6 +23,13 @@ class FileBasedStore:
         return os.path.exists(f"data/carpool/{agency_id}/{carpool_id}.json")
 
     async def store_carpool(self, carpool: Carpool) -> Carpool:
+        if await self.does_carpool_exist(carpool.agency, carpool.id):
+            existing_carpool = await self.load_carpool(carpool.agency, carpool.id)
+            if self._are_carpools_equivalent(existing_carpool, carpool):
+                logger.info(f"Carpool  {carpool.agency}:{carpool.id} already exists and seems equivalent, will not update")
+        
+                return existing_carpool
+
         await self.set_lastUpdated_if_unset(carpool)
         await self.save_carpool(carpool)
 
@@ -58,3 +65,22 @@ class FileBasedStore:
                 logger.error(f"Deletion of 'data/carpool/{agency_id}/{carpool_id}.json' failed")
             else:
                 logger.info(f"Deleted 'data/carpool/{agency_id}/{carpool_id}.json'")
+
+    def _are_carpools_equivalent(self, existing_carpool, carpool):
+        """
+        Some agencies don't provide last updated timestamps.
+        In these cases, we compare a potentially updated offer
+        is compared to an existing one. If they are equivalent,
+        no update / enhancement is required.
+        Path and 
+        """
+        if (existing_carpool.deeplink == carpool.deeplink and 
+           existing_carpool.departureTime == carpool.departureTime and
+          existing_carpool.departureDate == carpool.departureDate and
+          existing_carpool.exceptionDates == carpool.exceptionDates and
+          existing_carpool.stops == carpool.stops and
+          carpool.path is None or (existing_carpool.path == carpool.path) and
+          carpool.lastUpdated is None or (existing_carpool.lastUpdated == carpool.lastUpdated)):
+            return True
+
+        return False
