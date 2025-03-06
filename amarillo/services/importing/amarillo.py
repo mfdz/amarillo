@@ -60,7 +60,7 @@ class AmarilloImporter:
             with open(self.carpools_url[7:], "r") as f:
                 result = json.load(f)
         else:
-            response = get(self.carpools_url)
+            response = get(self.carpools_url, timeout=60)
             result = response.json()
 
         return result
