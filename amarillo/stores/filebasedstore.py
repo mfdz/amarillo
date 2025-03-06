@@ -26,10 +26,10 @@ class FileBasedStore:
         if await self.does_carpool_exist(carpool.agency, carpool.id):
             existing_carpool = await self.load_carpool(carpool.agency, carpool.id)
             if self._are_carpools_equivalent(existing_carpool, carpool):
-                logger.info(f"Carpool  {carpool.agency}:{carpool.id} already exists and seems equivalent, will not update")
+                logger.debug(f"Carpool  {carpool.agency}:{carpool.id} already exists and seems equivalent, will copy timestamp if unset")
+                if carpool.lastUpdated is None:
+                    carpool.lastUpdated = existing_carpool.lastUpdated
         
-                return existing_carpool
-
         await self.set_lastUpdated_if_unset(carpool)
         await self.save_carpool(carpool)
 
