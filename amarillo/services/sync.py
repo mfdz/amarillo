@@ -48,9 +48,10 @@ class Syncer:
             return None
             # raise ValueError(f"Agency {agency_id} does not exist.")
 
+        sync_start_time = time.time()
         carpools = importer.load_carpools()
-        # Reduce current time by a minute to avoid inter process timestamp issues
-        synced_files_older_than = time.time() - 60
+        
         result = [await self.store.store_carpool(cp) for cp in carpools]
-        await self.store.delete_agency_carpools_older_than(agency_id, synced_files_older_than)
+
+        await self.store.delete_agency_carpools_older_than(agency_id, sync_start_time)
         return result
