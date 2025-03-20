@@ -84,7 +84,7 @@ def configure_enhancer_services():
 
     logger.info("Restored carpools: %s", container['carpools'].get_all_ids())
     logger.info("Starting scheduler")
-    Syncer(FileBasedStore(), container["agencies"]).schedule_full_sync(config.daily_sync_time)
+    Syncer(FileBasedStore(), container["agencyconf"]).schedule_full_sync(config.daily_sync_time)
     gtfs_generator.start_schedule()
 
 

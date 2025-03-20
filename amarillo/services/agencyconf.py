@@ -6,7 +6,7 @@ import logging
 
 from fastapi import HTTPException, status
 
-from amarillo.models.AgencyConf import AgencyConf
+from amarillo.models.AgencyConf import AgencyConf, AgencyRole
 from amarillo.services.config import config
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,11 @@ class AgencyConfService:
                 dictionary = json.load(agency_conf_file)
 
                 agency_conf = AgencyConf(**dictionary)
+
+                # Default: if no role was defined, the default role is
+                # carpool_agency.
+                if agency_conf.roles is None:
+                    agency_conf.roles = [AgencyRole.carpool_agency]
 
                 agency_id = agency_conf.agency_id
                 api_key = agency_conf.api_key
@@ -100,6 +105,9 @@ class AgencyConfService:
 
     def get_agency_ids(self) -> List[str]:
         return list(self.agency_id_to_agency_conf.keys())
+
+    def get_all_agencies(self):
+        return list(self.agency_id_to_agency_conf.values())
 
     def delete(self, agency_id):
 
