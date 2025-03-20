@@ -6,4 +6,4 @@ class MyCarpoolAppImporter(AmarilloImporter):
         super().__init__("mycarpoolapp", url)
 
     def _get_data_from_json_response(self, json_response):
-        return json_response.get("data")
+        return [cp for cp in json_response.get("data") if not cp.get('isTest') == 1]
