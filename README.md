@@ -40,6 +40,66 @@ Permissions work this way
 - API-Keys for agencies are allowed to POST/PUT/GET/DELETE their own 
   resources and GET some public resources.  
 
+## Integrating new carpool agencies
+
+To add a new carpool agency, you need to provide agency metadata, which will be used to generated the GTFS agency.txt and an `agencyconf`, which defines how the agency's carpool 
+data is synced and access options. 
+
+### Agency Metadata
+To provide agency metadata information, create a json config file `conf/agency/<agency_id>.json`and specify the following information:
+
+```json
+{
+  "id": "mfdz",
+  "name": "MITFAHR|DE|ZENTRALE",
+  "url": "http://mfdz.de",
+  "timezone": "Europe/Berlin",
+  "lang": "de",
+  "email": "no-reply@mfdz.de"
+}
+```
+
+Note: The value of `id` must match the filename's name (without suffix `.json`).
+
+### Agency configuration
+
+For agency configuration, create a file `data/agencyconf/<agency_id>.json` and specify the following information:
+
+```json
+{
+  "agency_id": "mfdz", 
+  "api_key": "<a secret api key, at least 20 chars>",
+  "offers_download_url": "http://mfdz.de/carpools/", // url providing an endpoint serving a json array of carpool offers according to Amarillo carpool schema 
+  "roles": [
+    "carpool_agency", // if agencyconf has role carpool_agency, it may push carpool offers
+    "consumer" // if agencyconf has consumer role, it may download gtfs and gtfs-rt data
+  ],
+  "add_dropoffs_and_pickups": true, // if additional stops along the route should be added, default is true
+  "replace_carpool_stops_by_closest_transit_stops": true // if origin and destination should be snapped to closest stop, default is true.
+}
+```
+
+Note: The value of `agency_id` must match the filename's name (without suffix `.json`).
+
+Note: `add_dropoffs_and_pickups` and `replace_carpool_stops_by_closest_transit_stops` is currently not supported for carpool offers which provide a route geometry (path) instead of having it calculated by Amarillo. For such agencies, `add_dropoffs_and_pickups` and `replace_carpool_stops_by_closest_transit_stops` must be set to `false`.
+
+### Custom Importer
+In case an agency does not provide an endpoint serving carpool offers in Amarillo schema, 
+a custom importer can be implemented and integrated.
+
+For examples, see `amarillo/services/importing`.
+
+They need to be added in `amarillo/services/sync.py`:
+
+```python
+    ...
+    async def sync(self, agency_id: str, offers_download_url = None):
+      ...  
+      elif agency_id == "my-custom-agency":
+        importer = MyCustomAgencyImporter(offers_download_url)
+      ...
+```
+
 ## Development
 
 ### GTFS-RT python bindings
