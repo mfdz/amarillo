@@ -26,8 +26,20 @@ store = FileBasedStore()
 
 examples = [
     {
+        "id": "1234",
+        "agency": "mfdz",
+        "deeplink": "http://mfdz.de",
+        "stops": [
+            {"id": "de:12073:900340137::2", "name": "ABC", "lat": 45, "lon": 9},
+            {"id": "de:12073:900340137::3", "name": "XYZ", "lat": 45, "lon": 9},
+        ],
+        "departureTime": "12:34",
+        "departureDate": "2022-03-30",
+        "lastUpdated": "2022-03-30T12:34:00+00:00",
+    },
+    {
         "id": "1235",
-        "agency_id": "mfdz",
+        "agency": "mfdz",
         "deeplink": "http://mfdz.de",
         "stops": [
             {
@@ -49,18 +61,6 @@ examples = [
         "departureDate": "2025-03-30",
         "lastUpdated": "2025-03-03T18:22:00+00:00",
         "path": {"type": "LineString", "coordinates": [[48.51391, 9.0573], [48.64632, 9.23224], [48.746419, 9.163373]]},
-    },
-    {
-        "id": "1234",
-        "agency_id": "mfdz",
-        "deeplink": "http://mfdz.de",
-        "stops": [
-            {"id": "de:12073:900340137::2", "name": "ABC", "lat": 45, "lon": 9},
-            {"id": "de:12073:900340137::3", "name": "XYZ", "lat": 45, "lon": 9},
-        ],
-        "departureTime": "12:34",
-        "departureDate": "2022-03-30",
-        "lastUpdated": "2022-03-30T12:34:00+00:00",
     },
 ]
 
