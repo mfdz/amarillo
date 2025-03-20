@@ -38,7 +38,7 @@ def _weekday_sequence(start, end):
     if end - start == 1:
         return f"{WEEKDAYS[start % 7]}, {WEEKDAYS[end % 7]}"
     elif end - start > 1:
-        return f"{WEEKDAYS[start % 7]}-{WEEKDAYS[end % 7]}"
+        return f"{WEEKDAYS[start % 7]} – {WEEKDAYS[end % 7]}"
     return WEEKDAYS[start % 7]
 
 
