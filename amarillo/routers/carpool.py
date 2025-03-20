@@ -132,10 +132,10 @@ async def set_lastUpdated_if_unset(carpool):
 
 
 async def _assert_agency_exists(agency_id: str):
-    if not store.does_agency_exist(agency_id):
+    if not await store.does_agency_exist(agency_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Agency with id {agency_id} does not exist.")
 
 
 async def _assert_carpool_exists(agency_id: str, carpool_id: str):
-    if not store.does_carpool_exist(agency_id, carpool_id):
+    if not await store.does_carpool_exist(agency_id, carpool_id):
         raise HTTPException(status_code=404, detail=f"Carpool with id {carpool_id} for agency {agency_id} not found")
