@@ -13,9 +13,14 @@ Create a virtual environment `python3 -m venv venv`.
 
 Activate the environment and install the dependencies `pip install -r requirements.txt`.
 
-Run `uvicorn amarillo.main:app`. 
+Amarillo consists of two services: 
 
-In development, you can use `--reload`. 
+* a web service, providing an api for carpool agencies to push carpool data to and for consumers to download the GTFS and GTFS-Realtime date generated from these, and
+* an enhancer service, which performs background processes like enhancing carpool offers or schedule-based GTFS and GTFS-RT generation.
+
+To start the webservice, run `ADMIN_TOKEN=<your admin token> uvicorn amarillo.main:app`. In development, you can add `--reload` to have uvicorn detect and reload code changes. 
+
+To start the enhancer service, run `python enhancer.py`.
 
 ## Environment Variables
 
