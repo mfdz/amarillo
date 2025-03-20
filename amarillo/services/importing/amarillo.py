@@ -12,7 +12,7 @@ class AmarilloImporter:
 
     def __init__(self, agency_id, url):
         self.agency_id = agency_id
-        self.carpools_url = url
+        self.carpools_url = str(url)
 
     @staticmethod
     def _extract_stop(stop):

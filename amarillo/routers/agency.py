@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, status, Depends
 
+from requests.exceptions import HTTPError
 from amarillo.models.Carpool import Carpool, Agency
 from amarillo.routers.agencyconf import verify_api_key, verify_admin_api_key, verify_permission_for_same_agency_or_admin
 from amarillo.services.agencies import AgencyService
@@ -66,14 +67,25 @@ async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_ke
     await verify_permission_for_same_agency_or_admin(agency_id, requesting_agency_id)
 
     try:
-        return await Syncer(store, container["agencies"]).sync(agency_id)
+        agency = container["agencyconf"].get_agency_conf(agency_id)
+        if agency is None or agency.offers_download_url is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Agency does not exist or does not support sync."
+            )
+        return await Syncer(store, container["agencyconf"]).sync(agency_id, agency.offers_download_url)
 
-    except BaseException:
-        logger.exception("Error on sync for agency %s", agency_id)
+    except HTTPError:
+        logger.warn("HTTPError on sync for agency %s", agency_id)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong during import."
+            status_code=status.HTTP_502_BAD_GATEWAY, detail="Error retrieving carpools from agency."
         )
     except ValueError:
+        logger.warning("ValueError on sync for agency %s", agency_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Agency does not exist or does not support sync."
+        )
+    except BaseException:
+        logger.exception("BaseException on sync for agency %s", agency_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong during import."
         )
