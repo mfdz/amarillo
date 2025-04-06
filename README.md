@@ -6,7 +6,7 @@ An Amarillo is a [yellow-dressed person](https://oncubanews.com/canaldigital/gal
 
 ## Setup
 
-- Python 3.9.2 with pip
+- Python 3.12.9 with pip
 - python3-venv
 
 Create a virtual environment `python3 -m venv venv`.
@@ -125,7 +125,7 @@ In the top directory, run `pytest amarillo/tests`.
 
 ## Docker
 
-Based on [tiangolo/uvicorn-gunicorn:python3.9-slim](https://github.com/tiangolo/uvicorn-gunicorn-docker)
+Based on [python:3.12-slim](https://hub.docker.com/_/python/)
 
 - build `docker build -t amarillo .`
 - run `docker run --rm --name amarillo -p 8000:80 -e MAX_WORKERS="1" -e ADMIN_TOKEN=$ADMIN_TOKEN -e RIDE2GO_TOKEN=$RIDE2GO_TOKEN -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`
