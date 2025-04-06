@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class Trip:
 
-    def __init__(self, trip_id, route_name, headsign, url, calendar, departureTime, path, agency, lastUpdated, stop_times, bbox, additional_service_days, non_service_days):
+    def __init__(self, trip_id, route_name, headsign, url, calendar, departureTime, path, agency, lastUpdated, stop_times, bbox, additional_service_days, non_service_days, stops):
         if isinstance(calendar, set):
             self.runs_regularly = True
             self.weekdays = [
@@ -40,7 +40,7 @@ class Trip:
         self.trip_id = trip_id
         self.url = url
         self.agency = agency
-        self.stops = []
+        self.stops = stops
         self.lastUpdated = lastUpdated
         self.stop_times = stop_times
         self.bbox = bbox
@@ -48,6 +48,9 @@ class Trip:
         self.trip_headsign = headsign
         self.additional_service_days = additional_service_days
         self.non_service_days = non_service_days
+
+    def __repr__(self):
+        return f'Trip(trip_id={self.trip_id}key: value for key, value , route_name={self.route_name})'
 
     def path_as_line_string(self):
         return path
@@ -229,7 +232,7 @@ class TripTransformer:
         else:
             additional_service_days = [exception.date for exception in carpool.exceptionDates if exception.exceptionType=='added']
             non_service_days = [exception.date for exception in carpool.exceptionDates if exception.exceptionType=='removed']
-        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, carpool.path, carpool.agency, carpool.lastUpdated, stop_times, bbox, additional_service_days, non_service_days)
+        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, carpool.path, carpool.agency, carpool.lastUpdated, stop_times, bbox, additional_service_days, non_service_days, carpool.stops)
 
         return trip
 

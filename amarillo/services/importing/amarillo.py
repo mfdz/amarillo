@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class AmarilloImporter:
-
-    def __init__(self, agency_id, url):
+    def __init__(self, agency_id, url, http_headers: dict[str, str] = {}):
         self.agency_id = agency_id
         self.carpools_url = str(url)
+        self.carpools_http_headers = http_headers
 
     @staticmethod
     def _extract_stop(stop):
@@ -46,8 +46,8 @@ class AmarilloImporter:
             departureDate=departureDate,
             exceptionDates=offer.get("exceptionDates"),
             lastUpdated=offer.get("lastUpdated"),
+            path=offer.get('path'),
         )
-
         return carpool
 
     def _get_data(self):
@@ -60,7 +60,7 @@ class AmarilloImporter:
             with open(self.carpools_url[7:], "r") as f:
                 result = json.load(f)
         else:
-            response = get(self.carpools_url, timeout=60)
+            response = get(self.carpools_url, headers=self.carpools_http_headers, timeout=60)
             result = response.json()
 
         return result
