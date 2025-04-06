@@ -162,6 +162,12 @@ class GtfsExport:
 
         stop_name = "k.A." if stop.stop_name is None else stop.stop_name
         return GtfsStop(id, stop.y, stop.x, stop_name)
+
+    def _extract_stop_from_trip(self, stop_id, trip):
+        matched_stop = next(stop for stop in trip.stops if stop.id == stop_id)
+        if matched_stop is not None:
+            return GtfsStop(matched_stop.id, matched_stop.lat, matched_stop.lon, matched_stop.name )
+        return None
         
     def _append_stops_and_stop_times(self, trip):
         # Assumptions: 
@@ -170,14 +176,23 @@ class GtfsExport:
         # pickup_type, drop_off_type for destination: = none/coordinate
         # timepoint = approximate for origin and destination (not sure what consequences this might have for trip planners)
         for stop_time in trip.stop_times:
-            # retrieve stop from stored_stops and mark it to be exported
-            wkn_stop = self.stored_stops.get(stop_time.stop_id)
-            if not wkn_stop:
-                logger.warning("No stop found in stop_store for %s. Will skip stop_time %s of trip %s", stop_time.stop_id, stop_time.stop_sequence, trip.trip_id)
-            else:
-                self.stops[stop_time.stop_id] = wkn_stop
+            if stop_time.stop_id in self.stops:
                 # Append stop_time
                 self.stop_times.append(stop_time)
+                continue
+            
+            # retrieve stop from stored_stops and mark it to be exported
+            wkn_stop = self.stored_stops.get(stop_time.stop_id)
+            if wkn_stop is None:
+                # if the stop is provided by the trip's agency, add it
+                wkn_stop = self._extract_stop_from_trip(stop_time.stop_id, trip)
+                if wkn_stop is None:
+                    logger.warning("No stop found in stop_store for %s. Will skip stop_time %s of trip %s", stop_time.stop_id, stop_time.stop_sequence, trip.trip_id)
+                    continue
+            
+            self.stops[stop_time.stop_id] = wkn_stop
+            # Append stop_time
+            self.stop_times.append(stop_time)
         
     def _append_shapes(self, trip, shape_id):
         counter = 0

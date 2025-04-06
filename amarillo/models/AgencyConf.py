@@ -1,4 +1,4 @@
-from pydantic import ConfigDict, BaseModel, Field, HttpUrl
+from pydantic import ConfigDict, BaseModel, Field, HttpUrl, AnyUrl
 from enum import Enum
 from typing import Optional
 
@@ -23,10 +23,15 @@ class AgencyConf(BaseModel):
         pattern=r'^[a-zA-Z0-9]+$',
         examples=["d8yLuY4DqMEUCLcfJASi"])
 
-    offers_download_url: Optional[HttpUrl] = Field(
-        description="The agency's URL to download offers",
+    offers_download_url: Optional[AnyUrl] = Field(
+        description="The agency's URL to download offers", default=None, examples=['https://mfdz.de/carpools/offers']
+    )
+
+    offers_download_http_headers: Optional[dict[str, str]] = Field(
+        description='HTTP Headers to send when downloading offers, e.g. for authentication',
         default=None,
-        examples=["https://mfdz.de/carpools/offers"])
+        examples=[{'token': 'mytoken'}],
+    )
 
     add_dropoffs_and_pickups: bool = Field(
         description="Should Amarillo add pickup/dropoff points along the route?",
