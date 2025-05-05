@@ -272,7 +272,7 @@ class Carpool(BaseModel):
             {"date": "2025-01-02", "exceptionType": "added"}])
 
     path: Optional[LineString] = Field(
-        None, description="Optional route geometry as json LineString.")
+        None, description="Optional route geometry as json LineString. Note: this path will only be used, if the agency is configured to NOT enhance intermediate stops. Otherwise, the path will be re-calculated and overridden.")
 
     lastUpdated: Optional[datetime] = Field(
         None,

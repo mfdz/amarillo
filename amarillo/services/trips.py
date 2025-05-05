@@ -257,7 +257,14 @@ class TripTransformer:
         trip_id = f"{carpool.agency}:{carpool.id}"
         enhanced_carpool = carpool.model_copy(deep=True)
         should_add_dropoff_pickup_stops = self._should_add_dropoff_pickup_stops(carpool)
-        if carpool.path is None:
+        
+
+        if should_add_dropoff_pickup_stops:
+            if carpool.path is not None:
+                # To enhance stops, we need a path with distance/time points as returned by GraphHopper
+                # A simple linestring is not sufficient
+                logger.warning("For {}, supplied path will be overriden, as agency is configured to enhance dropoff/pickup stops")
+            
             routing_result = self._path_for_ride(carpool)
             lineString_shapely_wgs84 = LineString(coordinates=routing_result["points"]["coordinates"]).simplify(0.0001)
             lineString_wgs84 = GeoJSONLineString(type="LineString", coordinates=list(lineString_shapely_wgs84.coords))
@@ -276,13 +283,6 @@ class TripTransformer:
                 enhanced_carpool.stops = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
             
         else:
-            if should_add_dropoff_pickup_stops:
-                # To enhance stops, we need a path with distance/time points as returned by GraphHopper
-                # A simple linestring is not sufficient
-                raise Exception("When stops along route should be added, supplying a path is currently not supported.")
-            
-        
-        if not should_add_dropoff_pickup_stops:
             for stop in enhanced_carpool.stops:
                 # be sure that externally specified stop is complete, i.e. has stop_id, departure/arrival time, and possibly pickup/dropoff
                 if not stop.id:
