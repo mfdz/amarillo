@@ -30,8 +30,8 @@ examples = [
         "agency": "mfdz",
         "deeplink": "http://mfdz.de",
         "stops": [
-            {"id": "de:12073:900340137::2", "name": "ABC", "lat": 45, "lon": 9},
-            {"id": "de:12073:900340137::3", "name": "XYZ", "lat": 45, "lon": 9},
+            {"id": "de:12073:900340137::2", "name": "ABC", "lon": 9, "lat": 45},
+            {"id": "de:12073:900340137::3", "name": "XYZ", "lon": 9, "lat": 45},
         ],
         "departureTime": "12:34",
         "departureDate": "2022-03-30",
@@ -45,22 +45,22 @@ examples = [
             {
                 "id": "de:08416:10701",
                 "name": "Tübingen Hauptbahnhof",
-                "lat": 48.51391,
                 "lon": 9.0573,
+                "lat": 48.51391,
                 "departureTime": "08:00",
             },
             {
                 "id": "de:08111:2594",
                 "name": "Degerloch Albstraße",
-                "lat": 48.746419,
                 "lon": 9.163373,
+                "lat": 48.746419,
                 "arrivalTime": "08:34",
             },
         ],
         "departureTime": "08:00",
         "departureDate": "2025-03-30",
         "lastUpdated": "2025-03-03T18:22:00+00:00",
-        "path": {"type": "LineString", "coordinates": [[48.51391, 9.0573], [48.64632, 9.23224], [48.746419, 9.163373]]},
+        "path": {"type": "LineString", "coordinates": [[9.0573, 48.51391], [9.23224, 48.64632], [9.163373, 48.746419]]},
     },
 ]
 
