@@ -12,6 +12,8 @@ RUN \
 	libgdal-dev g++ \
 	# libspatialindex is required for rtree.
 	libspatialindex-dev \
+	# curl is required for healthcheck.
+	curl \
 	# Remove package index obtained by `apt update`.
 	&& rm -rf /var/lib/apt/lists/*
 
