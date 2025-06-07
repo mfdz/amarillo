@@ -3,3 +3,6 @@ ride2go_query_data = '{ "southWestCoordinates": { "lat": 47.3, "lon": 5.98 }, "n
 env = 'PROD'
 graphhopper_base_url = 'https://api.mfdz.de/gh'
 stop_sources_file = 'conf/stop_sources.json'
+# When debug is set to True, post requests are logged at loglevel INFO. 
+# (Only use this temporarilly to e.g. debug 422 Unprocessable Entity requests)
+debug=False

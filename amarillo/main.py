@@ -12,7 +12,7 @@ import mimetypes
 from starlette.staticfiles import StaticFiles
 
 from amarillo.routers import carpool, agency, agencyconf, region
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 # https://pydantic-docs.helpmanual.io/usage/settings/
 from amarillo.views import home
@@ -62,6 +62,14 @@ def configure():
     configure_services()
     configure_routing()
 
+
+@app.middleware("http")
+async def log_request_data(request: Request, call_next):
+    if request.method == "POST" and config.debug:
+        body = await request.body()
+        logger.info(f"POST Request to {request.url.path} with body: {body.decode('utf-8')}")
+    
+    return await call_next(request)
 
 def configure_routing():
     mimetypes.add_type('application/x-protobuf', '.pbf')
