@@ -50,6 +50,8 @@ class Syncer:
             importer = MyCarpoolAppImporter(offers_download_url)
         elif agency_id == 'matchrider':
             importer = MobilityDIYImporter(offers_download_url, offers_download_http_headers)
+        elif agency_id == 'simplyhop':
+            importer = SimplyHopImporter(agency_id, offers_download_url, offers_download_http_headers)
         else:
             importer = AmarilloImporter(agency_id, offers_download_url, offers_download_http_headers)
 
