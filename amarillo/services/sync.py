@@ -27,7 +27,7 @@ class Syncer:
         agencies = self.agencyconf_service.get_all_agencies()
         for agency in [agency for agency in agencies if self.should_sync(agency)]:
             try:
-                asyncio.run(self.sync(agency.agency_id, agency.offers_download_url.agency.offers_download_http_headers))
+                asyncio.run(self.sync(agency.agency_id, agency.offers_download_url, agency.offers_download_http_headers))
             except Exception as e:
                 logger.exception(f"Could not import {agency.agency_id}: {e}")
 
