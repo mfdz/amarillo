@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class Ride2GoImporter:
+
+    def __init__(self, url, http_headers: dict[str, str] = {}):
+        self.carpools_url = str(url)
+        self.carpools_http_headers = http_headers
+
     @staticmethod
     def _extract_stop(stop):
         return StopTime(
@@ -39,15 +44,8 @@ class Ride2GoImporter:
 
     def load_carpools(self) -> List[Carpool]:
         ride2go_query_data = config.ride2go_query_data
-
-        ride2go_url = 'https://ride2go.com/api/v1/trips/export'
-
-        api_key = secrets.ride2go_token
-
-        ride2go_headers = {'Content-type': 'text/plain;charset=UTF-8', 'X-API-Key': f'{api_key}'}
-
         try:
-            result = requests.get(ride2go_url, data=ride2go_query_data, headers=ride2go_headers)
+            result = requests.get(self.carpools_url, data=ride2go_query_data, headers=self.carpools_http_headers)
             if result.status_code == 200:
                 json_results = result.json()
                 carpools = [self._extract_carpool(cp) for cp in json_results]
