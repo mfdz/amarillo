@@ -39,7 +39,7 @@ class Syncer:
 
     async def sync(self, agency_id: str, offers_download_url=None, offers_download_http_headers=None):
         if agency_id == "ride2go":
-            importer = Ride2GoImporter()
+            importer = Ride2GoImporter(offers_download_url, offers_download_http_headers)
         elif agency_id == "ummadum":
             importer = NoiImporter(agency_id, test_mode=True)
         elif agency_id == "bessermitfahren":
