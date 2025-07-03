@@ -5,9 +5,6 @@ class BessermitfahrenImporter(AmarilloImporter):
     def __init__(self, url):
         super().__init__("bessermitfahren", url)
 
-    def _get_data_from_json_response(self, json_response):
-        return json_response.get("data")
-
     @staticmethod
     def _is_weekday(depatureDate):
         return depatureDate in {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
