@@ -30,6 +30,7 @@ class Ride2GoImporter:
     def _extract_carpool(dict) -> Carpool:
         (agency, id) = re.findall(r'https?://(.*)\..*/?trip=([0-9]+)', dict['deeplink'])[0]
 
+        lastUpdated = dict.get('lastUpdated')
         carpool = Carpool(
             id=id,
             agency=agency,
@@ -37,7 +38,7 @@ class Ride2GoImporter:
             stops=[Ride2GoImporter._extract_stop(s) for s in dict.get('stops')],
             departureTime=dict.get('departTime'),
             departureDate=dict.get('departDate') if dict.get('departDate') else dict.get('weekdays'),
-            lastUpdated=dict.get('lastUpdated'),
+            lastUpdated=lastUpdated +'T00:00:00' if lastUpdated and len(lastUpdated) == 10 else lastUpdated
         )
 
         return carpool
