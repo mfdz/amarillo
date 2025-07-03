@@ -72,7 +72,7 @@ async def sync(agency_id: str, requesting_agency_id: str = Depends(verify_api_ke
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Agency does not exist or does not support sync."
             )
-        return await Syncer(store, container["agencyconf"]).sync(agency_id, agency.offers_download_url)
+        return await Syncer(store, container["agencyconf"]).sync(agency_id, agency.offers_download_url, agency.offers_download_http_headers)
 
     except HTTPError:
         logger.warn("HTTPError on sync for agency %s", agency_id)
