@@ -13,6 +13,7 @@ from amarillo.services.importing import (
     NoiImporter,
     PendlerportalImporter,
     Ride2GoImporter,
+    SimplyHopImporter,
 )
 
 logger = logging.getLogger(__name__)
