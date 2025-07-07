@@ -8,6 +8,10 @@ import json
 import re
 import time
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class GtfsRtProducer():
 
 	def __init__(self, trip_store):
@@ -100,11 +104,11 @@ class GtfsRtProducer():
 		return [{
 		      'stopSequence': stoptime.stop_sequence, 
 		      'arrival': {
-		        'time': self._to_seconds(fromdate, stoptime.arrival_time),
+		        'time': self._to_seconds(fromdate, stoptime.arrival_time if stoptime.arrival_time is not None else stoptime.departure_time),
 		        'uncertainty': MFDZ_DEFAULT_UNCERTAINITY
 		      },
 		      'departure': {
-		        'time':  self._to_seconds(fromdate, stoptime.departure_time),
+		        'time':  self._to_seconds(fromdate, stoptime.departure_time if stoptime.departure_time is not None else stoptime.arrival_time),
 		        'uncertainty': MFDZ_DEFAULT_UNCERTAINITY
 		      }, 
 		      'stopId': stoptime.stop_id, 
@@ -119,19 +123,22 @@ class GtfsRtProducer():
 			for stoptime in trip.stop_times]
 
 	def _as_added_updates(self, trip, fromdate):
-		return [{ 
-		    'trip': {
-		      'tripId': trip.trip_id, 
-		      'startTime': trip.start_time_str(),
-		      'startDate': trip_date, 
-		      'scheduleRelationship': 'ADDED', 
-		      'routeId': trip.trip_id,
-		      '[transit_realtime.trip_descriptor]': { 
-					'routeUrl' : trip.url,
-				    'agencyId' : trip.agency,
-				    'route_long_name' : trip.route_long_name(),
-				    'route_type': RIDESHARING_ROUTE_TYPE
-			    	}
-		    },
-		    'stopTimeUpdate': self._to_stop_times(trip, trip_date)
-		} for trip_date in trip.next_trip_dates(fromdate)]
+		try:
+			return [{ 
+			    'trip': {
+			      'tripId': trip.trip_id, 
+			      'startTime': trip.start_time_str(),
+			      'startDate': trip_date, 
+			      'scheduleRelationship': 'ADDED', 
+			      'routeId': trip.trip_id,
+			      '[transit_realtime.trip_descriptor]': { 
+						'routeUrl' : trip.url,
+					    'agencyId' : trip.agency,
+					    'route_long_name' : trip.route_long_name(),
+					    'route_type': RIDESHARING_ROUTE_TYPE
+				    	}
+			    },
+			    'stopTimeUpdate': self._to_stop_times(trip, trip_date)
+			} for trip_date in trip.next_trip_dates(fromdate)]
+		except AttributeError:
+			logger.error(f"Error adding updates for trip {trip.trip_id}")
