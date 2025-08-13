@@ -138,7 +138,8 @@ gtfs/*.zip
 gtfs/*.pbf
 gtfs/*.json
 
-# data/agencyconf is explictly not ignored, as needed for tests
+data/agencyconf/
+!data/agencyconf/mfdz.json
 data/carpool/
 data/enhanced/
 data/failed/
