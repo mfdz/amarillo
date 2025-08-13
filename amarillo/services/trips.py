@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 class Trip:
 
-    def __init__(self, trip_id, route_name, headsign, url, calendar, departureTime, path, agency, lastUpdated, stop_times, bbox):
+    def __init__(self, trip_id, route_name, headsign, url, calendar, departureTime, path, agency, lastUpdated, stop_times, bbox, additional_service_days, non_service_days, stops):
         if isinstance(calendar, set):
             self.runs_regularly = True
-            self.weekdays = [ 
+            self.weekdays = [
                 1 if Weekday.monday in calendar else 0,
                 1 if Weekday.tuesday in calendar else 0,
                 1 if Weekday.wednesday in calendar else 0,
@@ -31,25 +31,30 @@ class Trip:
             ]
             start_in_day = self._total_seconds(departureTime)
         else:
-            self.start = datetime.combine(calendar, departureTime)    
+            self.start = datetime.combine(calendar, departureTime)
             self.runs_regularly = False
-            self.weekdays = [0,0,0,0,0,0,0]
+            self.weekdays = [0, 0, 0, 0, 0, 0, 0]
 
         self.start_time = departureTime
-        self.path = path   
+        self.path = path
         self.trip_id = trip_id
         self.url = url
         self.agency = agency
-        self.stops = []
+        self.stops = stops
         self.lastUpdated = lastUpdated
         self.stop_times = stop_times
         self.bbox = bbox
         self.route_name = route_name
         self.trip_headsign = headsign
+        self.additional_service_days = additional_service_days
+        self.non_service_days = non_service_days
+
+    def __repr__(self):
+        return f'Trip(trip_id={self.trip_id}key: value for key, value , route_name={self.route_name})'
 
     def path_as_line_string(self):
         return path
-    
+
     def _total_seconds(self, instant):
         return instant.hour * 3600 + instant.minute * 60 + instant.second
 
@@ -59,7 +64,7 @@ class Trip:
     def next_trip_dates(self, start_date, day_count=14):
         if self.runs_regularly:
             for single_date in (start_date + timedelta(n) for n in range(day_count)):
-                if self.weekdays[single_date.weekday()]==1:
+                if self.weekdays[single_date.weekday()]==1 and single_date not in self.non_service_days or single_date in self.additional_service_days:
                     yield single_date.strftime("%Y%m%d")
         else:
             yield self.start.strftime("%Y%m%d")
@@ -74,21 +79,19 @@ class Trip:
 class TripStore():
     """
     TripStore maintains the currently valid trips. A trip is a
-    carpool offer enhanced with all stops this 
+    carpool offer enhanced with all stops this
 
     Attributes:
-        trips           Dict of currently valid trips.
-        deleted_trips   Dict of recently deleted trips.
+        stops_store     Stops store
     """
 
-    def __init__(self, stops_store):
-        self.transformer = TripTransformer(stops_store)
+    def __init__(self, stops_store, agency_conf_service):
+        self.transformer = TripTransformer(stops_store, agency_conf_service)
         self.stops_store = stops_store
         self.trips = {}
         self.deleted_trips = {}
         self.recent_trips = {}
-
-
+          
     def put_carpool(self, carpool: Carpool):
         """
         Adds carpool to the TripStore.
@@ -96,8 +99,12 @@ class TripStore():
         id = "{}:{}".format(carpool.agency, carpool.id)
         filename = f'data/enhanced/{carpool.agency}/{carpool.id}.json'
         try:
-            existing_carpool = self._load_carpool_if_exists(carpool.agency, carpool.id)
+            existing_carpool = self._load_enhanced_carpool_if_exists(carpool.agency, carpool.id)
+            if existing_carpool is not None:
+                logger.info(f"Received put for already enhanced carpool {carpool.agency}:{carpool.id}.")
+                # todo must compare agains unenhanced
             if existing_carpool and existing_carpool.lastUpdated == carpool.lastUpdated:
+                logger.info(f"Skip enhancement for {carpool.agency}:{carpool.id} as existing is equivalent.")
                 enhanced_carpool = existing_carpool
             else:
                 if len(carpool.stops) < 2 or self.distance_in_m(carpool) < 1000:
@@ -105,12 +112,15 @@ class TripStore():
                     self.handle_failed_carpool_enhancement(carpool)
                     return
                 enhanced_carpool = self.transformer.enhance_carpool(carpool)
-                # TODO should only store enhanced_carpool, if it has 2 or more stops
+                if len(enhanced_carpool.stops) < 2:
+                    logger.warning("Failed to add carpool %s:%s to TripStore, less than two stops after enhancement", carpool.agency, carpool.id)
+                    self.handle_failed_carpool_enhancement(carpool)
+                    return
                 assert_folder_exists(f'data/enhanced/{carpool.agency}/')
                 with open(filename, 'w', encoding='utf-8') as f:
-                    f.write(enhanced_carpool.json())
+                    f.write(enhanced_carpool.model_dump_json())
                 logger.info("Added enhanced carpool %s:%s", carpool.agency, carpool.id)
-            
+
             return self._load_as_trip(enhanced_carpool)
         except RoutingException as err:
             logger.warning("Failed to add carpool %s:%s to TripStore due to RoutingException %s", carpool.agency, carpool.id, getattr(err, 'message', repr(err)))
@@ -122,14 +132,14 @@ class TripStore():
     def handle_failed_carpool_enhancement(sellf, carpool: Carpool):
         assert_folder_exists(f'data/failed/{carpool.agency}/')
         with open(f'data/failed/{carpool.agency}/{carpool.id}.json', 'w', encoding='utf-8') as f:
-            f.write(carpool.json())
+            f.write(carpool.model_dump_json())
 
     def distance_in_m(self, carpool):
         if len(carpool.stops) < 2:
             return 0
         s1 = carpool.stops[0]
         s2 = carpool.stops[-1]
-        return geodesic_distance_in_m((s1.lon, s1.lat),(s2.lon, s2.lat)) 
+        return geodesic_distance_in_m((s1.lon, s1.lat), (s2.lon, s2.lat))
 
     def recently_added_trips(self):
         return list(self.recent_trips.values())
@@ -137,12 +147,12 @@ class TripStore():
     def recently_deleted_trips(self):
         return list(self.deleted_trips.values())
 
-    def _load_carpool_if_exists(self, agency_id: str, carpool_id: str):
+    def _load_enhanced_carpool_if_exists(self, agency_id: str, carpool_id: str):
         if carpool_exists(agency_id, carpool_id, 'data/enhanced'):
             try:
                 return load_carpool(agency_id, carpool_id, 'data/enhanced')
             except Exception as e:
-                # An error on restore could be caused by model changes, 
+                # An error on restore could be caused by model changes,
                 # in such a case, it need's to be recreated
                 logger.warning("Could not restore enhanced trip %s:%s, reason: %s", agency_id, carpool_id, repr(e))
 
@@ -160,20 +170,20 @@ class TripStore():
 
     def delete_carpool(self, agency_id: str, carpool_id: str):
         """
-            Deletes carpool from the TripStore.
+        Deletes carpool from the TripStore.
         """
         agencyScopedCarpoolId = f"{agency_id}:{carpool_id}"
         trip_to_be_deleted = self.trips.get(agencyScopedCarpoolId)
         if trip_to_be_deleted:
             self.deleted_trips[agencyScopedCarpoolId] = trip_to_be_deleted
             del self.trips[agencyScopedCarpoolId]
-        
+
         if self.recent_trips.get(agencyScopedCarpoolId):
             del self.recent_trips[agencyScopedCarpoolId]
 
         if carpool_exists(agency_id, carpool_id):
             remove_carpool_file(agency_id, carpool_id)
-            
+
         logger.debug("Deleted trip %s", id)
 
     def unflag_unrecent_updates(self):
@@ -194,19 +204,20 @@ class TripStore():
 
 
 class TripTransformer:
-    REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS = True
     REPLACEMENT_STOPS_SERACH_RADIUS_IN_M = 1000
     SIMPLIFY_TOLERANCE = 0.0001
 
     router = RoutingService(config.graphhopper_base_url)
 
-    def __init__(self, stops_store):
+    def __init__(self, stops_store, agency_conf_service):
         self.stops_store = stops_store
+        self.agency_conf_service = agency_conf_service
+
 
     def transform_to_trip(self, carpool):
         stop_times = self._convert_stop_times(carpool)
-        route_name = carpool.stops[0].name + " nach " + carpool.stops[-1].name
-        headsign= carpool.stops[-1].name
+        route_name = carpool.stops[0].name + " -> " + carpool.stops[-1].name
+        headsign = carpool.stops[-1].name
         trip_id = self._trip_id(carpool)
         path = carpool.path
         bbox = box(
@@ -214,8 +225,14 @@ class TripTransformer:
             min([pt[1] for pt in path.coordinates]),
             max([pt[0] for pt in path.coordinates]),
             max([pt[1] for pt in path.coordinates]))
-            
-        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, carpool.path, carpool.agency, carpool.lastUpdated, stop_times, bbox)
+
+        if carpool.exceptionDates is None:
+            additional_service_days = []
+            non_service_days = []
+        else:
+            additional_service_days = [exception.date for exception in carpool.exceptionDates if exception.exceptionType=='added']
+            non_service_days = [exception.date for exception in carpool.exceptionDates if exception.exceptionType=='removed']
+        trip = Trip(trip_id, route_name, headsign, str(carpool.deeplink), carpool.departureDate, carpool.departureTime, carpool.path, carpool.agency, carpool.lastUpdated, stop_times, bbox, additional_service_days, non_service_days, carpool.stops)
 
         return trip
 
@@ -228,38 +245,70 @@ class TripTransformer:
             new_stops.append(self.stops_store.find_closest_stop(carpool_stop, max_search_distance))
         return new_stops
 
+    def _should_add_dropoff_pickup_stops(self, carpool):
+        agency_conf = self.agency_conf_service.get_agency_conf(carpool.agency)
+        return agency_conf.add_dropoffs_and_pickups
+
+    def _should_replace_carpool_stops_by_closest_transit_stops(self, carpool):
+        agency_conf = self.agency_conf_service.get_agency_conf(carpool.agency)
+        return agency_conf.replace_carpool_stops_by_closest_transit_stops
+
     def enhance_carpool(self, carpool):
-        if self.REPLACE_CARPOOL_STOPS_BY_CLOSEST_TRANSIT_STOPS:
+        if self._should_replace_carpool_stops_by_closest_transit_stops(carpool):
             carpool.stops = self._replace_stops_by_transit_stops(carpool, self.REPLACEMENT_STOPS_SERACH_RADIUS_IN_M)
- 
-        path = self._path_for_ride(carpool)
-        lineString_shapely_wgs84 = LineString(coordinates = path["points"]["coordinates"]).simplify(0.0001)
-        lineString_wgs84 = GeoJSONLineString(type="LineString", coordinates=list(lineString_shapely_wgs84.coords))
-        virtual_stops = self.stops_store.find_additional_stops_around(lineString_wgs84, carpool.stops) 
-        if not virtual_stops.empty:
-            virtual_stops["time"] = self._estimate_times(path, virtual_stops['distance'])
-            logger.debug("Virtual stops found: {}".format(virtual_stops))
-        if len(virtual_stops) > MAX_STOPS_PER_TRIP:
-            # in case we found more than MAX_STOPS_PER_TRIP, we retain first and last 
-            # half of MAX_STOPS_PER_TRIP
-            virtual_stops = virtual_stops.iloc[np.r_[0:int(MAX_STOPS_PER_TRIP/2), -int(MAX_STOPS_PER_TRIP/2):0]]
-            
+
         trip_id = f"{carpool.agency}:{carpool.id}"
-        stop_times = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
+        enhanced_carpool = carpool.model_copy(deep=True)
+        should_add_dropoff_pickup_stops = self._should_add_dropoff_pickup_stops(carpool)
         
-        enhanced_carpool = carpool.copy()
-        enhanced_carpool.stops = stop_times
-        enhanced_carpool.path = lineString_wgs84
+
+        if should_add_dropoff_pickup_stops:
+            if carpool.path is not None:
+                # To enhance stops, we need a path with distance/time points as returned by GraphHopper
+                # A simple linestring is not sufficient
+                logger.warning("For {}, supplied path will be overriden, as agency is configured to enhance dropoff/pickup stops")
+            
+            routing_result = self._path_for_ride(carpool)
+            lineString_shapely_wgs84 = LineString(coordinates=routing_result["points"]["coordinates"]).simplify(0.0001)
+            lineString_wgs84 = GeoJSONLineString(type="LineString", coordinates=list(lineString_shapely_wgs84.coords))
+            enhanced_carpool.path = lineString_wgs84
+
+            if should_add_dropoff_pickup_stops:
+                virtual_stops = self.stops_store.find_additional_stops_around(enhanced_carpool.path, carpool.stops)
+                if not virtual_stops.empty:
+                    virtual_stops["time"] = self._estimate_times(routing_result, virtual_stops['distance'])
+                    logger.debug("Virtual stops found: {}".format(virtual_stops))
+                if len(virtual_stops) > MAX_STOPS_PER_TRIP:
+                    # in case we found more than MAX_STOPS_PER_TRIP, we retain first and last
+                    # half of MAX_STOPS_PER_TRIP
+                    virtual_stops = virtual_stops.iloc[np.r_[0:int(MAX_STOPS_PER_TRIP/2), -int(MAX_STOPS_PER_TRIP/2):0]]
+
+                enhanced_carpool.stops = self._stops_and_stop_times(carpool.departureTime, trip_id, virtual_stops)
+            
+        else:
+            for stop in enhanced_carpool.stops:
+                # be sure that externally specified stop is complete, i.e. has stop_id, departure/arrival time, and possibly pickup/dropoff
+                if not stop.id:
+                    raise Exception("When trip's stops remain unchanged, stop.id is mandatory")
+                if not stop.arrivalTime and not stop.departureTime:
+                    raise Exception("When trip's stops remain unchanged, at least one of stop.arrivalTime or stop.departureTime must be set")
+                elif not stop.arrivalTime:
+                    stop.arrivalTime = stop.departureTime
+                elif not stop.departureTime:
+                    stop.departureTime = stop.arrivalTime
+                if not stop.pickup_dropoff:
+                    stop.pickup_dropoff = PickupDropoffType.pickup_and_dropoff
+
         return enhanced_carpool
 
     def _convert_stop_times(self, carpool):
 
         stop_times = [GtfsStopTime(
-                self._trip_id(carpool), 
-                stop.arrivalTime, 
-                stop.departureTime, 
-                stop.id, 
-                seq_nr+1,
+                self._trip_id(carpool),
+                stop.arrivalTime,
+                stop.departureTime,
+                stop.id,
+                seq_nr + 1,
                 STOP_TIMES_STOP_TYPE_NONE if stop.pickup_dropoff == PickupDropoffType.only_dropoff else STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER, 
                 STOP_TIMES_STOP_TYPE_NONE if stop.pickup_dropoff == PickupDropoffType.only_pickup else STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER, 
                 STOP_TIMES_TIMEPOINT_APPROXIMATE) 
@@ -269,7 +318,7 @@ class TripTransformer:
     def _path_for_ride(self, carpool):
         points = self._stop_coords(carpool.stops)
         return self.router.path_for_stops(points)
-    
+
     def _stop_coords(self, stops):
         # Retrieve coordinates of all officially announced stops (start, intermediate, target)
         return [Point(stop.lon, stop.lat) for stop in stops]
@@ -284,14 +333,14 @@ class TripTransformer:
         instr_distance = instructions[cnt]["distance"]
         instr_time = instructions[cnt]["time"]
 
-        for distance in distances_from_start:       
+        for distance in distances_from_start:
             while cnt < len(instructions) and cumulated_distance + instructions[cnt]["distance"] < distance:
                 cumulated_distance = cumulated_distance + instructions[cnt]["distance"]
                 cumulated_time = cumulated_time + instructions[cnt]["time"]
                 cnt = cnt + 1
-            
+
             if cnt < len(instructions):
-                if instructions[cnt]["distance"] ==0:
+                if instructions[cnt]["distance"] == 0:
                     raise RoutingException("Origin and destinaction too close")
                 percent_dist = (distance - cumulated_distance) / instructions[cnt]["distance"]
                 stop_time = cumulated_time + percent_dist * instructions[cnt]["time"]
@@ -302,15 +351,15 @@ class TripTransformer:
         return stop_times
 
     def _stops_and_stop_times(self, start_time, trip_id, stops_frame):
-        # Assumptions: 
+        # Assumptions:
         # arrival_time = departure_time
         # pickup_type, drop_off_type for origin: = coordinate/none
         # pickup_type, drop_off_type for destination: = none/coordinate
         # timepoint = approximate for origin and destination (not sure what consequences this might have for trip planners)
         number_of_stops = len(stops_frame.index)
-        total_distance = stops_frame.iloc[number_of_stops-1]["distance"]
-        
-        first_stop_time = GtfsTimeDelta(hours = start_time.hour, minutes = start_time.minute, seconds = start_time.second) 
+        total_distance = stops_frame.iloc[number_of_stops - 1]["distance"]
+
+        first_stop_time = GtfsTimeDelta(hours=start_time.hour, minutes=start_time.minute, seconds=start_time.second)
         stop_times = []
         seq_nr = 0
         for i in range(0, number_of_stops):
@@ -319,7 +368,7 @@ class TripTransformer:
             if not current_stop.id:
                 continue
             elif i == 0:
-                if (stops_frame.iloc[1].time-current_stop.time) < 1000:
+                if (stops_frame.iloc[1].time - current_stop.time) < 1000:
                     # skip custom stop if there is an official stop very close by
                     logger.debug("Skipped stop %s", current_stop.id)
                     continue
@@ -331,10 +380,10 @@ class TripTransformer:
             trip_time = timedelta(milliseconds=int(current_stop.time))
             is_dropoff = self._is_dropoff_stop(current_stop, total_distance)
             is_pickup = self._is_pickup_stop(current_stop, total_distance)
-            # TODO would be nice if possible to publish a minimum shared distance 
+            # TODO would be nice if possible to publish a minimum shared distance
             pickup_type = STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_pickup else STOP_TIMES_STOP_TYPE_NONE
             dropoff_type = STOP_TIMES_STOP_TYPE_COORDINATE_DRIVER if is_dropoff else STOP_TIMES_STOP_TYPE_NONE
-            
+
             if is_pickup and not is_dropoff:
                 pickup_dropoff = PickupDropoffType.only_pickup
             elif not is_pickup and is_dropoff:
@@ -355,10 +404,10 @@ class TripTransformer:
                 }))
 
         return stop_times
-    
+
     def _is_dropoff_stop(self, current_stop, total_distance):
         return current_stop["distance"] >= 0.5 * total_distance
-        
+
     def _is_pickup_stop(self, current_stop, total_distance):
         return current_stop["distance"] < 0.5 * total_distance
 

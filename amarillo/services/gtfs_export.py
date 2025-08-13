@@ -8,7 +8,7 @@ import logging
 import re
 
 from amarillo.utils.utils import assert_folder_exists
-from amarillo.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape
+from amarillo.models.gtfs import GtfsTimeDelta, GtfsFeedInfo, GtfsAgency, GtfsRoute, GtfsStop, GtfsStopTime, GtfsTrip, GtfsCalendar, GtfsCalendarDate, GtfsShape, format_calendar
 from amarillo.services.stops import is_carpooling_stop
 from amarillo.services.gtfs_constants import *
 
@@ -34,8 +34,6 @@ class GtfsExport:
         self.shapes = []
         self.agencies = agencies
         self.feed_info = feed_info
-        self.localized_to = " nach "
-        self.localized_short_name = "Mitfahrgelegenheit"
         self.stopstore = stopstore
         self.ridestore = ridestore
         self.bbox = bbox
@@ -79,11 +77,26 @@ class GtfsExport:
                 self._convert_trip(trip)
     
     def _convert_trip(self, trip):
+        """
+        Appends all required gtfs records for this trip to the
+        GTFS feeds files. I.e. it creates a new route, trip,
+        calendar, calendar_dates (in case it's no regular trip or
+        some dates are exceptionally served/unserved), stop_times 
+        and shapes. 
+        """
         self.routes_counter += 1
-        self.routes.append(self._create_route(trip))
-        self.calendar.append(self._create_calendar(trip))
+        calendar = self._create_calendar(trip)
+        trip_calendar_dates = []
         if not trip.runs_regularly:
-            self.calendar_dates.append(self._create_calendar_date(trip))
+            trip_calendar_dates = [self._create_calendar_date(trip)]
+        else:
+            # Append exceptions from regular schedule to calendar_dates
+            trip_calendar_dates.extend([GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_ADDED) for d in trip.additional_service_days or []])
+            trip_calendar_dates.extend([GtfsCalendarDate(trip.trip_id, self._convert_stop_date(d), CALENDAR_DATES_EXCEPTION_TYPE_REMOVED) for d in trip.non_service_days or []])
+                
+        self.routes.append(self._create_route(trip, calendar, trip_calendar_dates))
+        self.calendar.append(calendar)
+        self.calendar_dates.extend(trip_calendar_dates)
         self.trips.append(self._create_trip(trip, self.routes_counter))
         self._append_stops_and_stop_times(trip)
         self._append_shapes(trip, self.routes_counter)
@@ -111,8 +124,9 @@ class GtfsExport:
             logger.exception(ex)
             return destination
    
-    def _create_route(self, trip): 
-        return GtfsRoute(trip.agency, trip.trip_id, trip.route_long_name(), RIDESHARING_ROUTE_TYPE, trip.url, "")
+    def _create_route(self, trip, calendar: GtfsCalendar, calendar_dates: list[GtfsCalendarDate]): 
+        calendar_desc = format_calendar(calendar, calendar_dates)
+        return GtfsRoute(trip.agency, trip.trip_id, trip.route_long_name(), RIDESHARING_ROUTE_TYPE, trip.url, "", calendar_desc)
         
     def _create_calendar(self, trip):
         # TODO currently, calendar is not provided by Fahrgemeinschaft.de interface.
@@ -148,6 +162,12 @@ class GtfsExport:
 
         stop_name = "k.A." if stop.stop_name is None else stop.stop_name
         return GtfsStop(id, stop.y, stop.x, stop_name)
+
+    def _extract_stop_from_trip(self, stop_id, trip):
+        matched_stop = next(stop for stop in trip.stops if stop.id == stop_id)
+        if matched_stop is not None:
+            return GtfsStop(matched_stop.id, matched_stop.lat, matched_stop.lon, matched_stop.name )
+        return None
         
     def _append_stops_and_stop_times(self, trip):
         # Assumptions: 
@@ -156,14 +176,23 @@ class GtfsExport:
         # pickup_type, drop_off_type for destination: = none/coordinate
         # timepoint = approximate for origin and destination (not sure what consequences this might have for trip planners)
         for stop_time in trip.stop_times:
-            # retrieve stop from stored_stops and mark it to be exported
-            wkn_stop = self.stored_stops.get(stop_time.stop_id)
-            if not wkn_stop:
-                logger.warning("No stop found in stop_store for %s. Will skip stop_time %s of trip %s", stop_time.stop_id, stop_time.stop_sequence, trip.trip_id)
-            else:
-                self.stops[stop_time.stop_id] = wkn_stop
+            if stop_time.stop_id in self.stops:
                 # Append stop_time
                 self.stop_times.append(stop_time)
+                continue
+            
+            # retrieve stop from stored_stops and mark it to be exported
+            wkn_stop = self.stored_stops.get(stop_time.stop_id)
+            if wkn_stop is None:
+                # if the stop is provided by the trip's agency, add it
+                wkn_stop = self._extract_stop_from_trip(stop_time.stop_id, trip)
+                if wkn_stop is None:
+                    logger.warning("No stop found in stop_store for %s. Will skip stop_time %s of trip %s", stop_time.stop_id, stop_time.stop_sequence, trip.trip_id)
+                    continue
+            
+            self.stops[stop_time.stop_id] = wkn_stop
+            # Append stop_time
+            self.stop_times.append(stop_time)
         
     def _append_shapes(self, trip, shape_id):
         counter = 0

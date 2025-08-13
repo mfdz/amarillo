@@ -132,10 +132,13 @@ setup.ipynb
 
 *~
 /.idea/
+/.vscode/
 secrets
 gtfs/*.zip
 gtfs/*.pbf
 gtfs/*.json
+
+# data/agencyconf is explictly not ignored, as needed for tests
 data/carpool/
 data/enhanced/
 data/failed/
@@ -143,3 +146,10 @@ data/trash/
 data/gtfs/
 data/tmp
 
+
+#these files are under app/static but they get copied to the outside directory on startup
+logging.conf
+config
+static/**
+templates/**
+conf/**

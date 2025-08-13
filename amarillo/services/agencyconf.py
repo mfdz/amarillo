@@ -6,7 +6,7 @@ import logging
 
 from fastapi import HTTPException, status
 
-from amarillo.models.AgencyConf import AgencyConf
+from amarillo.models.AgencyConf import AgencyConf, AgencyRole
 from amarillo.services.config import config
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,11 @@ class AgencyConfService:
 
                 agency_conf = AgencyConf(**dictionary)
 
+                # Default: if no role was defined, the default role is
+                # carpool_agency.
+                if agency_conf.roles is None:
+                    agency_conf.roles = [AgencyRole.carpool_agency]
+
                 agency_id = agency_conf.agency_id
                 api_key = agency_conf.api_key
 
@@ -38,7 +43,7 @@ class AgencyConfService:
         agency_conf = self.agency_id_to_agency_conf.get(agency_id)
         return agency_conf
 
-    def check_api_key(self, api_key: str) -> str:
+    def check_api_key(self, api_key: str, role: str | None = None) -> str:
         """Check if the API key is valid
 
         The agencies' api keys are checked first, and the admin's key.
@@ -52,7 +57,12 @@ class AgencyConfService:
         is_agency = agency_id is not None
 
         if is_agency:
-            return agency_id
+            if role is not None:
+                agency_conf = self.get_agency_conf(agency_id)
+                if role in agency_conf.roles:
+                    return agency_id
+            else:
+                return agency_id
 
         is_admin = api_key == config.admin_token
 
@@ -86,7 +96,7 @@ class AgencyConfService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
         with open(f'{agency_conf_directory}/{agency_id}.json', 'w', encoding='utf-8') as f:
-            f.write(agency_conf.json())
+            f.write(agency_conf.model_dump_json())
 
         self.agency_id_to_agency_conf[agency_id] = agency_conf
         self.api_key_to_agency_id[api_key] = agency_id
@@ -95,6 +105,9 @@ class AgencyConfService:
 
     def get_agency_ids(self) -> List[str]:
         return list(self.agency_id_to_agency_conf.keys())
+
+    def get_all_agencies(self):
+        return list(self.agency_id_to_agency_conf.values())
 
     def delete(self, agency_id):
 

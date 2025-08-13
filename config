@@ -4,3 +4,6 @@ env = 'PROD'
 graphhopper_base_url = 'https://api.mfdz.de/gh'
 stop_sources_file = 'conf/stop_sources.json'
 max_age_carpool_offers_in_days = 3640
+# When debug is set to True, post requests are logged at loglevel INFO. 
+# (Only use this temporarilly to e.g. debug 422 Unprocessable Entity requests)
+debug=False

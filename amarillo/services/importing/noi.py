@@ -7,7 +7,6 @@ import requests
 
 from amarillo.models.Carpool import Carpool, StopTime
 from amarillo.services.config import config
-from amarillo.services.secrets import secrets
 
 logger = logging.getLogger(__name__)
 
