@@ -141,4 +141,5 @@ class GtfsRtProducer():
 			    'stopTimeUpdate': self._to_stop_times(trip, trip_date)
 			} for trip_date in trip.next_trip_dates(fromdate)]
 		except AttributeError:
-			logger.error(f"Error adding updates for trip {trip.trip_id}")
+			logger.exception(f"Error adding updates for trip {trip.trip_id}")
+			return []
