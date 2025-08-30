@@ -79,8 +79,11 @@ def configure_enhancer_services():
         # notify carpool about carpools in trash, as delete notifications must be sent
         for carpool_file_name in glob(f'data/trash/{agency_id}/*.json'):
             with open(carpool_file_name) as carpool_file:
-                carpool = Carpool(**(json.load(carpool_file)))
-                container['carpools'].delete(carpool.agency, carpool.id)
+                try:
+                    carpool = Carpool(**(json.load(carpool_file)))
+                    container['carpools'].delete(carpool.agency, carpool.id)
+                except Exception as e:
+                    logger.warning("Issue during deletion of carpool %s: %s", carpool_file_name, repr(e))
 
     logger.info("Restored carpools: %s", container['carpools'].get_all_ids())
     logger.info("Starting scheduler")
