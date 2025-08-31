@@ -296,6 +296,11 @@ class TripTransformer:
                     stop.arrivalTime = stop.departureTime
                 elif not stop.departureTime:
                     stop.departureTime = stop.arrivalTime
+                if stop.arrivalTime and len(stop.arrivalTime)==5:
+                    stop.arrivalTime = stop.arrivalTime + ":00"
+                if stop.departureTime and len(stop.departureTime)==5:
+                    stop.departureTime = stop.departureTime + ":00"
+
                 if not stop.pickup_dropoff:
                     stop.pickup_dropoff = PickupDropoffType.pickup_and_dropoff
 
