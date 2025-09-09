@@ -25,8 +25,9 @@ class Syncer:
         self.agencyconf_service = agencyconf_service
 
     def perform_full_sync(self) -> None:
-        agencies = self.agencyconf_service.get_all_agencies()
-        for agency in [agency for agency in agencies if self.should_sync(agency)]:
+        agencies_to_sync = [agency for agency in self.agencyconf_service.get_all_agencies() if self.should_sync(agency)]
+        logger.info(f"Perform full sync for agencies {agencies_to_sync}")
+        for agency in agencies_to_sync:
             try:
                 asyncio.run(self.sync(agency.agency_id, agency.offers_download_url, agency.offers_download_http_headers))
             except Exception as e:
@@ -57,9 +58,12 @@ class Syncer:
             importer = AmarilloImporter(agency_id, offers_download_url, offers_download_http_headers)
 
         sync_start_time = time.time()
+        logger.info(f"Start sync for agency {agency_id} at {sync_start_time}")
+
         carpools = importer.load_carpools()
 
         result = [await self.store.store_carpool(cp) for cp in carpools]
-
+        logger.info(f"Synced {len(result)} offers for agency {agency_id}")
+        
         await self.store.delete_agency_carpools_older_than(agency_id, sync_start_time)
         return result

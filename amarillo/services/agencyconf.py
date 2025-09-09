@@ -30,7 +30,7 @@ class AgencyConfService:
 
                 # Default: if no role was defined, the default role is
                 # carpool_agency.
-                if agency_conf.roles is None:
+                if agency_conf.roles is None or len(agency_conf.roles) == 0:
                     agency_conf.roles = [AgencyRole.carpool_agency]
 
                 agency_id = agency_conf.agency_id
