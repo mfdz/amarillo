@@ -38,7 +38,7 @@ class StopTime(BaseModel):
         "Haltestellenverzeichnis (zHV)', published by DELFI e.V. "
         "Note, that currently carpooling location.",
         # TODO: usually, ifopts should start with country code. sta GTFS uses Parentit, so we extend to max 8 chars
-        pattern=r"^([a-zA-Z]{2,8}):\d+:\d+(:\d*(:\w+)?)?$|^osm:[nwr]\d+$|^\w+:\w+$",
+        pattern=r"^([a-zA-Z]{2,8}):\d+:\d+(:\d*(:\w+)?)?$|^ch:\d+:sloid:\d+(:\d*(:\w+)?)?$|^osm:[nwr]\d+$|^\w+:\w+$",
         examples=["de:12073:900340137::2"])
 
     name: str = Field(
