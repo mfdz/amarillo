@@ -41,10 +41,12 @@ class PendlerportalImporter(AmarilloImporter):
             logger.debug("Startdate of %s unset, using 06:00", carpool_id)
             departureTime = "06:00"
 
+        deeplink = f"https://{offer['deeplink']}" if not offer["deeplink"].startswith("http") else offer["deeplink"]
+
         carpool = Carpool(
             id=carpool_id,
             agency=self.agency_id,
-            deeplink=offer["deeplink"],
+            deeplink=deeplink,
             stops=[self._extract_stop(stop) for stop in offer["stops"]],
             departureTime=departureTime,
             departureDate=departureDate,
