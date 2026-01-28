@@ -26,7 +26,8 @@ class Syncer:
 
     def perform_full_sync(self) -> None:
         agencies_to_sync = [agency for agency in self.agencyconf_service.get_all_agencies() if self.should_sync(agency)]
-        logger.info(f"Perform full sync for agencies {agencies_to_sync}")
+        agency_ids_to_sync = [agency.agency_id for agency in agencies_to_sync]
+        logger.info(f"Perform full sync for agencies {agency_ids_to_sync}")
         for agency in agencies_to_sync:
             try:
                 asyncio.run(self.sync(agency.agency_id, agency.offers_download_url, agency.offers_download_http_headers))
