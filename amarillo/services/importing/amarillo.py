@@ -83,8 +83,8 @@ class AmarilloImporter:
         for cp in self._offers_raw():
             try:
                 carpools.append(self._extract_carpool(cp))
-            except:
-                logger.error(f"Error on import for agency {self.agency_id} {cp}")
+            except BaseException as e:
+                logger.exception(f"Error on import for agency {self.agency_id} {cp}", e)
                 continue
 
         return carpools
