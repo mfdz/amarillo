@@ -33,7 +33,7 @@ class Ride2GoImporter:
         lastUpdated = dict.get('lastUpdated')
         carpool = Carpool(
             id=id,
-            agency=agency,
+            agency='ride2go',
             deeplink=dict['deeplink'],
             stops=[Ride2GoImporter._extract_stop(s) for s in dict.get('stops')],
             departureTime=dict.get('departTime'),
