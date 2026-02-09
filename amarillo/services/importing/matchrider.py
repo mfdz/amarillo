@@ -13,7 +13,14 @@ class MobilityDIYImporter(AmarilloImporter):
 
     @staticmethod
     def _extract_stop(stop):
-        stop_id = f'matchrider:{stop["id"]}' if not stop['id'].startswith('matchrider:') else stop['id']
+        if stop['id'].startswith('matchrider:'):
+            stop_id = stop['id']
+        else:
+            # if stop id does not start with matchrider:, 
+            # we expect ifopt. However, only station ifopt 
+            # is currently supported, so we chop off trailing parts
+            stop_id = stop['id'][0:stop['id'].find(':',9)]
+        stop_name = stop.get('name','-')
         arrivalTime = stop.get('arrivalTime')
         departureTime = stop.get('departureTime')
         if arrivalTime is not None and len(arrivalTime)==5:
@@ -23,7 +30,7 @@ class MobilityDIYImporter(AmarilloImporter):
 
         return StopTime(
             id=stop_id,
-            name=stop['name'],
+            name=stop_name,
             lat=float(stop['lat']),
             lon=float(stop['lon']),
             arrivalTime=arrivalTime,
@@ -49,9 +56,6 @@ class MobilityDIYImporter(AmarilloImporter):
         for cp in payload:
             if self._should_offer_be_ignored(cp):
                 continue
-            for stop in cp['stops']:
-                if 'id' in stop and not stop['id'].startswith('matchrider:'):
-                    stop['id'] = f'matchrider:{stop["id"]}'
-
+            
             filtered_payload.append(cp)
         return filtered_payload
