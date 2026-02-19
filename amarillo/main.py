@@ -1,5 +1,9 @@
 import logging.config
 import warnings
+from pydantic import ValidationError
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 from amarillo.configuration import configure_services, configure_admin_token
 from amarillo.services.config import config
@@ -63,14 +67,15 @@ def configure():
     configure_routing()
 
 
-@app.middleware("http")
-async def log_request_data(request: Request, call_next):
-    if request.method == "POST" and config.debug:
-        body = await request.body()
-        logger.info(f"POST Request to {request.url.path} with body: {body.decode('utf-8')}")
-    
-    return await call_next(request)
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.warning(f"Request failed %s", exc)
+    return JSONResponse(
+        status_code=422,
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+    )
 
+    
 def configure_routing():
     mimetypes.add_type('application/x-protobuf', '.pbf')
     app.mount('/static', StaticFiles(directory='static'), name='static')
