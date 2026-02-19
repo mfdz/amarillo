@@ -23,10 +23,11 @@ class FileBasedStore:
         return os.path.exists(f"data/carpool/{agency_id}/{carpool_id}.json")
 
     async def store_carpool(self, carpool: Carpool) -> Carpool:
+        logger.info(f"Store Carpool  {carpool.agency}:{carpool.id} ")
         if await self.does_carpool_exist(carpool.agency, carpool.id):
             existing_carpool = await self.load_carpool(carpool.agency, carpool.id)
             if self._are_carpools_equivalent(existing_carpool, carpool):
-                logger.debug(f"Carpool  {carpool.agency}:{carpool.id} already exists and seems equivalent, will copy timestamp if unset")
+                logger.info(f"Carpool  {carpool.agency}:{carpool.id} already exists and seems equivalent, will copy timestamp if unset")
                 if carpool.lastUpdated is None:
                     carpool.lastUpdated = existing_carpool.lastUpdated
         
@@ -49,7 +50,7 @@ class FileBasedStore:
         for carpool_file_name in glob(f"data/carpool/{agency_id}/*.json"):
             if os.path.getmtime(carpool_file_name) < timestamp:
                 m = re.search(r"([a-zA-Z0-9_-]+)\.json$", carpool_file_name)
-                # TODO log deletion
+                logger.info("Will delete %s as file timestamp is older than {timestamp}", carpool_file_name)
                 await self.delete_carpool(agency_id, m[1])
 
     async def delete_carpool(self, agency_id: str, carpool_id: str):
