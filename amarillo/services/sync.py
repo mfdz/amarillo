@@ -12,7 +12,7 @@ from amarillo.services.importing import (
     MyCarpoolAppImporter,
     NoiImporter,
     PendlerportalImporter,
-    Ride2GoImporter,
+    FahrgemeinschaftImporter,
     SimplyHopImporter,
 )
 
@@ -41,8 +41,8 @@ class Syncer:
         schedule.every().day.at(time_str).do(self.perform_full_sync)
 
     async def sync(self, agency_id: str, offers_download_url=None, offers_download_http_headers=None):
-        if agency_id == "ride2go":
-            importer = Ride2GoImporter(offers_download_url, offers_download_http_headers)
+        if agency_id in ("ride2go", "fahrgemeinschaft"):
+            importer = FahrgemeinschaftImporter(offers_download_url, offers_download_http_headers)
         elif agency_id == "ummadum":
             importer = NoiImporter(agency_id, test_mode=True)
         elif agency_id == "bessermitfahren":

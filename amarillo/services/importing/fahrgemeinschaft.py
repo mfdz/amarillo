@@ -11,7 +11,7 @@ from amarillo.services.secrets import secrets
 logger = logging.getLogger(__name__)
 
 
-class Ride2GoImporter:
+class FahrgemeinschaftImporter:
 
     def __init__(self, url, http_headers: dict[str, str] = {}):
         self.carpools_url = str(url)
@@ -33,9 +33,9 @@ class Ride2GoImporter:
         lastUpdated = dict.get('lastUpdated')
         carpool = Carpool(
             id=id,
-            agency='ride2go',
+            agency='fahrgemeinschaft',
             deeplink=dict['deeplink'],
-            stops=[Ride2GoImporter._extract_stop(s) for s in dict.get('stops')],
+            stops=[FahrgemeinschaftImporter._extract_stop(s) for s in dict.get('stops')],
             departureTime=dict.get('departTime'),
             departureDate=dict.get('departDate') if dict.get('departDate') else dict.get('weekdays'),
             lastUpdated=lastUpdated +'T00:00:00' if lastUpdated and len(lastUpdated) == 10 else lastUpdated
@@ -53,7 +53,7 @@ class Ride2GoImporter:
 
                 return carpools
             else:
-                logger.error('ride2go request returned with status_code %s', result.status_code)
+                logger.error('fahrgemeinschaft request returned with status_code %s', result.status_code)
                 json_results = result.json()
                 if 'status' in json_results:
                     logger.error('Error was: %s', result.json()['status'])
@@ -61,5 +61,5 @@ class Ride2GoImporter:
                 raise ValueError('Sync failed with error. See logs')
 
         except BaseException as e:
-            logger.exception('Error on import for agency ride2go')
+            logger.exception('Error on import for agency fahrgemeinschaft')
             raise e

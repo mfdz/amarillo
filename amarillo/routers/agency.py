@@ -8,7 +8,7 @@ from requests.exceptions import HTTPError
 from amarillo.models.Carpool import Carpool, Agency
 from amarillo.routers.agencyconf import verify_api_key, verify_admin_api_key, verify_permission_for_same_agency_or_admin
 from amarillo.services.agencies import AgencyService
-from amarillo.services.importing import Ride2GoImporter, NoiImporter, AmarilloImporter
+from amarillo.services.importing import FahrgemeinschaftImporter, NoiImporter, AmarilloImporter
 from amarillo.services.sync import Syncer
 from amarillo.stores.filebasedstore import FileBasedStore
 from amarillo.utils.container import container
