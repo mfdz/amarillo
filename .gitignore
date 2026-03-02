@@ -133,7 +133,6 @@ setup.ipynb
 *~
 /.idea/
 /.vscode/
-secrets
 gtfs/*.zip
 gtfs/*.pbf
 gtfs/*.json

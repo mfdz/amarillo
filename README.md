@@ -128,4 +128,4 @@ In the top directory, run `pytest amarillo/tests`.
 Based on [python:3.12-slim](https://hub.docker.com/_/python/)
 
 - build `docker build -t amarillo .`
-- run `docker run --rm --name amarillo -p 8000:80 -e MAX_WORKERS="1" -e ADMIN_TOKEN=$ADMIN_TOKEN -e RIDE2GO_TOKEN=$RIDE2GO_TOKEN -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`
+- run `docker run --rm --name amarillo -p 8000:80 -e MAX_WORKERS="1" -e ADMIN_TOKEN=$ADMIN_TOKEN -e TZ=Europe/Berlin -v $(pwd)/data:/app/data amarillo`
