@@ -44,9 +44,9 @@ class FahrgemeinschaftImporter:
         return carpool
 
     def load_carpools(self) -> List[Carpool]:
-        ride2go_query_data = config.ride2go_query_data
+        fahrgemeinschaft_query_data = config.fahrgemeinschaft_query_data
         try:
-            result = requests.get(self.carpools_url, data=ride2go_query_data, headers=self.carpools_http_headers)
+            result = requests.get(self.carpools_url, data=fahrgemeinschaft_query_data, headers=self.carpools_http_headers)
             if result.status_code == 200:
                 json_results = result.json()
                 carpools = [self._extract_carpool(cp) for cp in json_results]
