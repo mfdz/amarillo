@@ -6,7 +6,12 @@ class Config(BaseSettings):
     amarillo_baseurl: str = 'http://localhost:8000/'
     admin_token: str | None = None
     debug: bool = False
-    ride2go_query_data: str
+    # If fahrgemeinschaft is configured, a config like 
+    # '{ "southWestCoordinates": { "lat": 47.3, "lon": 5.98 }, 
+    #    "northEastCoordinates": { "lat": 54.99, "lon": 15.02 }, 
+    #    "lastModifiedSinceDays": 180 }' 
+    # should be set configured
+    fahrgemeinschaft_query_data: str = None
     env: str = 'DEV'
     graphhopper_base_url: str = 'https://api.mfdz.de/gh'
     stop_sources_file: str = 'conf/stop_sources.json'
