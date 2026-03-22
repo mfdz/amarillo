@@ -69,7 +69,18 @@ def configure():
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.warning(f"Request failed %s", exc)
+    try:
+        body = await request.json()
+        agency = body.get('agency')
+        if agency is not None:
+            logger.warning(f"Request failed %s for agency %s", exc, agency)
+        else:
+            x_api_key = request.headers.get('X-API-Key','')
+            partial_x_api_key = x_api_key[:2] + '****' + x_api_key[-2:]
+            logger.warning(f"Request failed %s for agency with token %s", exc, partial_x_api_key)      
+    except Exception:
+        logger.warning(f"Request failed %s, agency could not be determined", exc)
+
     return JSONResponse(
         status_code=422,
         content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
