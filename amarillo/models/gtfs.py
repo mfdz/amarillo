@@ -1,7 +1,7 @@
 from collections import namedtuple
 from datetime import timedelta, datetime
 
-GtfsFeedInfo = namedtuple('GtfsFeedInfo', 'feed_id feed_publisher_name feed_publisher_url feed_lang feed_version')
+GtfsFeedInfo = namedtuple('GtfsFeedInfo', 'feed_id feed_publisher_name feed_publisher_url feed_lang feed_contact_email feed_contact_url feed_version')
 GtfsAgency = namedtuple('GtfsAgency', 'agency_id agency_name agency_url agency_timezone agency_lang agency_email')
 GtfsRoute = namedtuple('GtfsRoute',  'agency_id route_id route_long_name route_type route_url route_short_name route_desc')
 GtfsStop = namedtuple('GtfsStop', 'stop_id stop_lat stop_lon stop_name')

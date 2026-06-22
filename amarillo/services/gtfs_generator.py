@@ -3,12 +3,12 @@ from amarillo.services.gtfs_export import GtfsExport, GtfsFeedInfo, GtfsAgency
 from amarillo.services.gtfs import GtfsRtProducer
 from amarillo.utils.container import container
 from glob import glob
+from datetime import date
 import json
 import schedule
 import threading
 import time
 import logging
-from datetime import date, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,10 @@ for agency_file_name in glob('conf/agency/*.json'):
         agency_id = agency.agency_id
         agencies.append(agency)
 
+# Load FeedInfo
+with open('conf/feed_info.json', 'r') as f:
+    feed_info_template = json.load(f)
+
 def run_schedule():
 	while 1:
 		try:
@@ -45,9 +49,17 @@ def midnight():
 def generate_gtfs():
 	logger.info("Generate GTFS")
 
+	feed_info = GtfsFeedInfo(
+		feed_info_template.get('feed_id',''), 
+		feed_info_template.get('feed_publisher_name',''), 
+		feed_info_template.get('feed_publisher_url',''),
+		feed_info_template.get('feed_lang',''),
+		feed_info_template.get('feed_contact_email',''),
+		feed_info_template.get('feed_contact_url',''),
+		date.today().isoformat())
+
 	for region in regions.values():
-		# TODO make feed producer infos configurable
-		feed_info = GtfsFeedInfo('mfdz', 'MITFAHR|DE|ZENTRALE', 'http://www.mitfahrdezentrale.de', 'de', 1)
+		
 		exporter = GtfsExport(
 			agencies, 
 			feed_info, 
