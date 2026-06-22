@@ -45,6 +45,20 @@ Permissions work this way
 - API-Keys for agencies are allowed to POST/PUT/GET/DELETE their own 
   resources and GET some public resources.  
 
+## Customising the Feed Info
+To provide custom feed_info information, create a json config file `conf/feed_info.json`and specify the following information:
+
+```json
+{
+  "feed_id": "mfdz",
+  "feed_publisher_name": "MITFAHR|DE|ZENTRALE", 
+  "feed_publisher_url": "http://www.mitfahrdezentrale.de/",
+  "feed_lang": "de",
+  "feed_contact_email": "info@null.com", 
+  "feed_contact_url": "http://www.mitfahrdezentrale.de/feedback"
+}
+```
+
 ## Integrating new carpool agencies
 
 To add a new carpool agency, you need to provide agency metadata, which will be used to generated the GTFS agency.txt and an `agencyconf`, which defines how the agency's carpool 
