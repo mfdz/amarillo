@@ -51,7 +51,7 @@ class MobilityDIYImporter(AmarilloImporter):
         return False
 
     def _get_data_from_json_response(self, json_response):
-        payload = json.loads(json_response.get('Payload'))
+        payload = json_response.get('Payload')
         filtered_payload = []
         for cp in payload:
             if self._should_offer_be_ignored(cp):
